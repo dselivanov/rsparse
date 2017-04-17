@@ -1,0 +1,25 @@
+Package: reco
+Type: Package
+Title: Set of algorithms for recommender systems
+Version: 0.1.0
+Author: Dmitriy Selivanov
+Maintainer: Dmitriy Selivanov <selivanov.dmitriy@gmail.com>
+Description: All algorithms are reasonably fast and parallelized if possible
+    (our target is to be within 5x of optimized C/C++ code). 
+    Following algorithms are implemented at the moment: 
+    1) ALS for implicit feedback
+License: GPL >= 3
+Encoding: UTF-8
+LazyData: true
+ByteCompile: true
+Depends:
+    methods
+Imports:
+    mlapi, 
+    Matrix, 
+    futile.logger,
+    data.table (>= 1.10.0)
+Suggests: 
+    parallel
+Remotes: github::dselivanov/mlapi
+RoxygenNote: 5.0.1
