@@ -55,5 +55,14 @@ asl_impl$components
  of computations.}
 }
 }
-\keyword{datasets}
 
+\seealso{
+\url{https://math.stackexchange.com/questions/1072451/analytic-solution-for-matrix-factorization-using-alternating-least-squares/1073170#1073170}
+\url{http://activisiongamescience.github.io/2016/01/11/Implicit-Recommender-Systems-Biased-Matrix-Factorization/}
+\url{http://datamusing.info/blog/2015/01/07/implicit-feedback-and-collaborative-filtering/}
+\url{https://jessesw.com/Rec-System/}
+\url{http://danielnee.com/2016/09/collaborative-filtering-using-alternating-least-squares/}
+\url{http://www.benfrederickson.com/matrix-factorization/}
+\url{http://www.benfrederickson.com/fast-implicit-matrix-factorization/}
+}
+\keyword{datasets}
