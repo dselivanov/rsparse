@@ -53,39 +53,41 @@ ALS_implicit = R6::R6Class(
   public = list(
     initialize = function(rank = 10L,
                           lambda = 0,
-                          init_stdv = ifelse(lambda == 0, 0.01, 1 / sqrt(2 * lambda))) {
+                          n_cores =
+                          init_stdv = 0.01) {
       private$set_internal_matrix_formats(sparse = "dgCMatrix", dense = NULL)
       private$lambda = lambda
       private$init_stdv = init_stdv
       private$rank = rank
       private$scorers = new.env(hash = TRUE, parent = emptyenv())
-    },
-    fit = function(x, n_iter = 5L, n_cores = 1, ...) {
-
       if (n_cores > 1 && .Platform$OS.type != "unix") {
         flog.warn("Detected Windows platform and 'n_cores > 1'. This won't work
                   since library relies on fork-based parellelism. Setting n_cores = 1.")
+        n_cores = 1
       }
+      private$n_cores = n_cores
+    },
+    fit = function(x, n_iter = 5L, n_thread = private$n_cores, ...) {
 
       # x = 1 + alpha * r
       # x = confidense matrix, not ratings/interactions matrix!
       # we expect user already transformed it
 
       flog.debug("convert input to %s if needed", private$internal_matrix_formats$sparse)
-      c_iu = private$check_convert_input(x, private$internal_matrix_formats)
+      c_ui = private$check_convert_input(x, private$internal_matrix_formats)
 
       flog.debug("check items in input are not negative")
-      stopifnot(all(c_iu@x >= 0))
+      stopifnot(all(c_ui@x >= 0))
 
       flog.debug("making antoher matrix for convenient traverse by users - transposing input matrix")
-      c_ui = t(c_iu)
+      c_iu = t(c_ui)
 
       # init
-      nr = nrow(c_iu)
-      nc = ncol(c_iu)
+      nr = nrow(c_ui)
+      nc = ncol(c_ui)
 
-      # private$U = matrix(rnorm(nr * private$rank, 0, private$init_stdv), ncol = nr, private$rank)
-      private$I = matrix(rnorm(nc * private$rank, 0, private$init_stdv), ncol = nc, private$rank)
+      private$U = matrix(rnorm(nr * private$rank, 0, private$init_stdv), ncol = nr, nrow = private$rank)
+      private$I = matrix(rnorm(nc * private$rank, 0, private$init_stdv), ncol = nc, nrow = private$rank)
       Lambda = diag(x = private$lambda, nrow = private$rank, ncol = private$rank)
 
       trace_values = vector("numeric", n_iter)
@@ -97,19 +99,28 @@ ALS_implicit = R6::R6Class(
 
         private$IIt = tcrossprod(private$I) + Lambda
         flog.debug("iter %d by item", i)
-        private$U = private$solver(private$I, private$IIt, c_ui, n_cores = n_cores, ...)
-        gc()
+        stopifnot(ncol(private$U) == ncol(c_iu))
+        # private$U will be modified in place
+        als_implicit(c_iu, private$I, private$IIt, private$U, nth = n_cores, ...)
+        # private$U = private$solver(private$I, private$IIt, c_iu, n_cores = n_cores, ...)
 
         private$UUt = tcrossprod(private$U) + Lambda
         flog.debug("iter %d by user", i)
-        private$I = private$solver(private$U, private$UUt, c_iu, n_cores = n_cores, ...)
-        gc()
+        stopifnot(ncol(private$I) == ncol(c_ui))
+
+        # private$I will be modified in place
+        als_implicit(c_ui, private$U, private$UUt, private$I, nth = n_cores, ...)
+        # private$I = private$solver(private$U, private$UUt, c_ui, n_cores = n_cores, ...)
 
         # flog.debug("calculating loss")
-        # trace_values[[i]] = calc_als_implicit_loss(c_iu, private$U, private$I, private$lambda, n_cores, ...)
+        # trace_values[[i]] = calc_als_implicit_loss(c_ui, private$U, private$I, private$lambda, n_cores, ...)
         # gc()
         # trace_loss = sprintf("iter %d loss %.4f", i, trace_values[[i]])
         # trace_loss = sprintf("iter %d", i)
+
+        #------------------------------------------------------------------------
+        # calculate some metrics if needed in order to diagnose convergence
+        #------------------------------------------------------------------------
         trace_iter = vector("list", length(names(private$scorers)))
         j = 1L
         trace_scors_string = ""
@@ -120,49 +131,36 @@ ALS_implicit = R6::R6Class(
           j = j + 1L
         }
         trace_lst[[i]] = rbindlist(trace_iter)
-
         flog.info("%s", trace_scors_string)
+        #------------------------------------------------------------------------
       }
 
       private$components_ = private$I
 
       res = t(private$U)
-      # if(trace)
       setattr(res, "trace", rbindlist(trace_lst))
       invisible(res)
     },
-    fit_transform = function(x, n_iter = 5L, n_cores = 1, trace = FALSE, ...) {
-      res = self$fit(x, n_iter, n_cores, trace, ...)
+    fit_transform = function(x, n_iter = 5L, n_thread = private$n_cores, ...) {
+      res = self$fit(x, n_iter, n_thread, ...)
       res
     },
     # project new user into latent user space
     factorize_new_users = function(x) {
       stopifnot(ncol(x) == ncol(private$I))
-      # XXt = tcrossprod(private$I)
-      # as.matrix(t(solve(XXt, t(tcrossprod(x, private$I)))))
       as.matrix( t( solve(private$IIt, t(tcrossprod(x, private$I)) ) ) )
     },
     # project new items into latent item space
     factorize_new_items = function(x) {
       stopifnot(nrow(x) == ncol(private$U))
-      # XXt = tcrossprod(private$U)
-      # as.matrix(solve(XXt, private$U %*% x))
       as.matrix(solve(private$UUt, private$U %*% x))
     },
-    predict = function(x, k, n_cores = getOption("mc.cores", 2L), ...) {
+    predict = function(x, k, n_cores = private$n_cores, ...) {
       m = nrow(x)
       # transform user features into latent space
       x_latent_space = self$factorize_new_users(x)
       # calculate scores for each item
       x_similarity = x_latent_space %*% private$I
-      # allocate memory in advance
-      # res = matrix(NA_integer_, nrow = m, ncol = k)
-      # # sort predictions by score and fill into result matrix
-      # for(i in seq_len(m)) {
-      #   top_k = order(x_similarity[i, ], decreasing = T)[seq_len(k)]
-      #   res[i, ] = top_k
-      # }
-      # res
       res = parallel::mclapply(seq_len(m), function(i) {
         top_n(x_similarity[i, ], k)
       }, mc.cores = n_cores, ...)
@@ -207,7 +205,7 @@ ALS_implicit = R6::R6Class(
     },
     # x = sparse matrix of observed user interactions
     # y = sparse matrix of observed user we are trying to predtict
-    add_scorer = function(x, y, name, metric, n_cores = getOption("mc.cores", 2L), ...) {
+    add_scorer = function(x, y, name, metric, ...) {
       if(exists(name, where = private$scorers, inherits = FALSE))
         stop(sprintf("scorer with name '%s' already exists", name))
 
@@ -215,9 +213,12 @@ ALS_implicit = R6::R6Class(
         private$scorers[[name]] = function() {
           # transpose since internally users kept as n_factor * n_users
           U_new = t(self$factorize_new_users(x))
-          calc_als_implicit_loss(x, private$U, private$I, private$lambda, n_cores = n_cores, ...)
+          calc_als_implicit_loss(x, private$U, private$I, private$lambda, n_cores = private$n_cores, ...)
         }
       } else {
+        if (length(grep(pattern = "(ndcg|map)\\@[[:digit:]]+", x = metric)) != 1 )
+          stop(sprintf("don't know how add '%s' metric. Only 'loss', 'map@k', 'ndcg@k' are supported", metric))
+
         scorer_conf = strsplit(metric, "@", T)[[1]]
         k = as.integer(tail(scorer_conf, 1))
         scorer_fun = scorer_conf[[1]]
@@ -255,7 +256,9 @@ ALS_implicit = R6::R6Class(
     #------------------------------------------------------------
     # X = factor matrix n_factors * (n_users or n_items)
     # C_UI = user-item confidence matrix
-    solver = function(X, XtX_reg, C_UI, n_cores = 1, ...) {
+
+    # R solver for reference. Now replaced with fast Armadillo solver
+    solver = function(X, XtX_reg, C_UI, n_cores = private$n_cores, ...) {
 
       # XtX = tcrossprod(X)
       m_rank = nrow(X)
@@ -339,7 +342,6 @@ ALS_implicit = R6::R6Class(
 
 # proxy loss since we don't calculate loss for "negative" (not observed) items
 calc_als_implicit_loss = function(X, user, item, lambda = 0, n_cores = 1, ...) {
-
   loss = parallel::mclapply(
     parallel::splitIndices(ncol(X), n_cores),
     function(ii) {
