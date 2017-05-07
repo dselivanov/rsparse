@@ -1,29 +1,24 @@
 #include <RcppArmadillo.h>
 #include <omp.h>
-#define GRAIN_SIZE 100
+#define GRAIN_SIZE 1
 using namespace Rcpp;
 using namespace RcppArmadillo;
 using namespace arma;
 
 //' @export
 // [[Rcpp::export]]
-void als_implicit(const S4 &mat, arma::mat& X, arma::mat& XtX, arma::mat& Y, int nth) {
-  IntegerVector dims = mat.slot("Dim");
-  int ncols = dims[1];
-  arma::uvec CUI_I = Rcpp::as<arma::uvec>(mat.slot("i"));
-  arma::uvec CUI_P = Rcpp::as<arma::uvec>(mat.slot("p"));
-  arma::vec CUI_X  = Rcpp::as<arma::vec>(mat.slot("x"));
-
-  #pragma omp parallel for num_threads(nth) schedule(dynamic, GRAIN_SIZE)
-  for(int i = 0; i < ncols; i++) {
-    int p1 = CUI_P[i];
-    int p2 = CUI_P[i + 1] - 1;
-    // catch situation when last column in matrix are empty, so p1 becomes larger than number of columns
-    if(p1 <= p2) {
-      arma::uvec idx = CUI_I.subvec( p1, p2 );
+void als_implicit(const arma::sp_mat& mat, arma::mat& X, arma::mat& XtX, arma::mat& Y, int n_threads) {
+  int nc = mat.n_cols;
+  #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE)
+  for(int i = 0; i < nc; i++) {
+    int p1 = mat.col_ptrs[i];
+    int p2 = mat.col_ptrs[i + 1];
+    // catch situation when some columns in matrix are empty, so p1 becomes equal to p2 or greater than number of columns
+    if(p1 < p2) {
+      arma::uvec idx = uvec(&mat.row_indices[p1], p2 - p1);
       arma::mat X_nnz = X.cols(idx);
 
-      arma::vec confidence = CUI_X.subvec( p1, p2 );
+      arma::vec confidence = vec(&mat.values[p1], p2 - p1);
       arma::mat inv = XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
       arma::mat rhs = X_nnz * confidence;
 

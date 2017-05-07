@@ -53,3 +53,31 @@ top_n = function(x, n) {
   # xp = sort(x, partial = p)[p]
   # which(x > xp, useNames = FALSE)
 }
+
+# proxy loss since we don't calculate loss for "negative" (not observed) items
+calc_als_implicit_loss = function(X, user, item, lambda = 0, n_cores = 1, ...) {
+  loss = parallel::mclapply(
+    parallel::splitIndices(ncol(X), n_cores),
+    function(ii) {
+      loss_chunk = 0
+      for(i in ii) {
+        p1 = X@p[i]
+        p2 = X@p[i + 1]
+        p = p1 + seq_len(p2 - p1)
+        ind = X@i[p] + 1L
+        xx  = X@x[p]
+        item_i = item[, i, drop = FALSE]
+        user_i = user[, ind, drop = FALSE]
+        loss_chunk = loss_chunk + sum( xx * ( ( 1 - crossprod(user_i, item_i) ) ^ 2 ) )
+      }
+      # flog.info("loss at worker %d = %.3f", Sys.getpid(), loss_chunk)
+      loss_chunk
+    },
+    mc.cores = n_cores, ...)
+  loss = sum(unlist(loss))
+  # add regularization if needed
+  if(lambda > 0) loss = loss + lambda * (sum(user ^ 2) + sum(item ^ 2))
+
+  # loss per number of non zero interactions
+  loss / length(X@x)
+}

@@ -16,43 +16,55 @@ See (Hu, Koren, Volinsky)'2008 paper \url{http://yifanhu.net/PUB/cf.pdf} for det
 
 For usage details see \bold{Methods, Arguments and Examples} sections.
 \preformatted{
-asl_impl = ALS_implicit$new(rank = 10L, lambda = 0, init_stdv = ifelse(lambda == 0, 0.01, 1 / sqrt(2 * lambda)))
-asl_impl$fit(x, n_iter = 5L, n_cores = 1, trace = FALSE, ...)
-asl_impl$fit_transform(x, n_iter = 5L, n_cores = 1, trace = FALSE, ...)
-asl_impl$components
+  model = ALS_implicit$new(rank = 10L, lambda = 0, init_stdv = 0.01, n_cores = parallel::detectCores())
+  model$fit(x, n_iter = 5L, n_threads = 1, ...)
+  model$fit_transform(x, n_iter = 5L, n_threads = 1, ...)
+  model$predict(x, k, n_cores = private$n_cores, ...)
+  model$components
+  model$add_scorer(x, y, name, metric, ...)
+  model$ap_k(x, y, k = ncol(x))
+  model$ndcg_k(x, y, k = ncol(x))
 }
 }
 
 \section{Methods}{
 
 \describe{
-  \item{\code{$new(rank = 10L, lambda = 0, init_stdv = ifelse(lambda == 0, 0.01, 1 / sqrt(2 * lambda)))}}{
+  \item{\code{$new(rank = 10L, lambda = 0, init_stdv = 0.01, n_cores = parallel::detectCores()) }}{
     create ALS_implicit model with \code{rank} latent factors}
-  \item{\code{$fit(x, n_iter = 5L, n_cores = 1, trace = FALSE, ...)}}{
+  \item{\code{$fit(x, n_iter = 5L, n_threads = private$n_cores, ...)}}{
     fit model to an input user-item \bold{confidence!} matrix. (preferably in "dgCMatrix" format)}.
     \code{x} should be a confidence matrix which corresponds to \code{1 + alpha * r_ui} in original paper.
-    Usually \code{r_ui} cosrresponds to the number of interactions of user \code{u} and item \code{i}.
-  \item{\code{$fit_transform(x, n_iter = 5L, n_cores = 1, trace = FALSE, ...)}}{Explicitly returns factor matrix for
+    Usually \code{r_ui} corresponds to the number of interactions of user \code{u} and item \code{i}.
+  \item{\code{$fit_transform(x, n_iter = 5L, n_threads = private$n_cores, ...)}}{Explicitly returns factor matrix for
     users of size \code{n_users * rank}. See description for \code{fit} above.}.
+  \item{\code{$predict(x, k, n_cores = private$n_cores, ...)}}{predict \code{top k} items for users \code{x}.
+    Users should be defined in the same way as in training - as \bold{sparse confidence matrix} }.
+  \item{\code{$add_scorer(x, y, name, metric, ...)}}{add a metric to watchlist.
+  Metric will be evaluated after each ALS interation. At the moment following metrices are supported:
+    \bold{loss, map@k, ndcg@k}, where k is some integer. }.
+  \item{\code{$ap_k(x, y, k = ncol(x)}}{ calculates average precision at k for new/out-of-bag users \code{x}}.
+  \item{\code{$ndcg_k(x, y, k = ncol(x)}}{ calculates NDCG k for new/out-of-bag users \code{x}}.
   \item{\code{$components}}{item factors matrix of size \code{rank * n_items}}.
+
 }
 }
 
 \section{Arguments}{
 
 \describe{
- \item{asl_impl}{A \code{ALS_implicit} model.}
+ \item{model}{A \code{ALS_implicit} model.}
  \item{x}{An input user-item \bold{confidence} matrix.}
+ \item{y}{An input user-item \bold{relevance} matrix. Used during evaluation of \code{map@k, ndcg@k}.
+   Should have the same shape as corresponding confidence matrix \code{x}. Values are used as "relevance" in ndgc calculation. }
+ \item{name}{\code{characetr} - name of the scorer}
  \item{rank}{\code{integer} desired number of latent factors}
  \item{lambda}{\code{numeric} regularization parameter}
- \item{init_stdv}{\code{numeric} std dev for initialization of the factor matrices}
- \item{trace}{\code{logical} whether to calculate loss proxy. By "proxy" we mean that we will calculate
- loss only for user-item pairs with observer interactions}
- \item{n_cores}{\code{n_cores} number of cores to use in factorization. Corresponds to
+ \item{n_threads}{\code{numeric} number of threads to use during fit (of OpenMP is available)}
+ \item{n_cores}{\code{n_cores} number of cores to use in validation and prediction. Corresponds to
    \code{mc.cores} in \code{parallel::mclapply}. Ignored for Windows OS (with warning).}
- \item{...}{Arguments useful for \code{fit(), fit_transform()} -
- these arguments will be passed to \link{parallel::mclapply} function which is used for parallelization
- of computations.}
+ \item{init_stdv}{\code{numeric} std dev for initialization of the factor matrices}
+ \item{...}{other arguments. Not used at the moment}
 }
 }
 

@@ -14,37 +14,49 @@
 #' @section Usage:
 #' For usage details see \bold{Methods, Arguments and Examples} sections.
 #' \preformatted{
-#' asl_impl = ALS_implicit$new(rank = 10L, lambda = 0, init_stdv = ifelse(lambda == 0, 0.01, 1 / sqrt(2 * lambda)))
-#' asl_impl$fit(x, n_iter = 5L, n_cores = 1, trace = FALSE, ...)
-#' asl_impl$fit_transform(x, n_iter = 5L, n_cores = 1, trace = FALSE, ...)
-#' asl_impl$components
+#'   model = ALS_implicit$new(rank = 10L, lambda = 0, init_stdv = 0.01, n_cores = parallel::detectCores())
+#'   model$fit(x, n_iter = 5L, n_threads = 1, ...)
+#'   model$fit_transform(x, n_iter = 5L, n_threads = 1, ...)
+#'   model$predict(x, k, n_cores = private$n_cores, ...)
+#'   model$components
+#'   model$add_scorer(x, y, name, metric, ...)
+#'   model$ap_k(x, y, k = ncol(x))
+#'   model$ndcg_k(x, y, k = ncol(x))
 #' }
 #' @section Methods:
 #' \describe{
-#'   \item{\code{$new(rank = 10L, lambda = 0, init_stdv = ifelse(lambda == 0, 0.01, 1 / sqrt(2 * lambda)))}}{
+#'   \item{\code{$new(rank = 10L, lambda = 0, init_stdv = 0.01, n_cores = parallel::detectCores()) }}{
 #'     create ALS_implicit model with \code{rank} latent factors}
-#'   \item{\code{$fit(x, n_iter = 5L, n_cores = 1, trace = FALSE, ...)}}{
+#'   \item{\code{$fit(x, n_iter = 5L, n_threads = private$n_cores, ...)}}{
 #'     fit model to an input user-item \bold{confidence!} matrix. (preferably in "dgCMatrix" format)}.
 #'     \code{x} should be a confidence matrix which corresponds to \code{1 + alpha * r_ui} in original paper.
-#'     Usually \code{r_ui} cosrresponds to the number of interactions of user \code{u} and item \code{i}.
-#'   \item{\code{$fit_transform(x, n_iter = 5L, n_cores = 1, trace = FALSE, ...)}}{Explicitly returns factor matrix for
+#'     Usually \code{r_ui} corresponds to the number of interactions of user \code{u} and item \code{i}.
+#'   \item{\code{$fit_transform(x, n_iter = 5L, n_threads = private$n_cores, ...)}}{Explicitly returns factor matrix for
 #'     users of size \code{n_users * rank}. See description for \code{fit} above.}.
+#'   \item{\code{$predict(x, k, n_cores = private$n_cores, ...)}}{predict \code{top k} items for users \code{x}.
+#'     Users should be defined in the same way as in training - as \bold{sparse confidence matrix} }.
+#'   \item{\code{$add_scorer(x, y, name, metric, ...)}}{add a metric to watchlist.
+#'   Metric will be evaluated after each ALS interation. At the moment following metrices are supported:
+#'     \bold{loss, map@k, ndcg@k}, where k is some integer. }.
+#'   \item{\code{$ap_k(x, y, k = ncol(x)}}{ calculates average precision at k for new/out-of-bag users \code{x}}.
+#'   \item{\code{$ndcg_k(x, y, k = ncol(x)}}{ calculates NDCG k for new/out-of-bag users \code{x}}.
 #'   \item{\code{$components}}{item factors matrix of size \code{rank * n_items}}.
+#'
 #'}
 #' @section Arguments:
 #' \describe{
-#'  \item{asl_impl}{A \code{ALS_implicit} model.}
+#'  \item{model}{A \code{ALS_implicit} model.}
 #'  \item{x}{An input user-item \bold{confidence} matrix.}
+#'  \item{y}{An input user-item \bold{relevance} matrix. Used during evaluation of \code{map@k, ndcg@k}.
+#'    Should have the same shape as corresponding confidence matrix \code{x}. Values are used as "relevance" in ndgc calculation. }
+#'  \item{name}{\code{characetr} - name of the scorer}
 #'  \item{rank}{\code{integer} desired number of latent factors}
 #'  \item{lambda}{\code{numeric} regularization parameter}
-#'  \item{init_stdv}{\code{numeric} std dev for initialization of the factor matrices}
-#'  \item{trace}{\code{logical} whether to calculate loss proxy. By "proxy" we mean that we will calculate
-#'  loss only for user-item pairs with observer interactions}
-#'  \item{n_cores}{\code{n_cores} number of cores to use in factorization. Corresponds to
+#'  \item{n_threads}{\code{numeric} number of threads to use during fit (of OpenMP is available)}
+#'  \item{n_cores}{\code{n_cores} number of cores to use in validation and prediction. Corresponds to
 #'    \code{mc.cores} in \code{parallel::mclapply}. Ignored for Windows OS (with warning).}
-#'  \item{...}{Arguments useful for \code{fit(), fit_transform()} -
-#'  these arguments will be passed to \link{parallel::mclapply} function which is used for parallelization
-#'  of computations.}
+#'  \item{init_stdv}{\code{numeric} std dev for initialization of the factor matrices}
+#'  \item{...}{other arguments. Not used at the moment}
 #' }
 #' @export
 ALS_implicit = R6::R6Class(
@@ -53,7 +65,7 @@ ALS_implicit = R6::R6Class(
   public = list(
     initialize = function(rank = 10L,
                           lambda = 0,
-                          n_cores =
+                          n_cores = parallel::detectCores(),
                           init_stdv = 0.01) {
       private$set_internal_matrix_formats(sparse = "dgCMatrix", dense = NULL)
       private$lambda = lambda
@@ -67,7 +79,7 @@ ALS_implicit = R6::R6Class(
       }
       private$n_cores = n_cores
     },
-    fit = function(x, n_iter = 5L, n_thread = private$n_cores, ...) {
+    fit = function(x, n_iter = 5L, n_threads = private$n_cores, ...) {
 
       # x = 1 + alpha * r
       # x = confidense matrix, not ratings/interactions matrix!
@@ -92,7 +104,7 @@ ALS_implicit = R6::R6Class(
 
       trace_values = vector("numeric", n_iter)
 
-      flog.info("starting factorization with %d workers", n_cores)
+      flog.info("starting factorization with %d threads", n_threads)
       trace_lst = vector("list", n_iter)
       # iterate
       for (i in seq_len(n_iter)) {
@@ -101,7 +113,7 @@ ALS_implicit = R6::R6Class(
         flog.debug("iter %d by item", i)
         stopifnot(ncol(private$U) == ncol(c_iu))
         # private$U will be modified in place
-        als_implicit(c_iu, private$I, private$IIt, private$U, nth = n_cores, ...)
+        als_implicit(c_iu, private$I, private$IIt, private$U, n_threads = n_threads, ...)
         # private$U = private$solver(private$I, private$IIt, c_iu, n_cores = n_cores, ...)
 
         private$UUt = tcrossprod(private$U) + Lambda
@@ -109,7 +121,7 @@ ALS_implicit = R6::R6Class(
         stopifnot(ncol(private$I) == ncol(c_ui))
 
         # private$I will be modified in place
-        als_implicit(c_ui, private$U, private$UUt, private$I, nth = n_cores, ...)
+        als_implicit(c_ui, private$U, private$UUt, private$I, n_threads = n_threads, ...)
         # private$I = private$solver(private$U, private$UUt, c_ui, n_cores = n_cores, ...)
 
         # flog.debug("calculating loss")
@@ -130,8 +142,8 @@ ALS_implicit = R6::R6Class(
           trace_iter[[j]] = list(iter = i, scorer = sc, value = score)
           j = j + 1L
         }
-        trace_lst[[i]] = rbindlist(trace_iter)
-        flog.info("%s", trace_scors_string)
+        trace_lst[[i]] = data.table::rbindlist(trace_iter)
+        flog.info("iter %d scores: %s", i, trace_scors_string)
         #------------------------------------------------------------------------
       }
 
@@ -141,8 +153,8 @@ ALS_implicit = R6::R6Class(
       setattr(res, "trace", rbindlist(trace_lst))
       invisible(res)
     },
-    fit_transform = function(x, n_iter = 5L, n_thread = private$n_cores, ...) {
-      res = self$fit(x, n_iter, n_thread, ...)
+    fit_transform = function(x, n_iter = 5L, n_threads = private$n_cores, ...) {
+      res = self$fit(x, n_iter, n_threads, ...)
       res
     },
     # project new user into latent user space
@@ -245,6 +257,7 @@ ALS_implicit = R6::R6Class(
     lambda = NULL,
     init_stdv = NULL,
     rank = NULL,
+    n_cores = NULL,
     # user factor matrix = rank * n_users
     U = NULL,
     # users tcrossprod
@@ -339,31 +352,3 @@ ALS_implicit = R6::R6Class(
     }
   )
 )
-
-# proxy loss since we don't calculate loss for "negative" (not observed) items
-calc_als_implicit_loss = function(X, user, item, lambda = 0, n_cores = 1, ...) {
-  loss = parallel::mclapply(
-    parallel::splitIndices(ncol(X), n_cores),
-    function(ii) {
-      loss_chunk = 0
-      for(i in ii) {
-        p1 = X@p[i]
-        p2 = X@p[i + 1]
-        p = p1 + seq_len(p2 - p1)
-        ind = X@i[p] + 1L
-        xx  = X@x[p]
-        item_i = item[, i, drop = FALSE]
-        user_i = user[, ind, drop = FALSE]
-        loss_chunk = loss_chunk + sum( xx * ( ( 1 - crossprod(user_i, item_i) ) ^ 2 ) )
-      }
-      # flog.info("loss at worker %d = %.3f", Sys.getpid(), loss_chunk)
-      loss_chunk
-    },
-    mc.cores = n_cores, ...)
-  loss = sum(unlist(loss))
-  # add regularization if needed
-  if(lambda > 0) loss = loss + lambda * (sum(user ^ 2) + sum(item ^ 2))
-
-  # loss per number of non zero interactions
-  loss / length(X@x)
-}
