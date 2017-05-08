@@ -133,6 +133,7 @@ ALS_implicit = R6::R6Class(
         #------------------------------------------------------------------------
         # calculate some metrics if needed in order to diagnose convergence
         #------------------------------------------------------------------------
+        loss = als_implicit_loss(c_ui, private$U, private$I, private$lambda, n_threads);
         trace_iter = vector("list", length(names(private$scorers)))
         j = 1L
         trace_scors_string = ""
@@ -142,8 +143,8 @@ ALS_implicit = R6::R6Class(
           trace_iter[[j]] = list(iter = i, scorer = sc, value = score)
           j = j + 1L
         }
-        trace_lst[[i]] = data.table::rbindlist(trace_iter)
-        flog.info("iter %d scores: %s", i, trace_scors_string)
+        trace_lst[[i]] = data.table::rbindlist(list(trace_iter, list(iter = i, scorer = "loss", value = loss)))
+        flog.info("iter %d loss = %.4f %s", i, loss, trace_scors_string)
         #------------------------------------------------------------------------
       }
 

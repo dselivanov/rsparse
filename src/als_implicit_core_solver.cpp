@@ -29,3 +29,26 @@ void als_implicit(const arma::sp_mat& mat, arma::mat& X, arma::mat& XtX, arma::m
     }
   }
 }
+
+// [[Rcpp::export]]
+double als_implicit_loss(const arma::sp_mat& mat, arma::mat& X, arma::mat& Y, double lambda, int n_threads) {
+  int nc = mat.n_cols;
+  double loss = 0;
+  #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE) reduction(+:loss)
+  for(int i = 0; i < nc; i++) {
+    int p1 = mat.col_ptrs[i];
+    int p2 = mat.col_ptrs[i + 1];
+    if(p1 < p2) {
+      arma::uvec idx = uvec(&mat.row_indices[p1], p2 - p1);
+      arma::vec confidence = vec(&mat.values[p1], p2 - p1);
+      // arma::mat item_i = Y.col(i);
+      arma::mat user_i = X.cols(idx);
+      loss += accu((square( 1 - (Y.col(i).t() * user_i) ) * confidence));
+      // loss -= accu(square(Y.col(i).t() * X.cols(idx)));
+    }
+  }
+  if(lambda > 0)
+    loss += lambda * (accu(square(X)) + accu(square(Y)));
+  return loss / accu(mat);
+  // return loss / (accu(mat) + mat.n_cols * mat.n_rows - mat.n_nonzero);
+}

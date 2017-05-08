@@ -20,3 +20,18 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// als_implicit_loss
+double als_implicit_loss(const arma::sp_mat& mat, arma::mat& X, arma::mat& Y, double lambda, int n_threads);
+RcppExport SEXP reco_als_implicit_loss(SEXP matSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::sp_mat& >::type mat(matSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(als_implicit_loss(mat, X, Y, lambda, n_threads));
+    return rcpp_result_gen;
+END_RCPP
+}
