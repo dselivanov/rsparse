@@ -65,12 +65,15 @@ ALS_implicit = R6::R6Class(
   public = list(
     initialize = function(rank = 10L,
                           lambda = 0,
+                          feedback = c("implicit", "explicit"),
                           n_cores = parallel::detectCores(),
                           init_stdv = 0.01) {
       private$set_internal_matrix_formats(sparse = "dgCMatrix", dense = NULL)
       private$lambda = lambda
       private$init_stdv = init_stdv
       private$rank = rank
+      private$feedback = match.arg(feedback)
+      private$feedback_encoding = if(private$feedback == "implicit") 1 else if(private$feedback == "explicit") 2
       private$scorers = new.env(hash = TRUE, parent = emptyenv())
       if (n_cores > 1 && .Platform$OS.type != "unix") {
         flog.warn("Detected Windows platform and 'n_cores > 1'. This won't work
@@ -95,11 +98,11 @@ ALS_implicit = R6::R6Class(
       c_iu = t(c_ui)
 
       # init
-      nr = nrow(c_ui)
-      nc = ncol(c_ui)
+      n_user = nrow(c_ui)
+      n_item = ncol(c_ui)
 
-      private$U = matrix(rnorm(nr * private$rank, 0, private$init_stdv), ncol = nr, nrow = private$rank)
-      private$I = matrix(rnorm(nc * private$rank, 0, private$init_stdv), ncol = nc, nrow = private$rank)
+      private$U = matrix(rnorm(n_user * private$rank, 0, private$init_stdv), ncol = n_user, nrow = private$rank)
+      private$I = matrix(rnorm(n_item * private$rank, 0, private$init_stdv), ncol = n_item, nrow = private$rank)
       Lambda = diag(x = private$lambda, nrow = private$rank, ncol = private$rank)
 
       trace_values = vector("numeric", n_iter)
@@ -112,28 +115,29 @@ ALS_implicit = R6::R6Class(
         private$IIt = tcrossprod(private$I) + Lambda
         flog.debug("iter %d by item", i)
         stopifnot(ncol(private$U) == ncol(c_iu))
-        # private$U will be modified in place
-        als_implicit(c_iu, private$I, private$IIt, private$U, n_threads = n_threads, ...)
-        # private$U = private$solver(private$I, private$IIt, c_iu, n_cores = n_cores, ...)
+        if (private$feedback == "implicit") {
+          # private$U will be modified in place
+          als_implicit(c_iu, private$I, private$IIt, private$U, n_threads = n_threads, ...)
+          # private$U = private$solver(private$I, private$IIt, c_iu, n_cores = n_cores, ...)
+        } else if (private$feedback == "explicit") {
+          private$U = private$solver_explicit_feedback(c_iu, private$I, private$IIt)
+        }
 
         private$UUt = tcrossprod(private$U) + Lambda
         flog.debug("iter %d by user", i)
         stopifnot(ncol(private$I) == ncol(c_ui))
-
-        # private$I will be modified in place
-        als_implicit(c_ui, private$U, private$UUt, private$I, n_threads = n_threads, ...)
-        # private$I = private$solver(private$U, private$UUt, c_ui, n_cores = n_cores, ...)
-
-        # flog.debug("calculating loss")
-        # trace_values[[i]] = calc_als_implicit_loss(c_ui, private$U, private$I, private$lambda, n_cores, ...)
-        # gc()
-        # trace_loss = sprintf("iter %d loss %.4f", i, trace_values[[i]])
-        # trace_loss = sprintf("iter %d", i)
+        if (private$feedback == "implicit") {
+          # private$I will be modified in place
+          als_implicit(c_ui, private$U, private$UUt, private$I, n_threads = n_threads, ...)
+          # private$I = private$solver(private$U, private$UUt, c_ui, n_cores = n_cores, ...)
+        } else if (private$feedback == "explicit") {
+          private$I = private$solver_explicit_feedback(c_ui, private$U, private$UUt)
+        }
 
         #------------------------------------------------------------------------
         # calculate some metrics if needed in order to diagnose convergence
         #------------------------------------------------------------------------
-        loss = als_implicit_loss(c_ui, private$U, private$I, private$lambda, n_threads);
+        loss = als_loss(c_ui, private$U, private$I, private$lambda, private$feedback_encoding, n_threads);
         trace_iter = vector("list", length(names(private$scorers)))
         j = 1L
         trace_scors_string = ""
@@ -267,7 +271,14 @@ ALS_implicit = R6::R6Class(
     I = NULL,
     # items tcrossprod
     IIt = NULL,
+    feedback = NULL,
+    feedback_encoding = NULL,
     #------------------------------------------------------------
+    solver_explicit_feedback = function(c_ui, X, XtX) {
+      # XtX = tcrossprod(X)
+      # if(private$lambda > 0) XtX = XtX + diag(x = private$lambda)
+      solve(XtX,  tcrossprod(X, c_ui));
+    },
     # X = factor matrix n_factors * (n_users or n_items)
     # C_UI = user-item confidence matrix
 
