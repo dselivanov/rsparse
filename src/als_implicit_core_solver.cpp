@@ -42,10 +42,10 @@ double als_loss(const arma::sp_mat& mat, arma::mat& X, arma::mat& Y, double lamb
       arma::vec true_val = vec(&mat.values[p1], p2 - p1);
       arma::mat user_i = X.cols(idx);
       if(feedback == 1) {
-        // true_val = confidence
+        // implicit feedback: true_val = confidence
         loss += accu((square( 1 - (Y.col(i).t() * user_i) ) * true_val));
       } else if(feedback == 2) {
-        // true_val = rating
+        // explicit feedback: true_val = rating
         loss += accu(square( true_val - (Y.col(i).t() * user_i) ));
       }
     }
