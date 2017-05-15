@@ -1,5 +1,9 @@
 #include <RcppArmadillo.h>
+
+#ifdef _OPENMP
 #include <omp.h>
+#endif
+
 #define GRAIN_SIZE 1
 using namespace Rcpp;
 using namespace RcppArmadillo;
@@ -8,7 +12,9 @@ using namespace arma;
 // [[Rcpp::export]]
 void als_implicit(const arma::sp_mat& mat, arma::mat& X, arma::mat& XtX, arma::mat& Y, int n_threads) {
   int nc = mat.n_cols;
+  #ifdef _OPENMP
   #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE)
+  #endif
   for(int i = 0; i < nc; i++) {
     int p1 = mat.col_ptrs[i];
     int p2 = mat.col_ptrs[i + 1];
@@ -33,7 +39,9 @@ void als_implicit(const arma::sp_mat& mat, arma::mat& X, arma::mat& XtX, arma::m
 double als_loss(const arma::sp_mat& mat, arma::mat& X, arma::mat& Y, double lambda, int feedback, int n_threads) {
   int nc = mat.n_cols;
   double loss = 0;
+  #ifdef _OPENMP
   #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE) reduction(+:loss)
+  #endif
   for(int i = 0; i < nc; i++) {
     int p1 = mat.col_ptrs[i];
     int p2 = mat.col_ptrs[i + 1];
