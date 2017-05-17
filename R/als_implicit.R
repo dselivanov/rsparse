@@ -162,25 +162,24 @@ ALS_implicit = R6::R6Class(
       res = self$fit(x, n_iter, n_threads, ...)
       res
     },
-    # project new user into latent user space
-    factorize_new_users = function(x) {
+    # project new users into latent user space
+    transform = function(x) {
       stopifnot(ncol(x) == ncol(private$I))
-      as.matrix( t( solve(private$IIt, t(tcrossprod(x, private$I)) ) ) )
+      as.matrix( t( solve(private$IIt, private$I %*% t(x) ) ) )
     },
     # project new items into latent item space
     factorize_new_items = function(x) {
       stopifnot(nrow(x) == ncol(private$U))
       as.matrix(solve(private$UUt, private$U %*% x))
     },
-    predict = function(x, k, n_cores = private$n_cores, ...) {
+    predict = function(x, k, ...) {
       m = nrow(x)
       # transform user features into latent space
-      x_latent_space = self$factorize_new_users(x)
       # calculate scores for each item
-      x_similarity = x_latent_space %*% private$I
-      res = parallel::mclapply(seq_len(m), function(i) {
+      x_similarity = self$transform(x) %*% private$I
+      res = lapply(seq_len(m), function(i) {
         top_n(x_similarity[i, ], k)
-      }, mc.cores = n_cores, ...)
+      })
       do.call(rbind, res)
     },
     # preds = predictions
@@ -229,7 +228,7 @@ ALS_implicit = R6::R6Class(
       if(metric == "loss") {
         private$scorers[[name]] = function() {
           # transpose since internally users kept as n_factor * n_users
-          U_new = t(self$factorize_new_users(x))
+          U_new = t(self$transform(x))
           calc_als_implicit_loss(x, private$U, private$I, private$lambda, n_cores = private$n_cores, ...)
         }
       } else {
