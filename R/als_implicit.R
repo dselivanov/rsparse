@@ -162,15 +162,19 @@ ALS_implicit = R6::R6Class(
       res = self$fit(x, n_iter, n_threads, ...)
       res
     },
-    # project new users into latent user space
-    transform = function(x) {
+    # project new users into latent user space - just make ALS step given fixes items matrix
+    transform = function(x, n_threads = private$n_cores, ...) {
       stopifnot(ncol(x) == ncol(private$I))
-      as.matrix( t( solve(private$IIt, private$I %*% t(x) ) ) )
+      # allocate result matrix - will be modified in place
+      res = matrix(0, nrow = private$rank, ncol = nrow(x))
+      als_implicit(t(x), private$I, private$IIt, res, n_threads = n_threads, ...)
+      t(res)
     },
     # project new items into latent item space
-    factorize_new_items = function(x) {
-      stopifnot(nrow(x) == ncol(private$U))
-      as.matrix(solve(private$UUt, private$U %*% x))
+    get_items_embeddings = function(x, n_threads = private$n_cores, ...) {
+      res = matrix(0, nrow = private$rank, ncol = nrow(x))
+      als_implicit(x, private$U, private$UUt, res, n_threads = n_threads, ...)
+      res
     },
     predict = function(x, k, ...) {
       m = nrow(x)
@@ -182,7 +186,6 @@ ALS_implicit = R6::R6Class(
       })
       do.call(rbind, res)
     },
-    # preds = predictions
     ap_k = function(x, y, k = ncol(x)) {
       stopifnot(ncol(x) == ncol(y))
       stopifnot(nrow(x) == nrow(y))
@@ -314,7 +317,7 @@ ALS_implicit = R6::R6Class(
 
         for(j in seq_along(chunk)) {
           i = chunk[[j]]
-          if(i %% n_print == 0) {
+          if(isTRUE(i %% n_print == 0)) {
             flog.debug("worker %d progress %d%%", Sys.getpid(), as.integer(100 * (i - chunk_start) / chunk_len))
           }
 
