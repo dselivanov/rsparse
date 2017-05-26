@@ -1,12 +1,14 @@
 Package: reco
 Type: Package
-Title: Set of algorithms for recommender systems
-Version: 0.1.2
+Title: Matrix factorizations for recommender systems
+Version: 0.1.3
 Author: Dmitriy Selivanov
 Maintainer: Dmitriy Selivanov <selivanov.dmitriy@gmail.com>
-Description: All algorithms are reasonably fast and parallelized if possible
+Description: Matrix factorizations for recommender systems. 
     Following algorithms are implemented at the moment: 
     1) ALS for implicit feedback
+    2) ALS for explicit feedback
+    All algorithms work on sparse matrices and reasonably fast and parallelized if possible.
 License: GPL >= 3
 Encoding: UTF-8
 LazyData: true

@@ -147,6 +147,7 @@ ALS_implicit = R6::R6Class(
           trace_iter[[j]] = list(iter = i, scorer = sc, value = score)
           j = j + 1L
         }
+        trace_iter = data.table::rbindlist(trace_iter)
         trace_lst[[i]] = data.table::rbindlist(list(trace_iter, list(iter = i, scorer = "loss", value = loss)))
         flog.info("iter %d loss = %.4f %s", i, loss, trace_scors_string)
         #------------------------------------------------------------------------
