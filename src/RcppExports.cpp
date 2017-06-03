@@ -36,3 +36,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// top_k_indices_byrow
+IntegerMatrix top_k_indices_byrow(NumericMatrix x, int k, int n_threads);
+RcppExport SEXP reco_top_k_indices_byrow(SEXP xSEXP, SEXP kSEXP, SEXP n_threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(top_k_indices_byrow(x, k, n_threads));
+    return rcpp_result_gen;
+END_RCPP
+}

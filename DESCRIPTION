@@ -1,7 +1,7 @@
 Package: reco
 Type: Package
 Title: Matrix factorizations for recommender systems
-Version: 0.1.3
+Version: 0.1.4
 Author: Dmitriy Selivanov
 Maintainer: Dmitriy Selivanov <selivanov.dmitriy@gmail.com>
 Description: Matrix factorizations for recommender systems. 

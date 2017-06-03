@@ -9,3 +9,7 @@ als_loss <- function(mat, X, Y, lambda, feedback, n_threads) {
     .Call('reco_als_loss', PACKAGE = 'reco', mat, X, Y, lambda, feedback, n_threads)
 }
 
+top_k_indices_byrow <- function(x, k, n_threads) {
+    .Call('reco_top_k_indices_byrow', PACKAGE = 'reco', x, k, n_threads)
+}
+
