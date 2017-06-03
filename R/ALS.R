@@ -1,8 +1,9 @@
-#' @name ALS_implicit
+#' @name ALS
 #'
 #' @title ALS implicit
-#' @description Creates ALS implicit model.
-#' See (Hu, Koren, Volinsky)'2008 paper \url{http://yifanhu.net/PUB/cf.pdf} for details.
+#' @description Creates ALS model for matrix factorization.
+#' For implicit feedback see (Hu, Koren, Volinsky)'2008 paper \url{http://yifanhu.net/PUB/cf.pdf}.
+#' For explicit feedback model is classic model for rating matrix decomposition with MSE error (without biases at the moment).
 #' @seealso \url{https://math.stackexchange.com/questions/1072451/analytic-solution-for-matrix-factorization-using-alternating-least-squares/1073170#1073170}
 #' \url{http://activisiongamescience.github.io/2016/01/11/Implicit-Recommender-Systems-Biased-Matrix-Factorization/}
 #' \url{http://datamusing.info/blog/2015/01/07/implicit-feedback-and-collaborative-filtering/}
@@ -14,7 +15,7 @@
 #' @section Usage:
 #' For usage details see \bold{Methods, Arguments and Examples} sections.
 #' \preformatted{
-#'   model = ALS_implicit$new(rank = 10L, lambda = 0, init_stdv = 0.01, n_cores = parallel::detectCores())
+#'   model = ALS$new(rank = 10L, lambda = 0, init_stdv = 0.01, n_cores = parallel::detectCores())
 #'   model$fit(x, n_iter = 5L, n_threads = 1, ...)
 #'   model$fit_transform(x, n_iter = 5L, n_threads = 1, ...)
 #'   model$predict(x, k, n_cores = private$n_cores, ...)
@@ -25,8 +26,9 @@
 #' }
 #' @section Methods:
 #' \describe{
-#'   \item{\code{$new(rank = 10L, lambda = 0, init_stdv = 0.01, n_cores = parallel::detectCores()) }}{
-#'     create ALS_implicit model with \code{rank} latent factors}
+#'   \item{\code{$new(rank = 10L, lambda = 0, feedback = c("implicit", "explicit"),
+#'                    init_stdv = 0.01, n_cores = parallel::detectCores()) }}{
+#'     create ALS model with \code{rank} latent factors}
 #'   \item{\code{$fit(x, n_iter = 5L, n_threads = private$n_cores, ...)}}{
 #'     fit model to an input user-item \bold{confidence!} matrix. (preferably in "dgCMatrix" format)}.
 #'     \code{x} should be a confidence matrix which corresponds to \code{1 + alpha * r_ui} in original paper.
@@ -37,7 +39,7 @@
 #'     Users should be defined in the same way as in training - as \bold{sparse confidence matrix} }.
 #'   \item{\code{$add_scorer(x, y, name, metric, ...)}}{add a metric to watchlist.
 #'   Metric will be evaluated after each ALS interation. At the moment following metrices are supported:
-#'     \bold{loss, map@k, ndcg@k}, where k is some integer. }.
+#'     \bold{"loss", "map@k", "ndcg@k"}, where k is some integer. }.
 #'   \item{\code{$ap_k(x, y, k = ncol(x)}}{ calculates average precision at k for new/out-of-bag users \code{x}}.
 #'   \item{\code{$ndcg_k(x, y, k = ncol(x)}}{ calculates NDCG k for new/out-of-bag users \code{x}}.
 #'   \item{\code{$components}}{item factors matrix of size \code{rank * n_items}}.
@@ -45,13 +47,17 @@
 #'}
 #' @section Arguments:
 #' \describe{
-#'  \item{model}{A \code{ALS_implicit} model.}
-#'  \item{x}{An input user-item \bold{confidence} matrix.}
+#'  \item{model}{A \code{ALS} model.}
+#'  \item{x}{An input sparse user-item matrix(of class \code{dgCMatrix}).
+#'  For explicit feedback data it should contain ratings.
+#'  For implicit feedback data should be filled with \bold{confidence - 1}}.
+#'  So for simple case case when \code{confidence = 1 + alpha * x} values in matrix should be \code{alpha * x}.
 #'  \item{y}{An input user-item \bold{relevance} matrix. Used during evaluation of \code{map@k, ndcg@k}.
 #'    Should have the same shape as corresponding confidence matrix \code{x}. Values are used as "relevance" in ndgc calculation. }
 #'  \item{name}{\code{characetr} - name of the scorer}
 #'  \item{rank}{\code{integer} desired number of latent factors}
 #'  \item{lambda}{\code{numeric} regularization parameter}
+#'  \item{feedback}{\code{character} feedback type - one of \code{c("implicit", "explicit")}}
 #'  \item{n_threads}{\code{numeric} number of threads to use during fit (of OpenMP is available)}
 #'  \item{n_cores}{\code{n_cores} number of cores to use in validation and prediction. Corresponds to
 #'    \code{mc.cores} in \code{parallel::mclapply}. Ignored for Windows OS (with warning).}
@@ -59,9 +65,9 @@
 #'  \item{...}{other arguments. Not used at the moment}
 #' }
 #' @export
-ALS_implicit = R6::R6Class(
+ALS = R6::R6Class(
   inherit = mlapi::mlDecomposition,
-  classname = "AlternatingLeastSquaresImplicit",
+  classname = "AlternatingLeastSquares",
   public = list(
     initialize = function(rank = 10L,
                           lambda = 0,
@@ -177,15 +183,14 @@ ALS_implicit = R6::R6Class(
       als_implicit(x, private$U, private$UUt, res, n_threads = n_threads, ...)
       res
     },
-    predict = function(x, k, ...) {
+    predict = function(x, k, n_threads = private$n_cores, ...) {
       m = nrow(x)
       # transform user features into latent space
       # calculate scores for each item
       x_similarity = self$transform(x) %*% private$I
-      res = lapply(seq_len(m), function(i) {
-        top_n(x_similarity[i, ], k)
-      })
-      do.call(rbind, res)
+      res = top_k_indices_byrow(x_similarity, k, n_threads)
+      data.table::setattr(res, "dimnames", list(rownames(x), NULL))
+      res
     },
     ap_k = function(x, y, k = ncol(x)) {
       stopifnot(ncol(x) == ncol(y))
