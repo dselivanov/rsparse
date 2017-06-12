@@ -49,3 +49,15 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+
+static const R_CallMethodDef CallEntries[] = {
+    {"reco_als_implicit", (DL_FUNC) &reco_als_implicit, 5},
+    {"reco_als_loss", (DL_FUNC) &reco_als_loss, 6},
+    {"reco_top_k_indices_byrow", (DL_FUNC) &reco_top_k_indices_byrow, 3},
+    {NULL, NULL, 0}
+};
+
+RcppExport void R_init_reco(DllInfo *dll) {
+    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
+    R_useDynamicSymbols(dll, FALSE);
+}
