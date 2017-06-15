@@ -1,4 +1,4 @@
-#include <Rcpp.h>
+#include <RcppArmadillo.h>
 #include <queue>
 #include <iostream>
 #include <vector>
@@ -11,7 +11,7 @@ using namespace Rcpp;
 // Find top k elements and their indices on O(n * log (k)) time with heaps
 // https://stackoverflow.com/a/38391603/1069256
 // [[Rcpp::export]]
-IntegerMatrix top_k_indices_byrow(NumericMatrix x, int k, int n_threads) {
+IntegerMatrix top_k_indices_byrow(NumericMatrix x, arma::sp_mat mat, int k, int n_threads) {
   int nc = x.ncol();
   int nr = x.nrow();
   IntegerMatrix res(nr, k);
@@ -25,13 +25,14 @@ IntegerMatrix top_k_indices_byrow(NumericMatrix x, int k, int n_threads) {
     for (int i = 0; i < nc; ++i) {
       int ind = nr * i + j;
       double val = ptr[ind];
-      if(q.size() < k)
-        q.push(std::pair<double, int>(val, i));
-      else if(q.top().first < val){
+      if(q.size() < k){
+        if (mat(j,i) == 0) q.push(std::pair<double, int>(val, i));
+      } else if ((q.top().first < val) && (mat(j,i) == 0)){
         q.pop();
         q.push(std::pair<double, int>(val, i));
       }
     }
+
     for (int i = 0; i < k; ++i) {
       res[nr * (k - i - 1) + j] = q.top().second + 1;
       scores[nr * (k - i - 1) + j] = q.top().first;
