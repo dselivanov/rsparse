@@ -1,10 +1,11 @@
 #' @name ALS
 #'
 #' @title ALS implicit
-#' @description Creates ALS model for matrix factorization.
+#' @description Creates matrix factorization model which could be solved with weighted or vanilla Alternating Least Squares algorithm.
 #' For implicit feedback see (Hu, Koren, Volinsky)'2008 paper \url{http://yifanhu.net/PUB/cf.pdf}.
 #' For explicit feedback model is classic model for rating matrix decomposition with MSE error (without biases at the moment).
-#' @seealso \url{https://math.stackexchange.com/questions/1072451/analytic-solution-for-matrix-factorization-using-alternating-least-squares/1073170#1073170}
+#' @seealso
+#' \url{https://math.stackexchange.com/questions/1072451/analytic-solution-for-matrix-factorization-using-alternating-least-squares/1073170#1073170}
 #' \url{http://activisiongamescience.github.io/2016/01/11/Implicit-Recommender-Systems-Biased-Matrix-Factorization/}
 #' \url{http://datamusing.info/blog/2015/01/07/implicit-feedback-and-collaborative-filtering/}
 #' \url{https://jessesw.com/Rec-System/}
@@ -21,6 +22,7 @@
 #'   model$predict(x, k, n_threads = private$n_threads, ...)
 #'   model$components
 #'   model$add_scorer(x, y, name, metric, ...)
+#'   model$remove_scorer(name)
 #'   model$ap_k(x, y, k = ncol(x))
 #'   model$ndcg_k(x, y, k = ncol(x))
 #' }
@@ -28,45 +30,54 @@
 #' \describe{
 #'   \item{\code{$new(rank = 10L, lambda = 0, feedback = c("implicit", "explicit"),
 #'                    init_stdv = 0.01, n_threads = parallel::detectCores()) }}{
-#'     create ALS model with \code{rank} latent factors}
-#'   \item{\code{$fit(x, n_iter = 5L, n_threads = private$n_threads, ...)}}{
-#'     fit model to an input user-item \bold{confidence!} matrix. (preferably in "dgCMatrix" format)}.
-#'     \code{x} should be a confidence matrix which corresponds to \code{1 + alpha * r_ui} in original paper.
+#'     creates matrix factorization model model with \code{rank} latent factors}
+#'   \item{\code{$fit_transform(x, n_iter = 5L, n_threads = private$n_threads, ...)}}{
+#'     fits model to an input user-item matrix. (preferably in "dgCMatrix" format)}.
+#'     For implicit feedback \code{x} should be a confidence matrix which corresponds to \code{1 + alpha * r_ui} in original paper.
 #'     Usually \code{r_ui} corresponds to the number of interactions of user \code{u} and item \code{i}.
-#'   \item{\code{$fit_transform(x, n_iter = 5L, n_threads = private$n_threads, ...)}}{Explicitly returns factor matrix for
-#'     users of size \code{n_users * rank}. See description for \code{fit} above.}.
+#'     For explicit feedback values in \code{x} represents ratings.
+#'     \bold{Returns factor matrix for users of size \code{n_users * rank}}
+#'   \item{\code{$fit(x, n_iter = 5L, n_threads = private$n_threads, ...)}}{Same as \code{fit_transform}.
+#'   Provided for convenience following of \code{mlapi} conventions}.
 #'   \item{\code{$predict(x, k, n_threads = private$n_threads, ...)}}{predict \code{top k} items for users \code{x}.
-#'     Users should be defined in the same way as in training - as \bold{sparse confidence matrix} }.
+#'     Users features should be defined the same way as they were defined in training data - as \bold{sparse matrix}
+#'     of confidence values (implicit feedback) or ratings (explicit feedback)}.
 #'   \item{\code{$add_scorer(x, y, name, metric, ...)}}{add a metric to watchlist.
 #'   Metric will be evaluated after each ALS interation. At the moment following metrices are supported:
 #'     \bold{"loss", "map@k", "ndcg@k"}, where k is some integer. }.
-#'   \item{\code{$ap_k(x, y, k = ncol(x)}}{ calculates average precision at k for new/out-of-bag users \code{x}}.
-#'   \item{\code{$ndcg_k(x, y, k = ncol(x)}}{ calculates NDCG k for new/out-of-bag users \code{x}}.
+#'   \item{\code{$remove_scorer(name)}}{remove a metric from watchlist.}
+#'   \item{\code{$ap_k(x, y, k = ncol(x)}}{ calculates average precision at k for new/out-of-bag users \code{x} and
+#'   validate against ground truth values in \code{y}}.
+#'   \item{\code{$ndcg_k(x, y, k = ncol(x)}}{ calculates NDCG k for new/out-of-bag users \code{x} and
+#'   validate against ground truth values in \code{y}}.
 #'   \item{\code{$components}}{item factors matrix of size \code{rank * n_items}}.
-#'
 #'}
 #' @section Arguments:
 #' \describe{
 #'  \item{model}{A \code{ALS} model.}
 #'  \item{x}{An input sparse user-item matrix(of class \code{dgCMatrix}).
-#'  For explicit feedback data it should contain ratings.
-#'  For implicit feedback data should be filled with \bold{confidence - 1}}.
-#'  So for simple case case when \code{confidence = 1 + alpha * x} values in matrix should be \code{alpha * x}.
+#'  For explicit feedback should consists of ratings.
+#'  For implicit feedback all positive interactions should be filled with \bold{confidence} values.
+#'  Missed interactions should me zeros/empty}.
+#'  So for simple case case when \code{confidence = 1 + alpha * x}.
 #'  \item{y}{An input user-item \bold{relevance} matrix. Used during evaluation of \code{map@k, ndcg@k}.
-#'    Should have the same shape as corresponding confidence matrix \code{x}. Values are used as "relevance" in ndgc calculation. }
-#'  \item{name}{\code{characetr} - name of the scorer}
-#'  \item{rank}{\code{integer} desired number of latent factors}
-#'  \item{lambda}{\code{numeric} regularization parameter}
-#'  \item{feedback}{\code{character} feedback type - one of \code{c("implicit", "explicit")}}
-#'  \item{n_threads}{\code{numeric} number of threads to use during fit (of OpenMP is available)}
-#'  \item{n_threads}{\code{n_threads} default number of threads to use.
-#'    Check descriptions of methods - some of them can overload this parameter.
-#'  \item{init_stdv}{\code{numeric} std dev for initialization of the factor matrices}
+#'    Should have the same shape as corresponding confidence matrix \code{x}.
+#'    Values are used as "relevance" in ndgc calculation. }
+#'  \item{name}{\code{character} - user-defined name of the scorer. For example "ndcg-scorer-1"}
+#'  \item{rank}{\code{integer} - number of latent factors}
+#'  \item{lambda}{\code{numeric} - regularization parameter}
+#'  \item{feedback}{\code{character} - feedback type - one of \code{c("implicit", "explicit")}}
+#'  \item{n_threads}{\code{numeric} default number of threads to use during training and prediction
+#'  (if OpenMP is available). Check descriptions of other methods - some of them can override this parameter.}
+#'  \item{convergence_tol}{{\code{numeric = -Inf} defines early stopping strategy. We stop fitting
+#'     when one of two following conditions will be satisfied: (a) we have used
+#'     all iterations, or (b) \code{loss_previous_iter / loss_current_iter - 1 < convergence_tol}}}
+#'  \item{init_stdv}{\code{numeric} standart deviation for initialization of the initial latent matrices}
 #'  \item{...}{other arguments. Not used at the moment}
 #' }
 #' @export
 ALS = R6::R6Class(
-  inherit = mlapi::mlDecomposition,
+  inherit = mlapi::mlapiDecomposition,
   classname = "AlternatingLeastSquares",
   public = list(
     initialize = function(rank = 10L,
@@ -85,7 +96,7 @@ ALS = R6::R6Class(
       private$n_threads = n_threads
       private$non_negative = non_negative
     },
-    fit = function(x, n_iter = 5L, n_threads = private$n_threads, ...) {
+    fit = function(x, n_iter = 5L, convergence_tol = -Inf, n_threads = private$n_threads, ...) {
 
       # x = confidense matrix, not ratings/interactions matrix!
       # we expect user already transformed it
@@ -113,6 +124,7 @@ ALS = R6::R6Class(
 
       flog.info("starting factorization with %d threads", n_threads)
       trace_lst = vector("list", n_iter)
+      loss_prev_iter = Inf
       # iterate
       for (i in seq_len(n_iter)) {
 
@@ -160,6 +172,11 @@ ALS = R6::R6Class(
         trace_iter = data.table::rbindlist(trace_iter)
         trace_lst[[i]] = data.table::rbindlist(list(trace_iter, list(iter = i, scorer = "loss", value = loss)))
         flog.info("iter %d loss = %.4f %s", i, loss, trace_scors_string)
+        if(loss_prev_iter / loss - 1 < convergence_tol) {
+          flog.info("Converged after %d iterations", i)
+          break
+        }
+        loss_prev_iter = loss
         #------------------------------------------------------------------------
       }
 
@@ -169,22 +186,33 @@ ALS = R6::R6Class(
       setattr(res, "trace", rbindlist(trace_lst))
       invisible(res)
     },
-    fit_transform = function(x, n_iter = 5L, n_threads = private$n_threads, ...) {
-      res = self$fit(x, n_iter, n_threads, ...)
+    fit_transform = function(x, n_iter = 5L, convergence_tol = -1, n_threads = private$n_threads, ...) {
+      res = self$fit(x, n_iter, convergence_tol, n_threads, ...)
       res
     },
     # project new users into latent user space - just make ALS step given fixes items matrix
     transform = function(x, n_threads = private$n_threads, ...) {
       stopifnot(ncol(x) == ncol(private$I))
       # allocate result matrix - will be modified in place
-      res = matrix(0, nrow = private$rank, ncol = nrow(x))
-      als_implicit(t(x), private$I, private$IIt, res, n_threads = n_threads, ...)
+
+      if(private$feedback == "implicit") {
+        res = matrix(0, nrow = private$rank, ncol = nrow(x))
+        als_implicit(t(x), private$I, private$IIt, res, n_threads = n_threads, ...)
+      } else if(private$feedback == "explicit")
+        res = private$solver_explicit_feedback(t(x), private$I, private$IIt)
+      else
+        stop(sprintf("don't know how to work with feedback = '%s'", private$feedback))
       t(res)
     },
     # project new items into latent item space
     get_items_embeddings = function(x, n_threads = private$n_threads, ...) {
-      res = matrix(0, nrow = private$rank, ncol = nrow(x))
-      als_implicit(x, private$U, private$UUt, res, n_threads = n_threads, ...)
+      if(private$feedback == "implicit") {
+        res = matrix(0, nrow = private$rank, ncol = nrow(x))
+        als_implicit(x, private$U, private$UUt, res, n_threads = n_threads, ...)
+      } else if(private$feedback == "explicit") {
+        res = private$solver_explicit_feedback(x, private$U, private$UUt)
+      } else
+        stop(sprintf("don't know how to work with feedback = '%s'", private$feedback))
       res
     },
     predict = function(x, k, n_threads = private$n_threads, ...) {
@@ -287,10 +315,8 @@ ALS = R6::R6Class(
     feedback = NULL,
     feedback_encoding = NULL,
     #------------------------------------------------------------
-    solver_explicit_feedback = function(c_ui, X, XtX) {
-      # XtX = tcrossprod(X)
-      # if(private$lambda > 0) XtX = XtX + diag(x = private$lambda)
-      solve(XtX,  tcrossprod(X, c_ui));
+    solver_explicit_feedback = function(R, X, XtX) {
+      solve(XtX,  tcrossprod(X, R));
     },
     # X = factor matrix n_factors * (n_users or n_items)
     # C_UI = user-item confidence matrix
