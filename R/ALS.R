@@ -181,6 +181,7 @@ ALS = R6::R6Class(
       }
 
       private$components_ = private$I
+      data.table::setattr(private$components_, "dimnames", list(NULL, colnames(x)))
 
       res = t(private$U)
       setattr(res, "trace", rbindlist(trace_lst))
