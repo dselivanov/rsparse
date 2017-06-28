@@ -2,7 +2,17 @@
 
 R package wich aims to implement several algrithms for recommender systems. 
 
-Where possible parallelization is also applied (but keep in mind what we don't care too much about parallelization on Windows platform. However contributions are welcome).
+Where possible parallelization is also applied (via OpenMP and multithreaded BLAS).
+
+# Tutorials
+
+1. [Introduction to matrix factorization with Weighted-ALS algorithm](http://dsnotes.com/post/2017-05-28-matrix-factorization-for-recommender-systems/) - collaborative filtering for implicit feedback datasets.
+1. [Music recommendations using LastFM-360K dataset](http://dsnotes.com/post/2017-06-28-matrix-factorization-for-recommender-systems-part-2/)
+    * evaluation metrics for ranking
+    * setting up proper cross-validation
+    * possible issues with nested parallelism and thread contention
+    * making recommendations for new users
+    * complimentary item-to-item recommendations
 
 # Algorithms
 
