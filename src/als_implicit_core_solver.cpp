@@ -54,7 +54,7 @@ double als_loss(const arma::sp_mat& mat, arma::mat& X, arma::mat& Y, double lamb
         loss += accu((square( 1 - (Y.col(i).t() * user_i) ) * true_val));
       } else if(feedback == 2) {
         // explicit feedback: true_val = rating
-        loss += accu(square( true_val - (Y.col(i).t() * user_i) ));
+        loss += accu(square( true_val.t() - (Y.col(i).t() * user_i) ));
       }
     }
   }

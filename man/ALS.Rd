@@ -17,7 +17,8 @@ For explicit feedback model is classic model for rating matrix decomposition wit
 
 For usage details see \bold{Methods, Arguments and Examples} sections.
 \preformatted{
-  model = ALS$new(rank = 10L, lambda = 0, init_stdv = 0.01, n_threads = parallel::detectCores())
+  model = ALS$new(rank = 10L, lambda = 0, feedback = c("implicit", "explicit"),
+                  init_stdv = 0.01, n_threads = parallel::detectCores(), non_negative = FALSE)
   model$fit(x, n_iter = 5L, n_threads = 1, ...)
   model$fit_transform(x, n_iter = 5L, n_threads = 1, ...)
   model$predict(x, k, n_threads = private$n_threads, ...)
@@ -33,7 +34,7 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 
 \describe{
   \item{\code{$new(rank = 10L, lambda = 0, feedback = c("implicit", "explicit"),
-                   init_stdv = 0.01, n_threads = parallel::detectCores()) }}{
+                   init_stdv = 0.01, n_threads = parallel::detectCores(), non_negative = FALSE) }}{
     creates matrix factorization model model with \code{rank} latent factors}
   \item{\code{$fit_transform(x, n_iter = 5L, n_threads = private$n_threads, ...)}}{
     fits model to an input user-item matrix. (preferably in "dgCMatrix" format)}.

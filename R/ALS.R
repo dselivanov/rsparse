@@ -16,7 +16,8 @@
 #' @section Usage:
 #' For usage details see \bold{Methods, Arguments and Examples} sections.
 #' \preformatted{
-#'   model = ALS$new(rank = 10L, lambda = 0, init_stdv = 0.01, n_threads = parallel::detectCores())
+#'   model = ALS$new(rank = 10L, lambda = 0, feedback = c("implicit", "explicit"),
+#'                   init_stdv = 0.01, n_threads = parallel::detectCores(), non_negative = FALSE)
 #'   model$fit(x, n_iter = 5L, n_threads = 1, ...)
 #'   model$fit_transform(x, n_iter = 5L, n_threads = 1, ...)
 #'   model$predict(x, k, n_threads = private$n_threads, ...)
@@ -29,7 +30,7 @@
 #' @section Methods:
 #' \describe{
 #'   \item{\code{$new(rank = 10L, lambda = 0, feedback = c("implicit", "explicit"),
-#'                    init_stdv = 0.01, n_threads = parallel::detectCores()) }}{
+#'                    init_stdv = 0.01, n_threads = parallel::detectCores(), non_negative = FALSE) }}{
 #'     creates matrix factorization model model with \code{rank} latent factors}
 #'   \item{\code{$fit_transform(x, n_iter = 5L, n_threads = private$n_threads, ...)}}{
 #'     fits model to an input user-item matrix. (preferably in "dgCMatrix" format)}.
@@ -91,7 +92,10 @@ ALS = R6::R6Class(
       private$init_stdv = init_stdv
       private$rank = rank
       private$feedback = match.arg(feedback)
-      private$feedback_encoding = if(private$feedback == "implicit") 1 else if(private$feedback == "explicit") 2
+      private$feedback_encoding =
+        if(private$feedback == "implicit") 1L
+        else 2L #"explicit"
+
       private$scorers = new.env(hash = TRUE, parent = emptyenv())
       private$n_threads = n_threads
       private$non_negative = non_negative
@@ -317,7 +321,7 @@ ALS = R6::R6Class(
     feedback_encoding = NULL,
     #------------------------------------------------------------
     solver_explicit_feedback = function(R, X, XtX) {
-      solve(XtX,  tcrossprod(X, R));
+      solve(XtX, as(X %*% R, "matrix"));
     },
     # X = factor matrix n_factors * (n_users or n_items)
     # C_UI = user-item confidence matrix
