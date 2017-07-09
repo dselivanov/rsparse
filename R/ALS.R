@@ -200,6 +200,8 @@ ALS = R6::R6Class(
       stopifnot(ncol(x) == ncol(private$I))
       # allocate result matrix - will be modified in place
 
+      x = private$check_convert_input(x, private$internal_matrix_formats)
+
       if(private$feedback == "implicit") {
         res = matrix(0, nrow = private$rank, ncol = nrow(x))
         als_implicit(t(x), private$I, private$IIt, res, n_threads = n_threads, ...)
@@ -207,6 +209,8 @@ ALS = R6::R6Class(
         res = private$solver_explicit_feedback(t(x), private$I, private$IIt)
       else
         stop(sprintf("don't know how to work with feedback = '%s'", private$feedback))
+      if(private$non_negative)
+        res[res < 0] = 0
       t(res)
     },
     # project new items into latent item space
@@ -218,6 +222,10 @@ ALS = R6::R6Class(
         res = private$solver_explicit_feedback(x, private$U, private$UUt)
       } else
         stop(sprintf("don't know how to work with feedback = '%s'", private$feedback))
+
+      if(private$non_negative)
+        res[res < 0] = 0
+
       res
     },
     predict = function(x, k, n_threads = private$n_threads, ...) {
@@ -321,7 +329,7 @@ ALS = R6::R6Class(
     feedback_encoding = NULL,
     #------------------------------------------------------------
     solver_explicit_feedback = function(R, X, XtX) {
-      solve(XtX, as(X %*% R, "matrix"));
+      solve(XtX, as(X %*% R, "matrix"))
     },
     # X = factor matrix n_factors * (n_users or n_items)
     # C_UI = user-item confidence matrix
