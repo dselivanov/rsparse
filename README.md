@@ -1,8 +1,10 @@
 # What is this?
 
-R package wich aims to implement several algrithms for recommender systems. 
+R package which implement several algrithms for matrix factorization targeting recommender systems. 
 
-Where possible parallelization is also applied (via OpenMP and multithreaded BLAS).
+Package is quite efficient - extensively use BLAS and parallelized with OpenMP, see benchmarks below.
+
+![benchmark](https://github.com/dselivanov/bench-wals/raw/master/img/wals-bench.png)
 
 # Tutorials
 
@@ -13,6 +15,7 @@ Where possible parallelization is also applied (via OpenMP and multithreaded BLA
     * possible issues with nested parallelism and thread contention
     * making recommendations for new users
     * complimentary item-to-item recommendations
+1. [Benchmark](http://dsnotes.com/post/2017-07-10-bench-wrmf/) against other good implementations
 
 # Algorithms
 
