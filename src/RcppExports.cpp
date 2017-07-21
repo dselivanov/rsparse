@@ -7,24 +7,25 @@
 using namespace Rcpp;
 
 // als_implicit
-void als_implicit(const arma::sp_mat& Conf, arma::mat& X, arma::mat& XtX, arma::mat& Y, int n_threads, int solver, int cg_steps);
-RcppExport SEXP reco_als_implicit(SEXP ConfSEXP, SEXP XSEXP, SEXP XtXSEXP, SEXP YSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP) {
+double als_implicit(const arma::sp_mat& Conf, arma::mat& X, arma::mat& Y, double lambda, int n_threads, int solver, int cg_steps);
+RcppExport SEXP reco_als_implicit(SEXP ConfSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP) {
 BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::sp_mat& >::type Conf(ConfSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< arma::mat& >::type XtX(XtXSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
     Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
     Rcpp::traits::input_parameter< int >::type solver(solverSEXP);
     Rcpp::traits::input_parameter< int >::type cg_steps(cg_stepsSEXP);
-    als_implicit(Conf, X, XtX, Y, n_threads, solver, cg_steps);
-    return R_NilValue;
+    rcpp_result_gen = Rcpp::wrap(als_implicit(Conf, X, Y, lambda, n_threads, solver, cg_steps));
+    return rcpp_result_gen;
 END_RCPP
 }
-// als_loss
-double als_loss(const arma::sp_mat& mat, arma::mat& X, arma::mat& Y, double lambda, int feedback, int n_threads);
-RcppExport SEXP reco_als_loss(SEXP matSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP feedbackSEXP, SEXP n_threadsSEXP) {
+// als_loss_explicit
+double als_loss_explicit(const arma::sp_mat& mat, arma::mat& X, arma::mat& Y, double lambda, int n_threads);
+RcppExport SEXP reco_als_loss_explicit(SEXP matSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -32,9 +33,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type Y(YSEXP);
     Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< int >::type feedback(feedbackSEXP);
     Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(als_loss(mat, X, Y, lambda, feedback, n_threads));
+    rcpp_result_gen = Rcpp::wrap(als_loss_explicit(mat, X, Y, lambda, n_threads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -54,7 +54,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"reco_als_implicit", (DL_FUNC) &reco_als_implicit, 7},
-    {"reco_als_loss", (DL_FUNC) &reco_als_loss, 6},
+    {"reco_als_loss_explicit", (DL_FUNC) &reco_als_loss_explicit, 5},
     {"reco_top_k_indices_byrow", (DL_FUNC) &reco_top_k_indices_byrow, 3},
     {NULL, NULL, 0}
 };

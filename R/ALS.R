@@ -106,9 +106,6 @@ ALS = R6::R6Class(
       private$lambda = lambda
       private$init_stdv = init_stdv
       private$rank = rank
-      private$feedback_encoding =
-        if(private$feedback == "implicit") 1L
-        else 2L #"explicit"
 
       private$scorers = new.env(hash = TRUE, parent = emptyenv())
       private$n_threads = n_threads
@@ -147,31 +144,33 @@ ALS = R6::R6Class(
       # iterate
       for (i in seq_len(n_iter)) {
 
-        private$IIt = tcrossprod(private$I) + Lambda
         flog.debug("iter %d by item", i)
         stopifnot(ncol(private$U) == ncol(c_iu))
         if (private$feedback == "implicit") {
           # private$U will be modified in place
-          als_implicit(c_iu, private$I, private$IIt, private$U, n_threads = n_threads,
-                       private$solver_code, private$cg_steps)
-          # private$U = private$solver(private$I, private$IIt, c_iu, n_threads = n_threads, ...)
+          loss = als_implicit(c_iu, private$I, private$U, n_threads = n_threads,
+                       # pass -1 mean that we ask to not calculate loss
+                       # 0 loss will be returned instead
+                       lambda = -1,
+                       solver = private$solver_code, cg_steps = private$cg_steps)
+          # private$U = private$solver(private$I, c_iu, n_threads = n_threads, ...)
         } else if (private$feedback == "explicit") {
-          private$U = private$solver_explicit_feedback(c_iu, private$I, private$IIt)
+          private$U = private$solver_explicit_feedback(c_iu, private$I)
         }
         # if need non-negative matrix factorization - just set all negative values to zero
         if(private$non_negative)
           private$U[private$U < 0] = 0
 
-        private$UUt = tcrossprod(private$U) + Lambda
         flog.debug("iter %d by user", i)
         stopifnot(ncol(private$I) == ncol(c_ui))
         if (private$feedback == "implicit") {
           # private$I will be modified in place
-          als_implicit(c_ui, private$U, private$UUt, private$I, n_threads = n_threads,
-                       private$solver_code, private$cg_steps)
-          # private$I = private$solver(private$U, private$UUt, c_ui, n_threads = n_threads, ...)
+          loss = als_implicit(c_ui, private$U, private$I, n_threads = n_threads,
+                              lambda = private$lambda,
+                              private$solver_code, private$cg_steps)
+          # private$I = private$solver(private$U, c_ui, n_threads = n_threads, ...)
         } else if (private$feedback == "explicit") {
-          private$I = private$solver_explicit_feedback(c_ui, private$U, private$UUt)
+          private$I = private$solver_explicit_feedback(c_ui, private$U)
         }
         # if need non-negative matrix factorization - just set all negative values to zero
         if(private$non_negative)
@@ -180,7 +179,9 @@ ALS = R6::R6Class(
         #------------------------------------------------------------------------
         # calculate some metrics if needed in order to diagnose convergence
         #------------------------------------------------------------------------
-        loss = als_loss(c_ui, private$U, private$I, private$lambda, private$feedback_encoding, n_threads);
+        if (private$feedback == "explicit")
+          loss = als_loss_explicit(c_ui, private$U, private$I, private$lambda, n_threads);
+
         trace_iter = vector("list", length(names(private$scorers)))
         j = 1L
         trace_scors_string = ""
@@ -221,10 +222,10 @@ ALS = R6::R6Class(
 
       if(private$feedback == "implicit") {
         res = matrix(0, nrow = private$rank, ncol = nrow(x))
-        als_implicit(t(x), private$I, private$IIt, res, n_threads = n_threads,
+        als_implicit(t(x), private$I, res, n_threads = n_threads,
                      private$solver_code, private$cg_steps)
       } else if(private$feedback == "explicit")
-        res = private$solver_explicit_feedback(t(x), private$I, private$IIt)
+        res = private$solver_explicit_feedback(t(x), private$I)
       else
         stop(sprintf("don't know how to work with feedback = '%s'", private$feedback))
       if(private$non_negative)
@@ -235,10 +236,10 @@ ALS = R6::R6Class(
     get_items_embeddings = function(x, n_threads = private$n_threads, ...) {
       if(private$feedback == "implicit") {
         res = matrix(0, nrow = private$rank, ncol = nrow(x))
-        als_implicit(x, private$U, private$UUt, res, n_threads = n_threads,
+        als_implicit(x, private$U, res, n_threads = n_threads,
                      private$solver_code, private$cg_steps)
       } else if(private$feedback == "explicit") {
-        res = private$solver_explicit_feedback(x, private$U, private$UUt)
+        res = private$solver_explicit_feedback(x, private$U)
       } else
         stop(sprintf("don't know how to work with feedback = '%s'", private$feedback))
 
@@ -340,25 +341,21 @@ ALS = R6::R6Class(
     non_negative = NULL,
     # user factor matrix = rank * n_users
     U = NULL,
-    # users tcrossprod
-    UUt = NULL,
     # item factor matrix = rank * n_items
     I = NULL,
-    # items tcrossprod
-    IIt = NULL,
     feedback = NULL,
-    feedback_encoding = NULL,
     #------------------------------------------------------------
-    solver_explicit_feedback = function(R, X, XtX) {
+    solver_explicit_feedback = function(R, X) {
+      XtX = tcrossprod(X) + diag(x = private$lambda, nrow = private$rank, ncol = private$rank)
       solve(XtX, as(X %*% R, "matrix"))
     },
     # X = factor matrix n_factors * (n_users or n_items)
     # C_UI = user-item confidence matrix
 
     # R solver for reference. Now replaced with fast Armadillo solver
-    solver = function(X, XtX_reg, C_UI, n_threads = private$n_threads, ...) {
+    solver = function(X, C_UI, n_threads = private$n_threads, ...) {
 
-      # XtX = tcrossprod(X)
+      XtX_reg = tcrossprod(X) + diag(x = private$lambda, nrow = private$rank, ncol = private$rank)
       m_rank = nrow(X)
 
       # BLAS multithreading should be switched off
