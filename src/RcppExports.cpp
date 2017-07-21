@@ -7,16 +7,18 @@
 using namespace Rcpp;
 
 // als_implicit
-void als_implicit(const arma::sp_mat& mat, arma::mat& X, arma::mat& XtX, arma::mat& Y, int n_threads);
-RcppExport SEXP reco_als_implicit(SEXP matSEXP, SEXP XSEXP, SEXP XtXSEXP, SEXP YSEXP, SEXP n_threadsSEXP) {
+void als_implicit(const arma::sp_mat& Conf, arma::mat& X, arma::mat& XtX, arma::mat& Y, int n_threads, int solver, int cg_steps);
+RcppExport SEXP reco_als_implicit(SEXP ConfSEXP, SEXP XSEXP, SEXP XtXSEXP, SEXP YSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type mat(matSEXP);
+    Rcpp::traits::input_parameter< const arma::sp_mat& >::type Conf(ConfSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type XtX(XtXSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type Y(YSEXP);
     Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
-    als_implicit(mat, X, XtX, Y, n_threads);
+    Rcpp::traits::input_parameter< int >::type solver(solverSEXP);
+    Rcpp::traits::input_parameter< int >::type cg_steps(cg_stepsSEXP);
+    als_implicit(Conf, X, XtX, Y, n_threads, solver, cg_steps);
     return R_NilValue;
 END_RCPP
 }
@@ -51,7 +53,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"reco_als_implicit", (DL_FUNC) &reco_als_implicit, 5},
+    {"reco_als_implicit", (DL_FUNC) &reco_als_implicit, 7},
     {"reco_als_loss", (DL_FUNC) &reco_als_loss, 6},
     {"reco_top_k_indices_byrow", (DL_FUNC) &reco_top_k_indices_byrow, 3},
     {NULL, NULL, 0}

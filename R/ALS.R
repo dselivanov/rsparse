@@ -86,12 +86,26 @@ ALS = R6::R6Class(
                           feedback = c("implicit", "explicit"),
                           n_threads = parallel::detectCores(),
                           init_stdv = 0.01,
-                          non_negative = FALSE) {
+                          non_negative = FALSE,
+                          solver = c("conjugate_gradient", "cholesky"),
+                          cg_steps = 3L) {
+
+      solver = match.arg(solver)
+      private$feedback = match.arg(feedback)
+      if(solver == "conjugate_gradient" && private$feedback == "explicit")
+        flog.warn("only 'cholesky' is available for 'explicit' feedback")
+
+      if(solver == "cholesky") private$solver_code = 0L
+      if(solver == "conjugate_gradient") private$solver_code = 1L
+
+      if(solver == "cholesky") flog.info("'cg_steps' ignored for 'cholesky' solver")
+      stopifnot(is.integer(cg_steps) && length(cg_steps) == 1)
+      private$cg_steps = cg_steps
+
       private$set_internal_matrix_formats(sparse = "dgCMatrix", dense = NULL)
       private$lambda = lambda
       private$init_stdv = init_stdv
       private$rank = rank
-      private$feedback = match.arg(feedback)
       private$feedback_encoding =
         if(private$feedback == "implicit") 1L
         else 2L #"explicit"
@@ -120,7 +134,8 @@ ALS = R6::R6Class(
       n_user = nrow(c_ui)
       n_item = ncol(c_ui)
 
-      private$U = matrix(rnorm(n_user * private$rank, 0, private$init_stdv), ncol = n_user, nrow = private$rank)
+      # private$U = matrix(rnorm(n_user * private$rank, 0, private$init_stdv), ncol = n_user, nrow = private$rank)
+      private$U = matrix(0.0, ncol = n_user, nrow = private$rank)
       private$I = matrix(rnorm(n_item * private$rank, 0, private$init_stdv), ncol = n_item, nrow = private$rank)
       Lambda = diag(x = private$lambda, nrow = private$rank, ncol = private$rank)
 
@@ -137,7 +152,8 @@ ALS = R6::R6Class(
         stopifnot(ncol(private$U) == ncol(c_iu))
         if (private$feedback == "implicit") {
           # private$U will be modified in place
-          als_implicit(c_iu, private$I, private$IIt, private$U, n_threads = n_threads, ...)
+          als_implicit(c_iu, private$I, private$IIt, private$U, n_threads = n_threads,
+                       private$solver_code, private$cg_steps)
           # private$U = private$solver(private$I, private$IIt, c_iu, n_threads = n_threads, ...)
         } else if (private$feedback == "explicit") {
           private$U = private$solver_explicit_feedback(c_iu, private$I, private$IIt)
@@ -151,7 +167,8 @@ ALS = R6::R6Class(
         stopifnot(ncol(private$I) == ncol(c_ui))
         if (private$feedback == "implicit") {
           # private$I will be modified in place
-          als_implicit(c_ui, private$U, private$UUt, private$I, n_threads = n_threads, ...)
+          als_implicit(c_ui, private$U, private$UUt, private$I, n_threads = n_threads,
+                       private$solver_code, private$cg_steps)
           # private$I = private$solver(private$U, private$UUt, c_ui, n_threads = n_threads, ...)
         } else if (private$feedback == "explicit") {
           private$I = private$solver_explicit_feedback(c_ui, private$U, private$UUt)
@@ -204,7 +221,8 @@ ALS = R6::R6Class(
 
       if(private$feedback == "implicit") {
         res = matrix(0, nrow = private$rank, ncol = nrow(x))
-        als_implicit(t(x), private$I, private$IIt, res, n_threads = n_threads, ...)
+        als_implicit(t(x), private$I, private$IIt, res, n_threads = n_threads,
+                     private$solver_code, private$cg_steps)
       } else if(private$feedback == "explicit")
         res = private$solver_explicit_feedback(t(x), private$I, private$IIt)
       else
@@ -217,7 +235,8 @@ ALS = R6::R6Class(
     get_items_embeddings = function(x, n_threads = private$n_threads, ...) {
       if(private$feedback == "implicit") {
         res = matrix(0, nrow = private$rank, ncol = nrow(x))
-        als_implicit(x, private$U, private$UUt, res, n_threads = n_threads, ...)
+        als_implicit(x, private$U, private$UUt, res, n_threads = n_threads,
+                     private$solver_code, private$cg_steps)
       } else if(private$feedback == "explicit") {
         res = private$solver_explicit_feedback(x, private$U, private$UUt)
       } else
@@ -311,6 +330,8 @@ ALS = R6::R6Class(
     }
   ),
   private = list(
+    solver_code = NULL,
+    cg_steps = NULL,
     scorers = NULL,
     lambda = NULL,
     init_stdv = NULL,
