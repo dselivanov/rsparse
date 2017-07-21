@@ -17,8 +17,13 @@ For explicit feedback model is classic model for rating matrix decomposition wit
 
 For usage details see \bold{Methods, Arguments and Examples} sections.
 \preformatted{
-  model = ALS$new(rank = 10L, lambda = 0, feedback = c("implicit", "explicit"),
-                  init_stdv = 0.01, n_threads = parallel::detectCores(), non_negative = FALSE)
+  model = ALS$new(rank = 10L, lambda = 0,
+                  feedback = c("implicit", "explicit"),
+                  init_stdv = 0.01,
+                  n_threads = parallel::detectCores(),
+                  non_negative = FALSE,
+                  solver = c("conjugate_gradient", "cholesky"),
+                  cg_steps = 3L)
   model$fit(x, n_iter = 5L, n_threads = 1, ...)
   model$fit_transform(x, n_iter = 5L, n_threads = 1, ...)
   model$predict(x, k, n_threads = private$n_threads, ...)
@@ -34,28 +39,29 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 
 \describe{
   \item{\code{$new(rank = 10L, lambda = 0, feedback = c("implicit", "explicit"),
-                   init_stdv = 0.01, n_threads = parallel::detectCores(), non_negative = FALSE) }}{
-    creates matrix factorization model model with \code{rank} latent factors}
-  \item{\code{$fit_transform(x, n_iter = 5L, n_threads = private$n_threads, ...)}}{
-    fits model to an input user-item matrix. (preferably in "dgCMatrix" format)}.
+                   init_stdv = 0.01, n_threads = parallel::detectCores(), non_negative = FALSE,
+                   solver = c("conjugate_gradient", "cholesky"), cg_steps = 3L) }}{ creates matrix
+    factorization model model with \code{rank} latent factors}
+  \item{\code{$fit_transform(x, n_iter = 5L, n_threads = private$n_threads, ...)}}{ fits model to
+    an input user-item matrix. (preferably in "dgCMatrix" format).
     For implicit feedback \code{x} should be a confidence matrix which corresponds to \code{1 + alpha * r_ui} in original paper.
     Usually \code{r_ui} corresponds to the number of interactions of user \code{u} and item \code{i}.
     For explicit feedback values in \code{x} represents ratings.
-    \bold{Returns factor matrix for users of size \code{n_users * rank}}
+    \bold{Returns factor matrix for users of size \code{n_users * rank}}}
   \item{\code{$fit(x, n_iter = 5L, n_threads = private$n_threads, ...)}}{Same as \code{fit_transform}.
-  Provided for convenience following of \code{mlapi} conventions}.
+  Provided for convenience following of \code{mlapi} conventions.}
   \item{\code{$predict(x, k, n_threads = private$n_threads, ...)}}{predict \code{top k} items for users \code{x}.
     Users features should be defined the same way as they were defined in training data - as \bold{sparse matrix}
-    of confidence values (implicit feedback) or ratings (explicit feedback)}.
+    of confidence values (implicit feedback) or ratings (explicit feedback).}
   \item{\code{$add_scorer(x, y, name, metric, ...)}}{add a metric to watchlist.
   Metric will be evaluated after each ALS interation. At the moment following metrices are supported:
-    \bold{"loss", "map@k", "ndcg@k"}, where k is some integer. }.
-  \item{\code{$remove_scorer(name)}}{remove a metric from watchlist.}
+    \bold{"loss"}, \bold{"map@k"}, \bold{"ndcg@k"}, where \bold{k} is some integer. For example \code{map@10}.}
+  \item{\code{$remove_scorer(name)}}{remove a metric from watchlist}
   \item{\code{$ap_k(x, y, k = ncol(x)}}{ calculates average precision at k for new/out-of-bag users \code{x} and
-  validate against ground truth values in \code{y}}.
+  validate against ground truth values in \code{y}}
   \item{\code{$ndcg_k(x, y, k = ncol(x)}}{ calculates NDCG k for new/out-of-bag users \code{x} and
-  validate against ground truth values in \code{y}}.
-  \item{\code{$components}}{item factors matrix of size \code{rank * n_items}}.
+  validate against ground truth values in \code{y}}
+  \item{\code{$components}}{item factors matrix of size \code{rank * n_items}}
 }
 }
 
@@ -66,15 +72,22 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
  \item{x}{An input sparse user-item matrix(of class \code{dgCMatrix}).
  For explicit feedback should consists of ratings.
  For implicit feedback all positive interactions should be filled with \bold{confidence} values.
- Missed interactions should me zeros/empty}.
- So for simple case case when \code{confidence = 1 + alpha * x}.
- \item{y}{An input user-item \bold{relevance} matrix. Used during evaluation of \code{map@k, ndcg@k}.
+ Missed interactions should me zeros/empty.
+ So for simple case case when \code{confidence = 1 + alpha * x}}
+ \item{y}{An input user-item \bold{relevance} matrix. Used during evaluation of \code{map@k}, \code{ndcg@k}
    Should have the same shape as corresponding confidence matrix \code{x}.
-   Values are used as "relevance" in ndgc calculation. }
+   Values are used as "relevance" in ndgc calculation}
  \item{name}{\code{character} - user-defined name of the scorer. For example "ndcg-scorer-1"}
  \item{rank}{\code{integer} - number of latent factors}
  \item{lambda}{\code{numeric} - regularization parameter}
  \item{feedback}{\code{character} - feedback type - one of \code{c("implicit", "explicit")}}
+ \item{solver}{\code{character} - solver for "implicit feedback" problem.
+    One of \code{c("conjugate_gradient", "cholesky")}.
+    Usually approximate \code{"conjugate_gradient"} is significantly faster and solution is
+    on par with exact \code{"cholesky"}}
+ \item{cg_steps}{\code{integer > 0} - max number of internal steps in conjugate gradient
+    (if "conjugate_gradient" solver used). \code{cg_steps = 3} by default.
+    Controls precision of linear equation solution at the each ALS step. Usually no need to tune this parameter.}
  \item{n_threads}{\code{numeric} default number of threads to use during training and prediction
  (if OpenMP is available). Check descriptions of other methods - some of them can override this parameter.}
  \item{convergence_tol}{{\code{numeric = -Inf} defines early stopping strategy. We stop fitting
@@ -86,12 +99,14 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 }
 
 \seealso{
-\url{https://math.stackexchange.com/questions/1072451/analytic-solution-for-matrix-factorization-using-alternating-least-squares/1073170#1073170}
-\url{http://activisiongamescience.github.io/2016/01/11/Implicit-Recommender-Systems-Biased-Matrix-Factorization/}
-\url{http://datamusing.info/blog/2015/01/07/implicit-feedback-and-collaborative-filtering/}
-\url{https://jessesw.com/Rec-System/}
-\url{http://danielnee.com/2016/09/collaborative-filtering-using-alternating-least-squares/}
-\url{http://www.benfrederickson.com/matrix-factorization/}
-\url{http://www.benfrederickson.com/fast-implicit-matrix-factorization/}
+\itemize{
+  \item{\url{https://math.stackexchange.com/questions/1072451/analytic-solution-for-matrix-factorization-using-alternating-least-squares/1073170#1073170}}
+  \item{\url{http://activisiongamescience.github.io/2016/01/11/Implicit-Recommender-Systems-Biased-Matrix-Factorization/}}
+  \item{\url{http://datamusing.info/blog/2015/01/07/implicit-feedback-and-collaborative-filtering/}}
+  \item{\url{https://jessesw.com/Rec-System/}}
+  \item{\url{http://danielnee.com/2016/09/collaborative-filtering-using-alternating-least-squares/}}
+  \item{\url{http://www.benfrederickson.com/matrix-factorization/}}
+  \item{\url{http://www.benfrederickson.com/fast-implicit-matrix-factorization/}}
+}
 }
 \keyword{datasets}
