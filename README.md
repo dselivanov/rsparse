@@ -1,10 +1,14 @@
-# What is this?
+# reco
 
-R package which implement several algrithms for matrix factorization targeting recommender systems. 
+`reco` is an R package which implements several algrithms for matrix factorization targeting recommender systems. 
 
-Package is quite efficient - extensively use BLAS and parallelized with OpenMP, see benchmarks below.
+Noticeably it provides one of the most efficient (benchmarks below) solvers for Weighted Regularized Matrix Factorization (WRMF). See [Collaborative Filtering for Implicit Feedback Datasets](http://yifanhu.net/PUB/cf.pdf) paper by Yifan Hu, Yehuda Koren, Chris Volinsky.
 
-![benchmark](https://github.com/dselivanov/bench-wals/raw/master/img/wals-bench.png)
+* extensively use **BLAS** and parallelized with **OpenMP**
+* implements **Conjugate Gradient solver** as dicribed in [Applications of the Conjugate Gradient Method for Implicit
+Feedback Collaborative Filtering](https://pdfs.semanticscholar.org/bfdf/7af6cf7fd7bb5e6b6db5bbd91be11597eaf0.pdf) and [Faster Implicit Matrix Factorization](www.benfrederickson.com/fast-implicit-matrix-factorization/)
+
+![benchmark](https://github.com/dselivanov/bench-wals/raw/master/img/wals-bench-cg.png)
 
 # Tutorials
 
@@ -21,25 +25,25 @@ Package is quite efficient - extensively use BLAS and parallelized with OpenMP, 
 
 At the moment following algorithms are implemented:
 
-### Alternating Least Squares for implicit feedback
+* Alternating Weighted Least Squares for matrix factorization for implicit feedback ([Collaborative Filtering for Implicit Feedback Datasets](http://yifanhu.net/PUB/cf.pdf) paper by Yifan Hu, Yehuda Koren, Chris Volinsky)
+* Classic Alternating Least Squares for rating data (explicit feedback)
 
-Current implementation used RcppArmadillo and  **extensively uses BLAS and LAPACK**, so on my 4-core PC with OpenBLAS it is **~1.7x faster** than highly optimized Quora's [qmf](https://github.com/quora/qmf) library.
+# API
 
-See [Collaborative Filtering for Implicit Feedback Datasets](http://yifanhu.net/PUB/cf.pdf) paper by (Yifan Hu, Yehuda Koren, Chris Volinsky) for details.  
+We follow [mlapi](https://github.com/dselivanov/mlapi) conventions.
 
-**VERY IMPORTANT** if you use multithreaded BLAS (you generally should) such as OpenBLAS, Intel MKL, Apple Accelerate, I **highly recommend disable its internal multithreading ability**. This leads to **substantial speedups** (can be 10x!) for this package (since matrix factorization is already parallelized in package with OpenMP). This can be done by setting corresponding environment variables **before starting `R`**:
+# Notes on multithreading and BLAS
+
+**VERY IMPORTANT** if you use multithreaded BLAS (you generally should) such as OpenBLAS, Intel MKL, Apple Accelerate, I **highly recommend disable its internal multithreading ability**. This leads to **substantial speedups** for this package (can be easily 10x and more). Matrix factorization is already parallelized in package with OpenMP. This can be done by setting corresponding environment variables **before starting `R`**:
 
 1. OpenBLAS: `export OPENBLAS_NUM_THREADS=1`.
 1. Intel MKL: `export MKL_NUM_THREADS=1`
 1. Apple Accelerate: `export VECLIB_MAXIMUM_THREADS=1`
 
-It it also possible to change number of threads in runtime, see for example [OpenBlasThreads](https://github.com/rundel/OpenBlasThreads) and [RhpcBLASctl](https://cran.r-project.org/web/packages/RhpcBLASctl/index.html) packages.
+It it also possible to change number of threads in runtime, see for example following packages:
 
-### Alternating Least Squares for explicit feedback
-
-# API
-
-We follow [mlapi](https://github.com/dselivanov/mlapi) conventions.
+* [OpenBlasThreads](https://github.com/rundel/OpenBlasThreads)
+* [RhpcBLASctl](https://cran.r-project.org/web/packages/RhpcBLASctl/index.html)
 
 # Quice reference
 
