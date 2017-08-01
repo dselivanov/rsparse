@@ -13,36 +13,33 @@ using namespace Rcpp;
 using namespace RcppArmadillo;
 using namespace arma;
 
-arma::vec chol_solver(const arma::sp_mat& Conf,
-                      const arma::mat& X,
-                      const arma::mat& XtX,
-                      const arma::mat& Y,
+arma::vec chol_solver(const arma::sp_mat &Conf,
+                      const arma::mat &XtX,
+                      const arma::mat &Y,
                       const arma::mat &X_nnz,
-                      arma::vec confidence) {
+                      const arma::vec &confidence) {
   arma::mat inv = XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
   arma::mat rhs = X_nnz * confidence;
   return solve(inv, rhs, solve_opts::fast );
 }
 
-arma::vec cg_solver(const arma::sp_mat& Conf,
-                      const arma::mat& X,
-                      const arma::mat& XtX,
+inline arma::vec cg_solver(const arma::sp_mat &Conf,
+                      const arma::mat &XtX,
                       const arma::mat &X_nnz,
                       const arma::vec &confidence,
                       const arma::vec &x_old,
-                      int n_iter) {
+                      const int n_iter) {
   arma::colvec x = x_old;
-  arma::mat X_nnz_t = X_nnz.t();
   arma::vec confidence_1 = confidence - 1;
 
   arma::mat Ap;
-  arma::vec r = X_nnz * confidence - XtX * x - X_nnz * (confidence_1 % (X_nnz_t * x));
+  arma::vec r = X_nnz * (confidence - (confidence_1 % (X_nnz.t() * x))) - XtX * x;
   arma::vec p = r;
   double rsold, rsnew, alpha;
   rsold = as_scalar(r.t() * r);
 
   for(int k = 0; k < n_iter; k++) {
-    Ap = XtX * p + X_nnz * (confidence_1 % (X_nnz_t * p));
+    Ap = XtX * p + X_nnz * (confidence_1 % (X_nnz.t() * p));
     alpha =  rsold / as_scalar(p.t() * Ap);
     x += alpha * p;
     r -= alpha * Ap;
@@ -82,9 +79,9 @@ double als_implicit(const arma::sp_mat& Conf,
       arma::vec confidence = vec(&Conf.values[p1], p2 - p1);
       arma::mat X_nnz = X.cols(idx);
       if(solver == CHOLESKY)
-        Y.col(i) = chol_solver(Conf, X, XtX, Y, X_nnz, confidence);
+        Y.col(i) = chol_solver(Conf, XtX, Y, X_nnz, confidence);
       else if(solver == CONJUGATE_GRADIENT)
-        Y.col(i) = cg_solver(Conf, X, XtX, X_nnz, confidence, Y.col(i), cg_steps);
+        Y.col(i) = cg_solver(Conf, XtX, X_nnz, confidence, Y.col(i), cg_steps);
       else stop("Unknown solver code %d", solver);
       // if we don't want to calc loss - will provide lambda = -1
       if(lambda >= 0)

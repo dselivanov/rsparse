@@ -2,14 +2,14 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 als_implicit <- function(Conf, X, Y, lambda, n_threads, solver, cg_steps = 3L) {
-    .Call('reco_als_implicit', PACKAGE = 'reco', Conf, X, Y, lambda, n_threads, solver, cg_steps)
+    .Call('_reco_als_implicit', PACKAGE = 'reco', Conf, X, Y, lambda, n_threads, solver, cg_steps)
 }
 
 als_loss_explicit <- function(mat, X, Y, lambda, n_threads) {
-    .Call('reco_als_loss_explicit', PACKAGE = 'reco', mat, X, Y, lambda, n_threads)
+    .Call('_reco_als_loss_explicit', PACKAGE = 'reco', mat, X, Y, lambda, n_threads)
 }
 
 top_k_indices_byrow <- function(x, k, n_threads) {
-    .Call('reco_top_k_indices_byrow', PACKAGE = 'reco', x, k, n_threads)
+    .Call('_reco_top_k_indices_byrow', PACKAGE = 'reco', x, k, n_threads)
 }
 

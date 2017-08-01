@@ -8,7 +8,7 @@ using namespace Rcpp;
 
 // als_implicit
 double als_implicit(const arma::sp_mat& Conf, arma::mat& X, arma::mat& Y, double lambda, int n_threads, int solver, int cg_steps);
-RcppExport SEXP reco_als_implicit(SEXP ConfSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP) {
+RcppExport SEXP _reco_als_implicit(SEXP ConfSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -25,7 +25,7 @@ END_RCPP
 }
 // als_loss_explicit
 double als_loss_explicit(const arma::sp_mat& mat, arma::mat& X, arma::mat& Y, double lambda, int n_threads);
-RcppExport SEXP reco_als_loss_explicit(SEXP matSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP) {
+RcppExport SEXP _reco_als_loss_explicit(SEXP matSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -40,7 +40,7 @@ END_RCPP
 }
 // top_k_indices_byrow
 IntegerMatrix top_k_indices_byrow(NumericMatrix x, int k, int n_threads);
-RcppExport SEXP reco_top_k_indices_byrow(SEXP xSEXP, SEXP kSEXP, SEXP n_threadsSEXP) {
+RcppExport SEXP _reco_top_k_indices_byrow(SEXP xSEXP, SEXP kSEXP, SEXP n_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -53,9 +53,9 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"reco_als_implicit", (DL_FUNC) &reco_als_implicit, 7},
-    {"reco_als_loss_explicit", (DL_FUNC) &reco_als_loss_explicit, 5},
-    {"reco_top_k_indices_byrow", (DL_FUNC) &reco_top_k_indices_byrow, 3},
+    {"_reco_als_implicit", (DL_FUNC) &_reco_als_implicit, 7},
+    {"_reco_als_loss_explicit", (DL_FUNC) &_reco_als_loss_explicit, 5},
+    {"_reco_top_k_indices_byrow", (DL_FUNC) &_reco_top_k_indices_byrow, 3},
     {NULL, NULL, 0}
 };
 
