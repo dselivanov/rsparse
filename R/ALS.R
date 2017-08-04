@@ -268,7 +268,7 @@ ALS = R6::R6Class(
       # transform user features into latent space
       # calculate scores for each item
       x_similarity = self$transform(x) %*% private$I
-      res = top_k_indices_byrow(x_similarity, k, n_threads)
+      res = top_k_indices_byrow(x_similarity, x, k, n_threads)
       data.table::setattr(res, "dimnames", list(rownames(x), NULL))
       res
     },

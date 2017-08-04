@@ -9,7 +9,6 @@ als_loss_explicit <- function(mat, X, Y, lambda, n_threads) {
     .Call('_reco_als_loss_explicit', PACKAGE = 'reco', mat, X, Y, lambda, n_threads)
 }
 
-top_k_indices_byrow <- function(x, k, n_threads) {
-    .Call('_reco_top_k_indices_byrow', PACKAGE = 'reco', x, k, n_threads)
+top_k_indices_byrow <- function(x, mat, k, n_threads) {
+    .Call('_reco_top_k_indices_byrow', PACKAGE = 'reco', x, mat, k, n_threads)
 }
-

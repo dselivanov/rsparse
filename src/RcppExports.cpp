@@ -39,15 +39,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // top_k_indices_byrow
-IntegerMatrix top_k_indices_byrow(NumericMatrix x, int k, int n_threads);
-RcppExport SEXP _reco_top_k_indices_byrow(SEXP xSEXP, SEXP kSEXP, SEXP n_threadsSEXP) {
+IntegerMatrix top_k_indices_byrow(NumericMatrix x, arma::sp_mat mat, int k, int n_threads);
+RcppExport SEXP _reco_top_k_indices_byrow(SEXP xSEXP, SEXP matSEXP, SEXP kSEXP, SEXP n_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< arma::sp_mat >::type mat(matSEXP);
     Rcpp::traits::input_parameter< int >::type k(kSEXP);
     Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(top_k_indices_byrow(x, k, n_threads));
+    rcpp_result_gen = Rcpp::wrap(top_k_indices_byrow(x, mat, k, n_threads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -55,7 +56,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_reco_als_implicit", (DL_FUNC) &_reco_als_implicit, 7},
     {"_reco_als_loss_explicit", (DL_FUNC) &_reco_als_loss_explicit, 5},
-    {"_reco_top_k_indices_byrow", (DL_FUNC) &_reco_top_k_indices_byrow, 3},
+    {"_reco_top_k_indices_byrow", (DL_FUNC) &_reco_top_k_indices_byrow, 4},
     {NULL, NULL, 0}
 };
 
