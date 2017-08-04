@@ -1,15 +1,15 @@
 Package: reco
 Type: Package
 Title: Matrix factorizations for recommender systems
-Version: 0.1.4
+Version: 0.2.0
 Author: Dmitriy Selivanov
 Maintainer: Dmitriy Selivanov <selivanov.dmitriy@gmail.com>
 Description: Matrix factorizations for recommender systems. 
     Following algorithms are implemented at the moment: 
-    1) ALS for implicit feedback
+    1) ALS for implicit feedback (Cholesky solver, Conjugate Gradient solver)
     2) ALS for explicit feedback
     All algorithms work on sparse matrices and reasonably fast and parallelized if possible.
-License: GPL >= 3
+License: GPL (>= 2) | file LICENSE
 Encoding: UTF-8
 LazyData: true
 ByteCompile: true

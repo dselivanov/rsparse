@@ -4,7 +4,7 @@
 \name{ALS}
 \alias{ALS}
 \title{ALS implicit}
-\format{\code{\link{R6Class}} object.}
+\format{\code{R6Class} object.}
 \usage{
 ALS
 }

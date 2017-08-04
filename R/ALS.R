@@ -14,7 +14,7 @@
 #'   \item{\url{http://www.benfrederickson.com/matrix-factorization/}}
 #'   \item{\url{http://www.benfrederickson.com/fast-implicit-matrix-factorization/}}
 #' }
-#' @format \code{\link{R6Class}} object.
+#' @format \code{R6Class} object.
 #' @section Usage:
 #' For usage details see \bold{Methods, Arguments and Examples} sections.
 #' \preformatted{
