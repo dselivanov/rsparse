@@ -237,8 +237,11 @@ ALS = R6::R6Class(
 
       if(private$feedback == "implicit") {
         res = matrix(0, nrow = private$rank, ncol = nrow(x))
+
         als_implicit(t(x), private$I, res, n_threads = n_threads,
+                     lambda = private$lambda,
                      private$solver_code, private$cg_steps)
+
       } else if(private$feedback == "explicit")
         res = private$solver_explicit_feedback(t(x), private$I)
       else
@@ -252,6 +255,7 @@ ALS = R6::R6Class(
       if(private$feedback == "implicit") {
         res = matrix(0, nrow = private$rank, ncol = nrow(x))
         als_implicit(x, private$U, res, n_threads = n_threads,
+                     lambda = private$lambda,
                      private$solver_code, private$cg_steps)
       } else if(private$feedback == "explicit") {
         res = private$solver_explicit_feedback(x, private$U)

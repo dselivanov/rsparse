@@ -56,7 +56,8 @@ double als_implicit(const arma::sp_mat& Conf,
                     arma::mat& X,
                     arma::mat& Y,
                     double lambda,
-                    int n_threads, int solver, int cg_steps = 3) {
+                    int n_threads,
+                    int solver, int cg_steps = 3) {
 
   arma::mat XtX = X * X.t();
   if(lambda > 0) {
