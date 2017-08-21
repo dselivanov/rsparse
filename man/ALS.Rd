@@ -24,7 +24,6 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
                   non_negative = FALSE,
                   solver = c("conjugate_gradient", "cholesky"),
                   cg_steps = 3L)
-  model$fit(x, n_iter = 5L, n_threads = 1, ...)
   model$fit_transform(x, n_iter = 5L, n_threads = 1, ...)
   model$predict(x, k, n_threads = private$n_threads, ...)
   model$components
@@ -48,11 +47,11 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
     Usually \code{r_ui} corresponds to the number of interactions of user \code{u} and item \code{i}.
     For explicit feedback values in \code{x} represents ratings.
     \bold{Returns factor matrix for users of size \code{n_users * rank}}}
-  \item{\code{$fit(x, n_iter = 5L, n_threads = private$n_threads, ...)}}{Same as \code{fit_transform}.
-  Provided for convenience following of \code{mlapi} conventions.}
-  \item{\code{$predict(x, k, n_threads = private$n_threads, ...)}}{predict \code{top k} items for users \code{x}.
+  \item{\code{$predict(x, k, n_threads = private$n_threads, ...)}}{predict \code{top k} item ids for users \code{x}.
+    (= column names from the matrix passed to \code{fit_transform()} method) .
     Users features should be defined the same way as they were defined in training data - as \bold{sparse matrix}
-    of confidence values (implicit feedback) or ratings (explicit feedback).}
+    of confidence values (implicit feedback) or ratings (explicit feedback).
+    Column names (=item ids) should be in the same order as in the \code{fit_transform()}.}
   \item{\code{$add_scorer(x, y, name, metric, ...)}}{add a metric to watchlist.
   Metric will be evaluated after each ALS interation. At the moment following metrices are supported:
     \bold{"loss"}, \bold{"map@k"}, \bold{"ndcg@k"}, where \bold{k} is some integer. For example \code{map@10}.}
