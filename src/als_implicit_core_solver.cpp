@@ -86,7 +86,7 @@ double als_implicit(const arma::sp_mat& Conf,
       else stop("Unknown solver code %d", solver);
       // if we don't want to calc loss - will provide lambda = -1
       if(lambda >= 0)
-        loss += as_scalar((square( 1 - (Y.col(i).t() * X_nnz) ) * confidence));
+        loss += accu(square( 1 - (Y.col(i).t() * X_nnz) ) * confidence);
     }
   }
 
@@ -108,8 +108,7 @@ double als_loss_explicit(const arma::sp_mat& mat, arma::mat& X, arma::mat& Y, do
     if(p1 < p2) {
       arma::uvec idx = uvec(&mat.row_indices[p1], p2 - p1);
       arma::vec rating = vec(&mat.values[p1], p2 - p1);
-      arma::mat user_i = X.cols(idx);
-      loss += as_scalar(square( rating.t() - (Y.col(i).t() * user_i) ));
+      loss += accu(square( rating.t() - (Y.col(i).t() * X.cols(idx))));
     }
   }
   if(lambda > 0)
