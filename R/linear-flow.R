@@ -14,6 +14,9 @@ LinearFlow = R6::R6Class(
       self$orthogonal_basis = orthogonal_basis
     },
     fit_transform = function(x, ...) {
+
+      private$item_ids = colnames(x)
+
       if(!is.null(self$orthogonal_basis)) {
         stopifnot(nrow((self$orthogonal_basis)) == ncol(x))
         stopifnot(ncol((self$orthogonal_basis)) == private$rank)
@@ -38,9 +41,18 @@ LinearFlow = R6::R6Class(
       self$components = solve(lhs, rhs)
     },
     predict = function(x, k, n_threads = 1L, ...) {
-      user_item_scores = x %*% self$orthogonal_basis %*% self$components
-      res = top_k_indices_byrow(as.matrix(user_item_scores), x, k, n_threads)
-      res
+
+      user_item_score = x %*% self$orthogonal_basis %*% self$components
+      user_item_score = as.matrix(user_item_score)
+      indices = top_k_indices_byrow(user_item_score, x, k, n_threads)
+      scores = attr(indices, "scores", exact = TRUE)
+      attr(indices, "scores") = NULL
+      predicted_item_ids = private$item_ids[indices]
+      data.table::setattr(predicted_item_ids, "dim", dim(indices))
+      data.table::setattr(predicted_item_ids, "indices", indices)
+      data.table::setattr(predicted_item_ids, "scores", scores)
+      data.table::setattr(predicted_item_ids, "dimnames", list(rownames(x), NULL))
+      predicted_item_ids
     },
     orthogonal_basis = NULL,
     components = NULL
@@ -48,6 +60,7 @@ LinearFlow = R6::R6Class(
   private = list(
     rank = NULL,
     svd_solver = NULL,
-    lambda = NULL
+    lambda = NULL,
+    item_ids = NULL
   )
 )
