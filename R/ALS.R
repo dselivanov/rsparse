@@ -25,7 +25,6 @@
 #'                   non_negative = FALSE,
 #'                   solver = c("conjugate_gradient", "cholesky"),
 #'                   cg_steps = 3L)
-#'   model$fit(x, n_iter = 5L, n_threads = 1, ...)
 #'   model$fit_transform(x, n_iter = 5L, n_threads = 1, ...)
 #'   model$predict(x, k, n_threads = private$n_threads, ...)
 #'   model$components
@@ -46,11 +45,11 @@
 #'     Usually \code{r_ui} corresponds to the number of interactions of user \code{u} and item \code{i}.
 #'     For explicit feedback values in \code{x} represents ratings.
 #'     \bold{Returns factor matrix for users of size \code{n_users * rank}}}
-#'   \item{\code{$fit(x, n_iter = 5L, n_threads = private$n_threads, ...)}}{Same as \code{fit_transform}.
-#'   Provided for convenience following of \code{mlapi} conventions.}
-#'   \item{\code{$predict(x, k, n_threads = private$n_threads, ...)}}{predict \code{top k} items for users \code{x}.
+#'   \item{\code{$predict(x, k, n_threads = private$n_threads, ...)}}{predict \code{top k} item ids for users \code{x}.
+#'     (= column names from the matrix passed to \code{fit_transform()} method) .
 #'     Users features should be defined the same way as they were defined in training data - as \bold{sparse matrix}
-#'     of confidence values (implicit feedback) or ratings (explicit feedback).}
+#'     of confidence values (implicit feedback) or ratings (explicit feedback).
+#'     Column names (=item ids) should be in the same order as in the \code{fit_transform()}.}
 #'   \item{\code{$add_scorer(x, y, name, metric, ...)}}{add a metric to watchlist.
 #'   Metric will be evaluated after each ALS interation. At the moment following metrices are supported:
 #'     \bold{"loss"}, \bold{"map@@k"}, \bold{"ndcg@@k"}, where \bold{k} is some integer. For example \code{map@@10}.}
@@ -126,7 +125,7 @@ ALS = R6::R6Class(
       private$n_threads = n_threads
       private$non_negative = non_negative
     },
-    fit = function(x, n_iter = 5L, convergence_tol = -Inf, n_threads = private$n_threads, ...) {
+    fit_transform = function(x, n_iter = 5L, convergence_tol = -Inf, n_threads = private$n_threads, ...) {
 
       # x = confidense matrix, not ratings/interactions matrix!
       # we expect user already transformed it
@@ -135,6 +134,9 @@ ALS = R6::R6Class(
 
       flog.debug("convert input to %s if needed", private$internal_matrix_formats$sparse)
       c_ui = private$check_convert_input(x, private$internal_matrix_formats)
+
+      # strore item_ids in order to use them in predict method
+      private$item_ids = colnames(c_ui)
 
       flog.debug("check items in input are not negative")
       stopifnot(all(c_ui@x >= 0))
@@ -222,10 +224,7 @@ ALS = R6::R6Class(
 
       res = t(private$U)
       setattr(res, "trace", rbindlist(trace_lst))
-      invisible(res)
-    },
-    fit_transform = function(x, n_iter = 5L, convergence_tol = -1, n_threads = private$n_threads, ...) {
-      res = self$fit(x, n_iter, convergence_tol, n_threads, ...)
+      setattr(res, "dimnames", list(rownames(x), NULL))
       res
     },
     # project new users into latent user space - just make ALS step given fixes items matrix
@@ -248,7 +247,9 @@ ALS = R6::R6Class(
         stop(sprintf("don't know how to work with feedback = '%s'", private$feedback))
       if(private$non_negative)
         res[res < 0] = 0
-      t(res)
+      res = t(res)
+      data.table::setattr(res, "dimnames", list(rownames(x), NULL))
+      res
     },
     # project new items into latent item space
     get_items_embeddings = function(x, n_threads = private$n_threads, ...) {
@@ -268,19 +269,27 @@ ALS = R6::R6Class(
       res
     },
     predict = function(x, k, n_threads = private$n_threads, ...) {
+      stopifnot(private$item_ids == colnames(x))
       m = nrow(x)
       # transform user features into latent space
       # calculate scores for each item
-      x_similarity = self$transform(x) %*% private$I
-      res = top_k_indices_byrow(x_similarity, x, k, n_threads)
-      data.table::setattr(res, "dimnames", list(rownames(x), NULL))
-      res
+      user_item_score = self$transform(x) %*% private$I
+      indices = top_k_indices_byrow(user_item_score, x, k, n_threads)
+      scores = attr(indices, "scores", exact = TRUE)
+      attr(indices, "scores") = NULL
+      predicted_item_ids = private$item_ids[indices]
+      data.table::setattr(predicted_item_ids, "dim", dim(indices))
+      data.table::setattr(predicted_item_ids, "indices", indices)
+      data.table::setattr(predicted_item_ids, "scores", scores)
+      data.table::setattr(predicted_item_ids, "dimnames", list(rownames(x), NULL))
+      predicted_item_ids
     },
     ap_k = function(x, y, k = ncol(x)) {
       stopifnot(ncol(x) == ncol(y))
       stopifnot(nrow(x) == nrow(y))
       n_u = nrow(x)
       preds = self$predict(x, k)
+      preds = attr(preds, "indices", TRUE)
       y_csr = as(y, "RsparseMatrix")
       res = numeric(n_u)
       for(u in seq_len(n_u)) {
@@ -299,6 +308,7 @@ ALS = R6::R6Class(
       stopifnot(nrow(x) == nrow(y))
       n_u = nrow(x)
       preds = self$predict(x, k)
+      preds = attr(preds, "indices", TRUE)
       y_csr = as(y, "RsparseMatrix")
       res = numeric(n_u)
       for(u in seq_len(n_u)) {
@@ -333,9 +343,9 @@ ALS = R6::R6Class(
         scorer_fun = scorer_conf[[1]]
 
         if(scorer_fun == "map")
-          private$scorers[[name]] = function() mean(self$ap_k(x, y, k))
+          private$scorers[[name]] = function() mean(self$ap_k(x, y, k), na.rm = T)
         if(scorer_fun == "ndcg")
-          private$scorers[[name]] = function() mean(self$ndcg_k(x, y, k))
+          private$scorers[[name]] = function() mean(self$ndcg_k(x, y, k), na.rm = T)
       }
     },
     remove_scorer = function(name) {
@@ -363,6 +373,7 @@ ALS = R6::R6Class(
     # item factor matrix = rank * n_items
     I = NULL,
     feedback = NULL,
+    item_ids = NULL,
     #------------------------------------------------------------
     solver_explicit_feedback = function(R, X) {
       XtX = tcrossprod(X) + diag(x = private$lambda, nrow = private$rank, ncol = private$rank)

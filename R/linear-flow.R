@@ -34,7 +34,6 @@ LinearFlow = R6::R6Class(
       rhs = t(self$orthogonal_basis) %*% t(x) %*% x
       flog.debug("calculating LHS")
       lhs = rhs %*% self$orthogonal_basis + Diagonal(private$rank, private$lambda)
-      str(lhs)
       flog.debug("solving least squares")
       self$components = solve(lhs, rhs)
     },
