@@ -23,7 +23,7 @@ dcg_at_k = function(predicted_indices, actual_indices, actual_relevances, k = le
   k = min(k, length(predicted_indices), length(actual_indices))
   x_match = match(predicted_indices, actual_indices)
   dcg = 0
-  for(i in 1:k) {
+  for(i in seq_len(k)) {
     j = x_match[[i]]
     if(!is.na(j))
       dcg = dcg + actual_relevances[[j]] / log2(i + 1)
