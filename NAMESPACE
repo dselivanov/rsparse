@@ -2,6 +2,7 @@
 
 export(ALS)
 export(LinearFlow)
+export(split_into_cv)
 import(Matrix)
 import(Rcpp)
 import(data.table)
