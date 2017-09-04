@@ -25,7 +25,7 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
                   solver = c("conjugate_gradient", "cholesky"),
                   cg_steps = 3L)
   model$fit_transform(x, n_iter = 5L, n_threads = 1, ...)
-  model$predict(x, k, n_threads = private$n_threads, ...)
+  model$predict(x, k, n_threads = private$n_threads, not_recommend = x, ...)
   model$components
   model$add_scorer(x, y, name, metric, ...)
   model$remove_scorer(name)
@@ -47,8 +47,8 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
     Usually \code{r_ui} corresponds to the number of interactions of user \code{u} and item \code{i}.
     For explicit feedback values in \code{x} represents ratings.
     \bold{Returns factor matrix for users of size \code{n_users * rank}}}
-  \item{\code{$predict(x, k, n_threads = private$n_threads, ...)}}{predict \code{top k} item ids for users \code{x}.
-    (= column names from the matrix passed to \code{fit_transform()} method) .
+  \item{\code{$predict(x, k, n_threads = private$n_threads, not_recommend = x, ...)}}{predict \code{top k}
+    item ids for users \code{x} (= column names from the matrix passed to \code{fit_transform()} method).
     Users features should be defined the same way as they were defined in training data - as \bold{sparse matrix}
     of confidence values (implicit feedback) or ratings (explicit feedback).
     Column names (=item ids) should be in the same order as in the \code{fit_transform()}.}
@@ -89,6 +89,8 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
     Controls precision of linear equation solution at the each ALS step. Usually no need to tune this parameter.}
  \item{n_threads}{\code{numeric} default number of threads to use during training and prediction
  (if OpenMP is available). Check descriptions of other methods - some of them can override this parameter.}
+ \item{not_recommend}{\code{sparse matrix} or \code{NULL} - points which items should be excluided from recommendations for a user.
+   By default it excludes previously seen/consumed items.}
  \item{convergence_tol}{{\code{numeric = -Inf} defines early stopping strategy. We stop fitting
     when one of two following conditions will be satisfied: (a) we have used
     all iterations, or (b) \code{loss_previous_iter / loss_current_iter - 1 < convergence_tol}}}
