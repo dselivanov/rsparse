@@ -291,11 +291,11 @@ ALS = R6::R6Class(
       data.table::setattr(predicted_item_ids, "dimnames", list(rownames(x), NULL))
       predicted_item_ids
     },
-    ap_k = function(x, y, k = ncol(x)) {
+    ap_k = function(x, y, k = ncol(x), ...) {
       stopifnot(ncol(x) == ncol(y))
       stopifnot(nrow(x) == nrow(y))
       n_u = nrow(x)
-      preds = self$predict(x, k)
+      preds = self$predict(x, k, ...)
       preds = attr(preds, "indices", TRUE)
       y_csr = as(y, "RsparseMatrix")
       res = numeric(n_u)
@@ -310,11 +310,11 @@ ALS = R6::R6Class(
       }
       res
     },
-    ndcg_k = function(x, y, k = ncol(x)) {
+    ndcg_k = function(x, y, k = ncol(x), ...) {
       # stopifnot(ncol(x) == ncol(y))
       stopifnot(nrow(x) == nrow(y))
       n_u = nrow(x)
-      preds = self$predict(x, k)
+      preds = self$predict(x, k, ...)
       preds = attr(preds, "indices", TRUE)
       y_csr = as(y, "RsparseMatrix")
       res = numeric(n_u)
@@ -350,9 +350,9 @@ ALS = R6::R6Class(
         scorer_fun = scorer_conf[[1]]
 
         if(scorer_fun == "map")
-          private$scorers[[name]] = function() mean(self$ap_k(x, y, k), na.rm = T)
+          private$scorers[[name]] = function() mean(self$ap_k(x, y, k, ...), na.rm = T)
         if(scorer_fun == "ndcg")
-          private$scorers[[name]] = function() mean(self$ndcg_k(x, y, k), na.rm = T)
+          private$scorers[[name]] = function() mean(self$ndcg_k(x, y, k, ...), na.rm = T)
       }
     },
     remove_scorer = function(name) {
