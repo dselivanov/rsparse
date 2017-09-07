@@ -1,6 +1,22 @@
+#' @name LinearFlow
+#'
+#' @title Linear Flow method for collaborative filtering
+#' @description Creates model which seeks for item similarity matrix
+#' @format \code{R6Class} object.
+#' @section Usage:
+#' For usage details see \bold{Methods, Arguments and Examples} sections.
+#' \preformatted{
+#'   model = LinearFlow$new( rank = 8L,
+#'                           lambda = 0,
+#'                           svd_solver = c("irlba", "randomized_svd"),
+#'                           orthogonal_basis = NULL)
+#'   model$function(x, ...)
+#'   model$predict(x, k, n_threads = 1L, not_recommend = x, ...)
+#'   model$components
+#'   model$orthogonal_basis
+#' }
 #' @export
 LinearFlow = R6::R6Class(
-  # inherit = mlapi::mlapiDecomposition,
   classname = "LinearFlow",
   public = list(
     initialize = function(rank = 8L,
@@ -39,12 +55,13 @@ LinearFlow = R6::R6Class(
       lhs = rhs %*% self$orthogonal_basis + Diagonal(private$rank, private$lambda)
       flog.debug("solving least squares")
       self$components = solve(lhs, rhs)
+      list(lsh = self$components, rhs = self$orthogonal_basis)
     },
     predict = function(x, k, n_threads = 1L, not_recommend = x, ...) {
 
       user_item_score = x %*% self$orthogonal_basis %*% self$components
       user_item_score = as.matrix(user_item_score)
-      indices = top_k_indices_byrow(user_item_score, not_recommend, k, n_threads)
+      indices = top_k_indices_byrow(user_item_score, k, n_threads, not_recommend)
       scores = attr(indices, "scores", exact = TRUE)
       attr(indices, "scores") = NULL
       predicted_item_ids = private$item_ids[indices]

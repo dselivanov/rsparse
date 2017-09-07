@@ -6,9 +6,12 @@ Author: Dmitriy Selivanov
 Maintainer: Dmitriy Selivanov <selivanov.dmitriy@gmail.com>
 Description: Matrix factorizations for recommender systems. 
     Following algorithms are implemented at the moment: 
-    1) ALS for implicit feedback (Cholesky solver, Conjugate Gradient solver)
-    2) ALS for explicit feedback
-    All algorithms work on sparse matrices and reasonably fast and parallelized if possible.
+    1) Weighted Regularazied Matrix Factorization with ALS 
+      for implicit feedback (Cholesky solver, Conjugate Gradient solver)
+    2) Regularazied Matrix Factorization with ALS for explicit feedback
+    3) LinearFlow method which can inferr item-item similarity matrix from the data
+    All algorithms work on sparse matrices, extensively use BLAS and LAPACK 
+    and parallelized if possible. So they are reasonably fast and scale to large datasets.
 License: GPL (>= 2) | file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -20,12 +23,11 @@ Imports:
     Matrix, 
     futile.logger,
     data.table (>= 1.10.0), 
+    irlba (>= 2.2.0), 
     Rcpp, 
     RcppArmadillo
 LinkingTo:
     Rcpp, 
     RcppArmadillo
-Suggests: 
-    parallel
 Remotes: github::dselivanov/mlapi
 RoxygenNote: 6.0.1
