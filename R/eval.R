@@ -53,3 +53,46 @@ top_n = function(x, n) {
   # xp = sort(x, partial = p)[p]
   # which(x > xp, useNames = FALSE)
 }
+
+
+#' @export
+ap_k = function(predictions, actual, ...) {
+  k = ncol(predictions)
+  n_u = nrow(predictions)
+  stopifnot(n_u == nrow(actual))
+  predictions = attr(predictions, "indices", TRUE)
+  y_csr = as(actual, "RsparseMatrix")
+  res = numeric(n_u)
+  for(u in seq_len(n_u)) {
+    p1 = y_csr@p[[u]]
+    p2 = y_csr@p[[u + 1]]
+    ind = p1 + seq_len(p2 - p1)
+    # adjust from 0-based indices to 1-based
+    u_ind = y_csr@j[ind] + 1L
+    u_x = y_csr@x[ind]
+    ord = order(u_x, decreasing = TRUE)
+    res[[u]] = ap_at_k(predictions[u, ], u_ind[ord], k = k)
+  }
+  res
+}
+
+#' @export
+ndcg_k = function(predictions, actual, ...) {
+  k = ncol(predictions)
+  n_u = nrow(predictions)
+  stopifnot(n_u == nrow(actual))
+  predictions = attr(predictions, "indices", TRUE)
+  y_csr = as(actual, "RsparseMatrix")
+  res = numeric(n_u)
+  for(u in seq_len(n_u)) {
+    p1 = y_csr@p[[u]]
+    p2 = y_csr@p[[u + 1]]
+    ind = p1 + seq_len(p2 - p1)
+    # adjust from 0-based indices to 1-based
+    u_ind = y_csr@j[ind] + 1L
+    u_x = y_csr@x[ind]
+    ord = order(u_x, decreasing = TRUE)
+    res[[u]] = ndcg_at_k(predictions[u, ], u_ind[ord], u_x[ord], k)
+  }
+  res
+}

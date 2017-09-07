@@ -2,6 +2,9 @@
 
 export(ALS)
 export(LinearFlow)
+export(WRMF)
+export(ap_k)
+export(ndcg_k)
 export(split_into_cv)
 import(Matrix)
 import(Rcpp)

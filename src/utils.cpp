@@ -11,7 +11,7 @@ using namespace Rcpp;
 // Find top k elements and their indices on O(n * log (k)) time with heaps
 // https://stackoverflow.com/a/38391603/1069256
 // [[Rcpp::export]]
-IntegerMatrix top_k_indices_byrow(const NumericMatrix &x, Rcpp::Nullable<const arma::sp_mat> &not_recommend, int k, int n_threads) {
+IntegerMatrix top_k_indices_byrow(const NumericMatrix &x, int k, int n_threads, Rcpp::Nullable<const arma::sp_mat> &not_recommend) {
   arma::sp_mat mat;
   int not_empty_filter_matrix = not_recommend.isNotNull();
   if(not_empty_filter_matrix)

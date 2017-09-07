@@ -1,9 +1,10 @@
-#' @name ALS
+#' @name WRMF
 #'
-#' @title ALS implicit
-#' @description Creates matrix factorization model which could be solved with weighted or vanilla Alternating Least Squares algorithm.
+#' @title (Weighted) Regularized Matrix Facrtorization for collaborative filtering
+#' @description Creates matrix factorization model which could be solved with Alternating Least Squares (Weighted ALS for implicit feedback).
 #' For implicit feedback see (Hu, Koren, Volinsky)'2008 paper \url{http://yifanhu.net/PUB/cf.pdf}.
 #' For explicit feedback model is classic model for rating matrix decomposition with MSE error (without biases at the moment).
+#' These two algorithms are proven to work well in recommender systems.
 #' @seealso
 #' \itemize{
 #'   \item{\url{https://math.stackexchange.com/questions/1072451/analytic-solution-for-matrix-factorization-using-alternating-least-squares/1073170#1073170}}
@@ -18,7 +19,7 @@
 #' @section Usage:
 #' For usage details see \bold{Methods, Arguments and Examples} sections.
 #' \preformatted{
-#'   model = ALS$new(rank = 10L, lambda = 0,
+#'   model = WRMF$new(rank = 10L, lambda = 0,
 #'                   feedback = c("implicit", "explicit"),
 #'                   init_stdv = 0.01,
 #'                   n_threads = parallel::detectCores(),
@@ -28,10 +29,8 @@
 #'   model$fit_transform(x, n_iter = 5L, n_threads = 1, ...)
 #'   model$predict(x, k, n_threads = private$n_threads, not_recommend = x, ...)
 #'   model$components
-#'   model$add_scorer(x, y, name, metric, ...)
+#'   model$add_scorers(x_train, x_cv, specs = list("map10" = "map@@10"), ...)
 #'   model$remove_scorer(name)
-#'   model$ap_k(x, y, k = ncol(x))
-#'   model$ndcg_k(x, y, k = ncol(x))
 #' }
 #' @section Methods:
 #' \describe{
@@ -50,7 +49,7 @@
 #'     Users features should be defined the same way as they were defined in training data - as \bold{sparse matrix}
 #'     of confidence values (implicit feedback) or ratings (explicit feedback).
 #'     Column names (=item ids) should be in the same order as in the \code{fit_transform()}.}
-#'   \item{\code{$add_scorer(x, y, name, metric, ...)}}{add a metric to watchlist.
+#'   \item{\code{$add_scorers(x_train, x_cv, specs = list("map10" = "map@@10"), ...)}}{add a metric to watchlist.
 #'   Metric will be evaluated after each ALS interation. At the moment following metrices are supported:
 #'     \bold{"loss"}, \bold{"map@@k"}, \bold{"ndcg@@k"}, where \bold{k} is some integer. For example \code{map@@10}.}
 #'   \item{\code{$remove_scorer(name)}}{remove a metric from watchlist}
@@ -62,15 +61,16 @@
 #'}
 #' @section Arguments:
 #' \describe{
-#'  \item{model}{A \code{ALS} model.}
+#'  \item{model}{A \code{WRMF} model.}
 #'  \item{x}{An input sparse user-item matrix(of class \code{dgCMatrix}).
 #'  For explicit feedback should consists of ratings.
 #'  For implicit feedback all positive interactions should be filled with \bold{confidence} values.
 #'  Missed interactions should me zeros/empty.
 #'  So for simple case case when \code{confidence = 1 + alpha * x}}
-#'  \item{y}{An input user-item \bold{relevance} matrix. Used during evaluation of \code{map@@k}, \code{ndcg@@k}
-#'    Should have the same shape as corresponding confidence matrix \code{x}.
+#'  \item{x_train}{An input user-item \bold{relevance} matrix. Used during evaluation of \code{map@@k}, \code{ndcg@@k}
+#'    Should have the same shape as corresponding confidence matrix \code{x_cv}.
 #'    Values are used as "relevance" in ndgc calculation}
+#'  \item{x_cv}{user-item matrix used for validation (ground-truth observations)}
 #'  \item{name}{\code{character} - user-defined name of the scorer. For example "ndcg-scorer-1"}
 #'  \item{rank}{\code{integer} - number of latent factors}
 #'  \item{lambda}{\code{numeric} - regularization parameter}
@@ -93,7 +93,7 @@
 #'  \item{...}{other arguments. Not used at the moment}
 #' }
 #' @export
-ALS = R6::R6Class(
+WRMF = R6::R6Class(
   inherit = mlapi::mlapiDecomposition,
   classname = "AlternatingLeastSquares",
   public = list(
@@ -204,8 +204,13 @@ ALS = R6::R6Class(
         trace_iter = vector("list", length(names(private$scorers)))
         j = 1L
         trace_scors_string = ""
+        max_k = max(vapply(private$scorers, function(x) as.integer(x[["k"]]), -1L))
+        preds = do.call(function(...) self$predict(x = private$cv_data$train, k = max_k, ...),  private$scorers_ellipsis)
+
         for(sc in names(private$scorers)) {
-          score = private$scorers[[sc]]()
+          scorer = private$scorers[[sc]]
+          # preds = do.call(function(...) self$predict(x = private$cv_data$train, k = scorer[["k"]], ...),  private$scorers_ellipsis)
+          score = scorer$scorer_function(preds, ...)
           trace_scors_string = sprintf("%s score %s = %f", trace_scors_string, sc, score)
           trace_iter[[j]] = list(iter = i, scorer = sc, value = score)
           j = j + 1L
@@ -280,7 +285,7 @@ ALS = R6::R6Class(
       # transform user features into latent space
       # calculate scores for each item
       user_item_score = self$transform(x) %*% private$I
-      indices = top_k_indices_byrow(user_item_score, not_recommend, k, n_threads)
+      indices = top_k_indices_byrow(user_item_score, k, n_threads, not_recommend)
       scores = attr(indices, "scores", exact = TRUE)
       attr(indices, "scores") = NULL
 
@@ -291,74 +296,39 @@ ALS = R6::R6Class(
       data.table::setattr(predicted_item_ids, "dimnames", list(rownames(x), NULL))
       predicted_item_ids
     },
-    ap_k = function(x, y, k = ncol(x), ...) {
-      stopifnot(ncol(x) == ncol(y))
-      stopifnot(nrow(x) == nrow(y))
-      n_u = nrow(x)
-      preds = self$predict(x, k, ...)
-      preds = attr(preds, "indices", TRUE)
-      y_csr = as(y, "RsparseMatrix")
-      res = numeric(n_u)
-      for(u in seq_len(n_u)) {
-        p1 = y_csr@p[[u]]
-        p2 = y_csr@p[[u + 1]]
-        ind = p1 + seq_len(p2 - p1)
-        u_ind = y_csr@j[ind] + 1L
-        u_x = y_csr@x[ind]
-        ord = order(u_x, decreasing = TRUE)
-        res[[u]] = ap_at_k(preds[u, ], u_ind[ord], k = k)
-      }
-      res
-    },
-    ndcg_k = function(x, y, k = ncol(x), ...) {
-      # stopifnot(ncol(x) == ncol(y))
-      stopifnot(nrow(x) == nrow(y))
-      n_u = nrow(x)
-      preds = self$predict(x, k, ...)
-      preds = attr(preds, "indices", TRUE)
-      y_csr = as(y, "RsparseMatrix")
-      res = numeric(n_u)
-      for(u in seq_len(n_u)) {
-        p1 = y_csr@p[[u]]
-        p2 = y_csr@p[[u + 1]]
-        ind = p1 + seq_len(p2 - p1)
-        u_ind = y_csr@j[ind] + 1L
-        u_x = y_csr@x[ind]
-        ord = order(u_x, decreasing = TRUE)
-        res[[u]] = ndcg_at_k(preds[u, ], u_ind[ord], u_x[ord], k)
-      }
-      res
-    },
-    # x = sparse matrix of observed user interactions
-    # y = sparse matrix of observed user we are trying to predtict
-    add_scorer = function(x, y, name, metric, ...) {
-      if(exists(name, where = private$scorers, inherits = FALSE))
-        stop(sprintf("scorer with name '%s' already exists", name))
+    add_scorers = function(x_train, x_cv, specs = list("map10" = "map@10"), ...) {
+      stopifnot(data.table::uniqueN(names(specs)) == length(specs))
+      private$cv_data = list(train = x_train, cv = x_cv)
+      private$scorers_ellipsis = list(...)
+      for(scorer_name in names(specs)) {
+        # check scorer exists
+        if(exists(scorer_name, where = private$scorers, inherits = FALSE))
+          stop(sprintf("scorer with name '%s' already exists", scorer_name))
 
-      if(metric == "loss") {
-        private$scorers[[name]] = function() {
-          # transpose since internally users kept as n_factor * n_users
-          U_new = t(self$transform(x))
-          calc_als_implicit_loss(x, private$U, private$I, private$lambda, n_threads = private$n_threads, ...)
-        }
-      } else {
+        metric = specs[[scorer_name]]
+        scorer_placeholder = list("scorer_function" = NULL, "k" = NULL)
+
         if (length(grep(pattern = "(ndcg|map)\\@[[:digit:]]+", x = metric)) != 1 )
           stop(sprintf("don't know how add '%s' metric. Only 'loss', 'map@k', 'ndcg@k' are supported", metric))
 
         scorer_conf = strsplit(metric, "@", T)[[1]]
-        k = as.integer(tail(scorer_conf, 1))
-        scorer_fun = scorer_conf[[1]]
+        scorer_placeholder[["k"]] = as.integer(tail(scorer_conf, 1))
 
+        scorer_fun = scorer_conf[[1]]
         if(scorer_fun == "map")
-          private$scorers[[name]] = function() mean(self$ap_k(x, y, k, ...), na.rm = T)
+          scorer_placeholder[["scorer_function"]] =
+            function(predictions, ...) mean(ap_k(predictions, private$cv_data$cv, ...), na.rm = T)
         if(scorer_fun == "ndcg")
-          private$scorers[[name]] = function() mean(self$ndcg_k(x, y, k, ...), na.rm = T)
+          scorer_placeholder[["scorer_function"]] =
+            function(predictions, ...) mean(ndcg_k(predictions, private$cv_data$cv, ...), na.rm = T)
+
+        private$scorers[[scorer_name]] = scorer_placeholder
       }
     },
-    remove_scorer = function(name) {
-      if(!exists(name, where = private$scorers))
-        stop(sprintf("can't find scorer '%s'", name))
-      rm(list = name, envir = private$scorers)
+    remove_scorer = function(scorer_name) {
+      if(!exists(scorer_name, where = private$scorers))
+        stop(sprintf("can't find scorer '%s'", scorer_name))
+      rm(list = scorer_name, envir = private$scorers)
     },
     finalize = function() {
       rm(list = names(private$scorers), envir = private$scorers)
@@ -381,6 +351,8 @@ ALS = R6::R6Class(
     I = NULL,
     feedback = NULL,
     item_ids = NULL,
+    cv_data = NULL,
+    scorers_ellipsis = NULL,
     #------------------------------------------------------------
     solver_explicit_feedback = function(R, X) {
       XtX = tcrossprod(X) + diag(x = private$lambda, nrow = private$rank, ncol = private$rank)
@@ -471,3 +443,7 @@ ALS = R6::R6Class(
     }
   )
 )
+
+
+#' @export
+ALS = WRMF
