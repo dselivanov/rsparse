@@ -40,11 +40,11 @@ LinearFlow = R6::R6Class(
       flog.debug("solving least squares")
       self$components = solve(lhs, rhs)
     },
-    predict = function(x, k, n_threads = 1L, ...) {
+    predict = function(x, k, n_threads = 1L, not_recommend = x, ...) {
 
       user_item_score = x %*% self$orthogonal_basis %*% self$components
       user_item_score = as.matrix(user_item_score)
-      indices = top_k_indices_byrow(user_item_score, x, k, n_threads)
+      indices = top_k_indices_byrow(user_item_score, not_recommend, k, n_threads)
       scores = attr(indices, "scores", exact = TRUE)
       attr(indices, "scores") = NULL
       predicted_item_ids = private$item_ids[indices]
