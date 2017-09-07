@@ -19,7 +19,7 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
                           lambda = 0,
                           svd_solver = c("irlba", "randomized_svd"),
                           orthogonal_basis = NULL)
-  model$function(x, ...)
+  model$fit_transform(x, ...)
   model$predict(x, k, n_threads = 1L, not_recommend = x, ...)
   model$components
   model$orthogonal_basis

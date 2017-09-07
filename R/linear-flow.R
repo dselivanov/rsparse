@@ -10,7 +10,7 @@
 #'                           lambda = 0,
 #'                           svd_solver = c("irlba", "randomized_svd"),
 #'                           orthogonal_basis = NULL)
-#'   model$function(x, ...)
+#'   model$fit_transform(x, ...)
 #'   model$predict(x, k, n_threads = 1L, not_recommend = x, ...)
 #'   model$components
 #'   model$orthogonal_basis
@@ -54,8 +54,8 @@ LinearFlow = R6::R6Class(
       flog.debug("calculating LHS")
       lhs = rhs %*% self$orthogonal_basis + Diagonal(private$rank, private$lambda)
       flog.debug("solving least squares")
-      self$components = solve(lhs, rhs)
-      list(lsh = self$components, rhs = self$orthogonal_basis)
+      self$components = as.matrix(solve(lhs, rhs))
+      list(lhs = self$orthogonal_basis, rsh = self$components)
     },
     predict = function(x, k, n_threads = 1L, not_recommend = x, ...) {
 
