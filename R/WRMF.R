@@ -201,21 +201,26 @@ WRMF = R6::R6Class(
         if (private$feedback == "explicit")
           loss = als_loss_explicit(c_ui, private$U, private$I, private$lambda, n_threads);
 
-        trace_iter = vector("list", length(names(private$scorers)))
+
         j = 1L
         trace_scors_string = ""
-        max_k = max(vapply(private$scorers, function(x) as.integer(x[["k"]]), -1L))
-        preds = do.call(function(...) self$predict(x = private$cv_data$train, k = max_k, ...),  private$scorers_ellipsis)
-
-        for(sc in names(private$scorers)) {
-          scorer = private$scorers[[sc]]
-          # preds = do.call(function(...) self$predict(x = private$cv_data$train, k = scorer[["k"]], ...),  private$scorers_ellipsis)
-          score = scorer$scorer_function(preds, ...)
-          trace_scors_string = sprintf("%s score %s = %f", trace_scors_string, sc, score)
-          trace_iter[[j]] = list(iter = i, scorer = sc, value = score)
-          j = j + 1L
+        trace_iter = NULL
+        # check if we have scorers
+        if(length(private$scorers) > 0) {
+          trace_iter = vector("list", length(names(private$scorers)))
+          max_k = max(vapply(private$scorers, function(x) as.integer(x[["k"]]), -1L))
+          preds = do.call(function(...) self$predict(x = private$cv_data$train, k = max_k, ...),  private$scorers_ellipsis)
+          for(sc in names(private$scorers)) {
+            scorer = private$scorers[[sc]]
+            # preds = do.call(function(...) self$predict(x = private$cv_data$train, k = scorer[["k"]], ...),  private$scorers_ellipsis)
+            score = scorer$scorer_function(preds, ...)
+            trace_scors_string = sprintf("%s score %s = %f", trace_scors_string, sc, score)
+            trace_iter[[j]] = list(iter = i, scorer = sc, value = score)
+            j = j + 1L
+          }
+          trace_iter = data.table::rbindlist(trace_iter)
         }
-        trace_iter = data.table::rbindlist(trace_iter)
+
         trace_lst[[i]] = data.table::rbindlist(list(trace_iter, list(iter = i, scorer = "loss", value = loss)))
         flog.info("iter %d loss = %.4f %s", i, loss, trace_scors_string)
         if(loss_prev_iter / loss - 1 < convergence_tol) {
