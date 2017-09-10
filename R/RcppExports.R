@@ -13,3 +13,7 @@ top_k_indices_byrow <- function(x, k, n_threads, not_recommend) {
     .Call('_reco_top_k_indices_byrow', PACKAGE = 'reco', x, k, n_threads, not_recommend)
 }
 
+dotprod_top_k <- function(x, y, k, n_threads, not_recommend) {
+    .Call('_reco_dotprod_top_k', PACKAGE = 'reco', x, y, k, n_threads, not_recommend)
+}
+

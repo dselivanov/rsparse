@@ -289,8 +289,10 @@ WRMF = R6::R6Class(
 
       # transform user features into latent space
       # calculate scores for each item
-      user_item_score = self$transform(x) %*% private$I
-      indices = top_k_indices_byrow(user_item_score, k, n_threads, not_recommend)
+      # user_item_score = self$transform(x) %*% private$I
+      # indices = top_k_indices_byrow(user_item_score, k, n_threads, not_recommend)
+      indices = dotprod_top_k(self$transform(x), private$I, k, n_threads, not_recommend)
+
       scores = attr(indices, "scores", exact = TRUE)
       attr(indices, "scores") = NULL
 
