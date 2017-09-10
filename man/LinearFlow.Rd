@@ -18,11 +18,13 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
   model = LinearFlow$new( rank = 8L,
                           lambda = 0,
                           svd_solver = c("irlba", "randomized_svd"),
-                          orthogonal_basis = NULL)
+                          Q = NULL)
   model$fit_transform(x, ...)
   model$predict(x, k, n_threads = 1L, not_recommend = x, ...)
   model$components
-  model$orthogonal_basis
+  model$Q
+  model$cv = function(x, x_cv_train, x_cv_cv, lambdas = "auto@50", metric = "map@10",
+                      n_threads = 1L, not_recommend = x_cv_train, ...)
 }
 }
 
