@@ -148,14 +148,14 @@ LinearFlow = R6::R6Class(
       as.matrix(solve(lhs_ridge, rhs))
     },
     predict_internal = function(xq, k, Y, n_threads = 1L, not_recommend = x, ...) {
-      # user_item_score = x %*% self$Q %*% Y
-      user_item_score = xq %*% Y
-
-      if(!is.matrix(user_item_score))
-        user_item_score = as.matrix(user_item_score)
+      if(!is.matrix(xq))
+        xq = as.matrix(xq)
+      if(!is.matrix(Y))
+        Y = as.matrix(Y)
 
       flog.debug("predicting top %d values", k)
-      indices = top_k_indices_byrow(user_item_score, k, n_threads, not_recommend)
+      indices = dotprod_top_k(xq, Y, k, n_threads, not_recommend)
+
       scores = attr(indices, "scores", exact = TRUE)
       data.table::setattr(indices, "scores", NULL)
 
