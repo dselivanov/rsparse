@@ -13,9 +13,7 @@ using namespace Rcpp;
 using namespace RcppArmadillo;
 using namespace arma;
 
-arma::vec chol_solver(const arma::sp_mat &Conf,
-                      const arma::mat &XtX,
-                      const arma::mat &Y,
+arma::vec chol_solver(const arma::mat &XtX,
                       const arma::mat &X_nnz,
                       const arma::vec &confidence) {
   arma::mat inv = XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
@@ -23,8 +21,7 @@ arma::vec chol_solver(const arma::sp_mat &Conf,
   return solve(inv, rhs, solve_opts::fast );
 }
 
-inline arma::vec cg_solver(const arma::sp_mat &Conf,
-                      const arma::mat &XtX,
+inline arma::vec cg_solver(const arma::mat &XtX,
                       const arma::mat &X_nnz,
                       const arma::vec &confidence,
                       const arma::vec &x_old,
@@ -80,9 +77,9 @@ double als_implicit(const arma::sp_mat& Conf,
       arma::vec confidence = vec(&Conf.values[p1], p2 - p1);
       arma::mat X_nnz = X.cols(idx);
       if(solver == CHOLESKY)
-        Y.col(i) = chol_solver(Conf, XtX, Y, X_nnz, confidence);
+        Y.col(i) = chol_solver(XtX, X_nnz, confidence);
       else if(solver == CONJUGATE_GRADIENT)
-        Y.col(i) = cg_solver(Conf, XtX, X_nnz, confidence, Y.col(i), cg_steps);
+        Y.col(i) = cg_solver(XtX, X_nnz, confidence, Y.col(i), cg_steps);
       else stop("Unknown solver code %d", solver);
       // if we don't want to calc loss - will provide lambda = -1
       if(lambda >= 0)

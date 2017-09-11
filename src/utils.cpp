@@ -10,7 +10,7 @@
 
 using namespace Rcpp;
 
-// Find top k elements and their indices on O(n * log (k)) time with heaps
+// Find top k elements (and their indices) of the dot-product of 2 matrices in O(n * log (k))
 // https://stackoverflow.com/a/38391603/1069256
 // [[Rcpp::export]]
 IntegerMatrix dotprod_top_k(const arma::mat &x, const arma::mat &y, int k, int n_threads, Rcpp::Nullable<const arma::sp_mat> &not_recommend) {
@@ -33,7 +33,6 @@ IntegerMatrix dotprod_top_k(const arma::mat &x, const arma::mat &y, int k, int n
     arma::rowvec yvec = x.row(j) * y;
     std::priority_queue< std::pair<double, int>, std::vector< std::pair<double, int> >, std::greater <std::pair<double, int> > > q;
     for (int i = 0; i < nc; ++i) {
-      // double val = as_scalar(x.row(j) * y.col(i));
       double val = arma::as_scalar(yvec.at(i));
       double m_ji;
       if(not_empty_filter_matrix)
