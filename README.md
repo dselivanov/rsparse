@@ -2,11 +2,17 @@
 
 `reco` is an R package which implements several algrithms for matrix factorization targeting recommender systems. 
 
-Noticeably it provides one of the most efficient (benchmarks below) solvers for Weighted Regularized Matrix Factorization (WRMF). See [Collaborative Filtering for Implicit Feedback Datasets](http://yifanhu.net/PUB/cf.pdf) paper by Yifan Hu, Yehuda Koren, Chris Volinsky.
+1. Weighted Regularized Matrix Factorization (WRMF) from [Collaborative Filtering for Implicit Feedback Datasets](http://yifanhu.net/PUB/cf.pdf) (by Yifan Hu, Yehuda Koren, Chris Volinsky). One of the most efficient (benchmarks below) solvers.
+1. Linear-Flow from [Practical Linear Models for Large-Scale One-Class Collaborative Filtering](http://www.bkveton.com/docs/ijcai2016.pdf). This algorithm is similar to [SLIM](http://glaros.dtc.umn.edu/gkhome/node/774) but looks for factorized low-rank item-item similarity matrix.
+1. Regularized Matrix Factorization (MF) - classic approch for "rating" prediction.
 
+Package is **quite fast**:
+
+* Built on top of `RcppArmadillo`
 * extensively use **BLAS** and parallelized with **OpenMP**
 * implements **Conjugate Gradient solver** as dicribed in [Applications of the Conjugate Gradient Method for Implicit
 Feedback Collaborative Filtering](https://pdfs.semanticscholar.org/bfdf/7af6cf7fd7bb5e6b6db5bbd91be11597eaf0.pdf) and [Faster Implicit Matrix Factorization](www.benfrederickson.com/fast-implicit-matrix-factorization/)
+* Top-k items inference is `O(n*log(k))` and use **BLAS** + **OpenMP**
 
 ![benchmark](https://github.com/dselivanov/bench-wals/raw/master/img/wals-bench-cg.png)
 
@@ -21,12 +27,6 @@ Feedback Collaborative Filtering](https://pdfs.semanticscholar.org/bfdf/7af6cf7f
     * complimentary item-to-item recommendations
 1. [Benchmark](http://dsnotes.com/post/2017-07-10-bench-wrmf/) against other good implementations
 
-# Algorithms
-
-At the moment following algorithms are implemented:
-
-* Alternating Weighted Least Squares for matrix factorization for implicit feedback ([Collaborative Filtering for Implicit Feedback Datasets](http://yifanhu.net/PUB/cf.pdf) paper by Yifan Hu, Yehuda Koren, Chris Volinsky)
-* Classic Alternating Least Squares for rating data (explicit feedback)
 
 # API
 
@@ -44,7 +44,3 @@ It it also possible to change number of threads in runtime, see for example foll
 
 * [OpenBlasThreads](https://github.com/rundel/OpenBlasThreads)
 * [RhpcBLASctl](https://cran.r-project.org/web/packages/RhpcBLASctl/index.html)
-
-# Quice reference
-
-TODO
