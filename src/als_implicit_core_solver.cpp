@@ -81,7 +81,6 @@ double als_implicit(const arma::sp_mat& Conf,
       else if(solver == CONJUGATE_GRADIENT)
         Y.col(i) = cg_solver(XtX, X_nnz, confidence, Y.col(i), cg_steps);
       else stop("Unknown solver code %d", solver);
-      // if we don't want to calc loss - will provide lambda = -1
       if(lambda >= 0)
         loss += accu(square( 1 - (Y.col(i).t() * X_nnz) ) * confidence);
     }
