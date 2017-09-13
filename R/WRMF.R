@@ -104,8 +104,10 @@ WRMF = R6::R6Class(
                           init_stdv = 0.01,
                           non_negative = FALSE,
                           solver = c("conjugate_gradient", "cholesky"),
-                          cg_steps = 3L) {
-
+                          cg_steps = 3L,
+                          components = NULL) {
+      stopifnot(is.null(components) || is.matrix(components))
+      private$components_ = components
       solver = match.arg(solver)
       private$feedback = match.arg(feedback)
       if(solver == "conjugate_gradient" && private$feedback == "explicit")
@@ -150,9 +152,16 @@ WRMF = R6::R6Class(
       n_user = nrow(c_ui)
       n_item = ncol(c_ui)
 
-      # private$U = matrix(rnorm(n_user * private$rank, 0, private$init_stdv), ncol = n_user, nrow = private$rank)
       private$U = matrix(0.0, ncol = n_user, nrow = private$rank)
-      private$I = matrix(rnorm(n_item * private$rank, 0, private$init_stdv), ncol = n_item, nrow = private$rank)
+
+      if(is.null(private$components_)) {
+        private$components_ = matrix(rnorm(n_item * private$rank, 0, private$init_stdv), ncol = n_item, nrow = private$rank)
+      } else {
+        stopifnot(is.matrix(private$components_))
+        stopifnot(ncol(private$components_) == n_item)
+        stopifnot(nrow(private$components_) == private$rank)
+      }
+
       Lambda = diag(x = private$lambda, nrow = private$rank, ncol = private$rank)
 
       trace_values = vector("numeric", n_iter)
@@ -167,39 +176,37 @@ WRMF = R6::R6Class(
         stopifnot(ncol(private$U) == ncol(c_iu))
         if (private$feedback == "implicit") {
           # private$U will be modified in place
-          loss = als_implicit(c_iu, private$I, private$U, n_threads = n_threads,
-                       # pass -1 mean that we ask to not calculate loss
-                       # 0 loss will be returned instead
-                       lambda = -1,
+          loss = als_implicit(c_iu, private$components_, private$U, n_threads = n_threads,
+                       lambda = private$lambda,
                        solver = private$solver_code, cg_steps = private$cg_steps)
-          # private$U = private$solver(private$I, c_iu, n_threads = n_threads, ...)
+          # private$U = private$solver(private$components_, c_iu, n_threads = n_threads, ...)
         } else if (private$feedback == "explicit") {
-          private$U = private$solver_explicit_feedback(c_iu, private$I)
+          private$U = private$solver_explicit_feedback(c_iu, private$components_)
         }
         # if need non-negative matrix factorization - just set all negative values to zero
         if(private$non_negative)
           private$U[private$U < 0] = 0
 
         flog.debug("iter %d by user", i)
-        stopifnot(ncol(private$I) == ncol(c_ui))
+        stopifnot(ncol(private$components_) == ncol(c_ui))
         if (private$feedback == "implicit") {
-          # private$I will be modified in place
-          loss = als_implicit(c_ui, private$U, private$I, n_threads = n_threads,
+          # private$components_ will be modified in place
+          loss = als_implicit(c_ui, private$U, private$components_, n_threads = n_threads,
                               lambda = private$lambda,
                               private$solver_code, private$cg_steps)
-          # private$I = private$solver(private$U, c_ui, n_threads = n_threads, ...)
+          # private$components_ = private$solver(private$U, c_ui, n_threads = n_threads, ...)
         } else if (private$feedback == "explicit") {
-          private$I = private$solver_explicit_feedback(c_ui, private$U)
+          private$components_ = private$solver_explicit_feedback(c_ui, private$U)
         }
         # if need non-negative matrix factorization - just set all negative values to zero
         if(private$non_negative)
-          private$I[private$I < 0] = 0
+          private$components_[private$components_ < 0] = 0
 
         #------------------------------------------------------------------------
         # calculate some metrics if needed in order to diagnose convergence
         #------------------------------------------------------------------------
         if (private$feedback == "explicit")
-          loss = als_loss_explicit(c_ui, private$U, private$I, private$lambda, n_threads);
+          loss = als_loss_explicit(c_ui, private$U, private$components_, private$lambda, n_threads);
 
 
         j = 1L
@@ -231,7 +238,6 @@ WRMF = R6::R6Class(
         #------------------------------------------------------------------------
       }
 
-      private$components_ = private$I
       data.table::setattr(private$components_, "dimnames", list(NULL, colnames(x)))
 
       res = t(private$U)
@@ -241,7 +247,7 @@ WRMF = R6::R6Class(
     },
     # project new users into latent user space - just make ALS step given fixed items matrix
     transform = function(x, n_threads = private$n_threads, ...) {
-      stopifnot(ncol(x) == ncol(private$I))
+      stopifnot(ncol(x) == ncol(private$components_))
       # allocate result matrix - will be modified in place
 
       x = private$check_convert_input(x, private$internal_matrix_formats)
@@ -249,12 +255,12 @@ WRMF = R6::R6Class(
       if(private$feedback == "implicit") {
         res = matrix(0, nrow = private$rank, ncol = nrow(x))
 
-        als_implicit(t(x), private$I, res, n_threads = n_threads,
+        als_implicit(t(x), private$components_, res, n_threads = n_threads,
                      lambda = private$lambda,
                      private$solver_code, private$cg_steps)
 
       } else if(private$feedback == "explicit")
-        res = private$solver_explicit_feedback(t(x), private$I)
+        res = private$solver_explicit_feedback(t(x), private$components_)
       else
         stop(sprintf("don't know how to work with feedback = '%s'", private$feedback))
       if(private$non_negative)
@@ -289,8 +295,8 @@ WRMF = R6::R6Class(
 
       # transform user features into latent space
       # calculate scores for each item
-      # user_item_score = self$transform(x) %*% private$I
-      indices = dotprod_top_k(self$transform(x), private$I, k, n_threads, not_recommend)
+      # user_item_score = self$transform(x) %*% private$components_
+      indices = dotprod_top_k(self$transform(x), private$components_, k, n_threads, not_recommend)
 
       scores = attr(indices, "scores", exact = TRUE)
       attr(indices, "scores") = NULL

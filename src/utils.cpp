@@ -29,10 +29,10 @@ IntegerMatrix dotprod_top_k(const arma::mat &x, const arma::mat &y, unsigned k, 
   #ifdef _OPENMP
   #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE)
   #endif
-  for(int j = 0; j < nr; j++) {
+  for(size_t j = 0; j < nr; j++) {
     arma::rowvec yvec = x.row(j) * y;
     std::priority_queue< std::pair<double, int>, std::vector< std::pair<double, int> >, std::greater <std::pair<double, int> > > q;
-    for (int i = 0; i < nc; ++i) {
+    for (size_t i = 0; i < nc; ++i) {
       double val = arma::as_scalar(yvec.at(i));
       double m_ji;
       if(not_empty_filter_matrix)
@@ -46,7 +46,7 @@ IntegerMatrix dotprod_top_k(const arma::mat &x, const arma::mat &y, unsigned k, 
         q.push(std::pair<double, int>(val, i));
       }
     }
-    for (int i = 0; i < k; ++i) {
+    for (size_t i = 0; i < k; ++i) {
       res_ptr[nr * (k - i - 1) + j] = q.top().second + 1;
       scores_ptr[nr * (k - i - 1) + j] = q.top().first;
       q.pop();
