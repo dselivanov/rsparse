@@ -53,8 +53,8 @@ double als_implicit(const arma::sp_mat& Conf,
                     arma::mat& X,
                     arma::mat& Y,
                     double lambda,
-                    int n_threads,
-                    int solver, int cg_steps = 3) {
+                    unsigned n_threads,
+                    unsigned solver, unsigned cg_steps = 3) {
 
   arma::mat XtX = X * X.t();
   if(lambda > 0) {
@@ -64,11 +64,11 @@ double als_implicit(const arma::sp_mat& Conf,
   }
 
   double loss = 0;
-  int nc = Conf.n_cols;
+  size_t nc = Conf.n_cols;
   #ifdef _OPENMP
   #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE) reduction(+:loss)
   #endif
-  for(int i = 0; i < nc; i++) {
+  for(size_t i = 0; i < nc; i++) {
     int p1 = Conf.col_ptrs[i];
     int p2 = Conf.col_ptrs[i + 1];
     // catch situation when some columns in matrix are empty, so p1 becomes equal to p2 or greater than number of columns
@@ -93,13 +93,13 @@ double als_implicit(const arma::sp_mat& Conf,
 }
 
 // [[Rcpp::export]]
-double als_loss_explicit(const arma::sp_mat& mat, arma::mat& X, arma::mat& Y, double lambda, int n_threads) {
-  int nc = mat.n_cols;
+double als_loss_explicit(const arma::sp_mat& mat, arma::mat& X, arma::mat& Y, double lambda, unsigned n_threads) {
+  size_t nc = mat.n_cols;
   double loss = 0;
   #ifdef _OPENMP
   #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE) reduction(+:loss)
   #endif
-  for(int i = 0; i < nc; i++) {
+  for(size_t i = 0; i < nc; i++) {
     int p1 = mat.col_ptrs[i];
     int p2 = mat.col_ptrs[i + 1];
     if(p1 < p2) {

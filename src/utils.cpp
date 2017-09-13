@@ -13,14 +13,14 @@ using namespace Rcpp;
 // Find top k elements (and their indices) of the dot-product of 2 matrices in O(n * log (k))
 // https://stackoverflow.com/a/38391603/1069256
 // [[Rcpp::export]]
-IntegerMatrix dotprod_top_k(const arma::mat &x, const arma::mat &y, int k, int n_threads, Rcpp::Nullable<const arma::sp_mat> &not_recommend) {
+IntegerMatrix dotprod_top_k(const arma::mat &x, const arma::mat &y, unsigned k, unsigned n_threads, Rcpp::Nullable<const arma::sp_mat> &not_recommend) {
   arma::sp_mat mat;
   int not_empty_filter_matrix = not_recommend.isNotNull();
   if(not_empty_filter_matrix)
     mat = as<arma::sp_mat>(not_recommend.get());
 
-  int nr = x.n_rows;
-  int nc = y.n_cols;
+  size_t nr = x.n_rows;
+  size_t nc = y.n_cols;
 
   IntegerMatrix res(nr, k);
   int *res_ptr = res.begin();
