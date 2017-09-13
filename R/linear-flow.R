@@ -38,7 +38,11 @@ LinearFlow = R6::R6Class(
       private$item_ids = colnames(x)
       self$Q = private$calc_Q(x, ...)
       flog.debug("calculating RHS")
-      rhs = t(self$Q) %*% t(x) %*% x
+
+      # rhs = t(self$Q) %*% t(x) %*% x
+      # same as above but a bit faster:
+      rhs = crossprod(x %*% self$Q, x)
+
       flog.debug("calculating LHS")
       lhs = rhs %*% self$Q
       self$components = private$fit_transform_internal(lhs, rhs, private$lambda, ...)
@@ -73,14 +77,17 @@ LinearFlow = R6::R6Class(
 
       self$Q = private$calc_Q(x, ...)
       flog.info("calculating RHS")
-      rhs = t(self$Q) %*% t(x) %*% x
+      # rhs = t(self$Q) %*% t(x) %*% x
+      # same as above but a bit faster:
+      rhs = crossprod(x %*% self$Q, x)
+
       flog.info("calculating LHS")
       lhs = rhs %*% self$Q
       # calculate "reasonable" lambda from values of main diagonal of LSH
       if(lambda_auto) {
-        lhs_diag = diag(lhs)
+        lhs_ridge = diag(lhs)
         # generate sequence of lambdas
-        lambdas = seq(log10(0.1 * min(lhs_diag)), log10(100 * max(lhs_diag)), length.out = lambdas_k)
+        lambdas = seq(log10(0.1 * min(lhs_ridge)), log10(100 * max(lhs_ridge)), length.out = lambdas_k)
         lambdas = 10 ^ lambdas
       }
 
