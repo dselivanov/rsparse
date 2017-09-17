@@ -20,9 +20,9 @@
 #' @export
 LinearFlow = R6::R6Class(
   classname = "LinearFlow",
+  inherit = mlapi::mlapiDecomposition,
   public = list(
     Q = NULL,
-    components = NULL,
     initialize = function(rank = 8L,
                           lambda = 0,
                           svd_solver = c("irlba", "randomized_svd"),
@@ -45,7 +45,10 @@ LinearFlow = R6::R6Class(
 
       flog.debug("calculating LHS")
       lhs = rhs %*% self$Q
-      self$components = private$fit_transform_internal(lhs, rhs, private$lambda, ...)
+      private$components_ = private$fit_transform_internal(lhs, rhs, private$lambda, ...)
+      invisible(as.matrix(x %*% self$Q))
+    },
+    transform = function(x, ...) {
       invisible(as.matrix(x %*% self$Q))
     },
     cv = function(x, x_cv_train, x_cv_cv, lambdas = "auto@50", metric = "map@10",
@@ -105,8 +108,8 @@ LinearFlow = R6::R6Class(
           score = mean(ndcg_k(preds, x_cv_cv, ...), na.rm = T)
 
         cv_res$score[[i]] = score
-        if(score >= max(cv_res$score, na.rm = T) || is.null(self$components)) {
-          self$components = Y
+        if(score >= max(cv_res$score, na.rm = T) || is.null(private$components_)) {
+          private$components_ = Y
           private$lambda = lambda
         }
         flog.info("%d/%d lambda %.3f score = %.3f", i, length(lambdas), lambda, score)
@@ -115,7 +118,7 @@ LinearFlow = R6::R6Class(
     },
     predict = function(x, k, n_threads = 1L, not_recommend = x, ...) {
       xq = x %*% self$Q
-      predicted_item_ids = private$predict_internal(xq, k = k, self$components, n_threads = n_threads, not_recommend = not_recommend, ...)
+      predicted_item_ids = private$predict_internal(xq, k = k, private$components_, n_threads = n_threads, not_recommend = not_recommend, ...)
       predicted_item_ids
     }
   ),

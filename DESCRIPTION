@@ -29,5 +29,9 @@ Imports:
 LinkingTo:
     Rcpp, 
     RcppArmadillo
+Suggests:
+    testthat
+Remotes:
+    dselivanov/mlapi
 Remotes: github::dselivanov/mlapi
 RoxygenNote: 6.0.1

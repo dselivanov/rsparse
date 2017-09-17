@@ -24,7 +24,8 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
                   n_threads = parallel::detectCores(),
                   non_negative = FALSE,
                   solver = c("conjugate_gradient", "cholesky"),
-                  cg_steps = 3L)
+                  cg_steps = 3L,
+                  components = NULL)
   model$fit_transform(x, n_iter = 5L, n_threads = 1, ...)
   model$predict(x, k, n_threads = private$n_threads, not_recommend = x, ...)
   model$components
@@ -38,8 +39,10 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 \describe{
   \item{\code{$new(rank = 10L, lambda = 0, feedback = c("implicit", "explicit"),
                    init_stdv = 0.01, n_threads = parallel::detectCores(), non_negative = FALSE,
-                   solver = c("conjugate_gradient", "cholesky"), cg_steps = 3L) }}{ creates matrix
-    factorization model model with \code{rank} latent factors}
+                   solver = c("conjugate_gradient", "cholesky"), cg_steps = 3L,
+                   components = NULL) }}{ creates matrix
+    factorization model model with \code{rank} latent factors. If \code{components} is provided then initialize
+    item embeddings with its values.}
   \item{\code{$fit_transform(x, n_iter = 5L, n_threads = private$n_threads, ...)}}{ fits model to
     an input user-item matrix. (preferably in "dgCMatrix" format).
     For implicit feedback \code{x} should be a confidence matrix which corresponds to \code{1 + alpha * r_ui} in original paper.
@@ -55,10 +58,6 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
   Metric will be evaluated after each ALS interation. At the moment following metrices are supported:
     \bold{"loss"}, \bold{"map@k"}, \bold{"ndcg@k"}, where \bold{k} is some integer. For example \code{map@10}.}
   \item{\code{$remove_scorer(name)}}{remove a metric from watchlist}
-  \item{\code{$ap_k(x, y, k = ncol(x)}}{ calculates average precision at k for new/out-of-bag users \code{x} and
-  validate against ground truth values in \code{y}}
-  \item{\code{$ndcg_k(x, y, k = ncol(x)}}{ calculates NDCG k for new/out-of-bag users \code{x} and
-  validate against ground truth values in \code{y}}
   \item{\code{$components}}{item factors matrix of size \code{rank * n_items}}
 }
 }

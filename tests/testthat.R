@@ -1,0 +1,6 @@
+Sys.setenv("R_TESTS" = "")
+library(testthat)
+library(reco)
+library(data.table)
+data("movielens100k")
+test_check("reco")
