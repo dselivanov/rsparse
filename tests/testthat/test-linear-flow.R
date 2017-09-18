@@ -25,7 +25,7 @@ test_that("test linear-flow", {
   expect_equal(dim(user_emb), c(nrow(cv), rank))
 
   # check cheap cross-validation
-  fit_trace = model$cv(x = train, x_cv_train = cv_split$x_train, x_cv_cv = cv_split$x_cv,
+  fit_trace = model$cross_validate_lambda(x = train, x_cv_train = cv_split$x_train, x_cv_cv = cv_split$x_cv,
            lambdas = "auto@50", metric = "map@10", n_threads = 4, not_recommend = cv_split$x_train)
   expect_equal(nrow(fit_trace), 50)
   expect_gt(fit_trace$lambda[[2]],  fit_trace$lambda[[1]])
