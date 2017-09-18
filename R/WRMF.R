@@ -27,8 +27,8 @@
 #'                   solver = c("conjugate_gradient", "cholesky"),
 #'                   cg_steps = 3L,
 #'                   components = NULL)
-#'   model$fit_transform(x, n_iter = 5L, n_threads = 1, ...)
-#'   model$predict(x, k, n_threads = private$n_threads, not_recommend = x, ...)
+#'   model$fit_transform(x, n_iter = 5L, ...)
+#'   model$predict(x, k, not_recommend = x, ...)
 #'   model$components
 #'   model$add_scorers(x_train, x_cv, specs = list("map10" = "map@@10"), ...)
 #'   model$remove_scorer(name)
@@ -41,13 +41,13 @@
 #'                    components = NULL) }}{ creates matrix
 #'     factorization model model with \code{rank} latent factors. If \code{components} is provided then initialize
 #'     item embeddings with its values.}
-#'   \item{\code{$fit_transform(x, n_iter = 5L, n_threads = private$n_threads, ...)}}{ fits model to
+#'   \item{\code{$fit_transform(x, n_iter = 5L, ...)}}{ fits model to
 #'     an input user-item matrix. (preferably in "dgCMatrix" format).
 #'     For implicit feedback \code{x} should be a confidence matrix which corresponds to \code{1 + alpha * r_ui} in original paper.
 #'     Usually \code{r_ui} corresponds to the number of interactions of user \code{u} and item \code{i}.
 #'     For explicit feedback values in \code{x} represents ratings.
 #'     \bold{Returns factor matrix for users of size \code{n_users * rank}}}
-#'   \item{\code{$predict(x, k, n_threads = private$n_threads, not_recommend = x, ...)}}{predict \code{top k}
+#'   \item{\code{$predict(x, k, not_recommend = x, ...)}}{predict \code{top k}
 #'     item ids for users \code{x} (= column names from the matrix passed to \code{fit_transform()} method).
 #'     Users features should be defined the same way as they were defined in training data - as \bold{sparse matrix}
 #'     of confidence values (implicit feedback) or ratings (explicit feedback).
@@ -57,6 +57,9 @@
 #'     \bold{"loss"}, \bold{"map@@k"}, \bold{"ndcg@@k"}, where \bold{k} is some integer. For example \code{map@@10}.}
 #'   \item{\code{$remove_scorer(name)}}{remove a metric from watchlist}
 #'   \item{\code{$components}}{item factors matrix of size \code{rank * n_items}}
+#'   \item{n_threads}{\code{numeric} default number of threads to use during training and prediction
+#'   (if OpenMP is available).}
+
 #'}
 #' @section Arguments:
 #' \describe{
@@ -82,7 +85,7 @@
 #'     (if "conjugate_gradient" solver used). \code{cg_steps = 3} by default.
 #'     Controls precision of linear equation solution at the each ALS step. Usually no need to tune this parameter.}
 #'  \item{n_threads}{\code{numeric} default number of threads to use during training and prediction
-#'  (if OpenMP is available). Check descriptions of other methods - some of them can override this parameter.}
+#'  (if OpenMP is available).}
 #'  \item{not_recommend}{\code{sparse matrix} or \code{NULL} - points which items should be excluided from recommendations for a user.
 #'    By default it excludes previously seen/consumed items.}
 #'  \item{convergence_tol}{{\code{numeric = -Inf} defines early stopping strategy. We stop fitting
@@ -96,6 +99,7 @@ WRMF = R6::R6Class(
   inherit = mlapi::mlapiDecomposition,
   classname = "AlternatingLeastSquares",
   public = list(
+    n_threads = NULL,
     initialize = function(rank = 10L,
                           lambda = 0,
                           feedback = c("implicit", "explicit"),
@@ -125,10 +129,10 @@ WRMF = R6::R6Class(
       private$rank = as.integer(rank)
 
       private$scorers = new.env(hash = TRUE, parent = emptyenv())
-      private$n_threads = n_threads
+      self$n_threads = n_threads
       private$non_negative = non_negative
     },
-    fit_transform = function(x, n_iter = 5L, convergence_tol = -Inf, n_threads = private$n_threads, ...) {
+    fit_transform = function(x, n_iter = 5L, convergence_tol = -Inf, ...) {
 
       # x = confidense matrix, not ratings/interactions matrix!
       # we expect user already transformed it
@@ -165,7 +169,7 @@ WRMF = R6::R6Class(
 
       trace_values = vector("numeric", n_iter)
 
-      flog.info("starting factorization with %d threads", n_threads)
+      flog.info("starting factorization with %d threads", self$n_threads)
       trace_lst = vector("list", n_iter)
       loss_prev_iter = Inf
       # iterate
@@ -175,10 +179,9 @@ WRMF = R6::R6Class(
         stopifnot(ncol(private$U) == ncol(c_iu))
         if (private$feedback == "implicit") {
           # private$U will be modified in place
-          loss = als_implicit(c_iu, private$components_, private$U, n_threads = n_threads,
+          loss = als_implicit(c_iu, private$components_, private$U, n_threads = self$n_threads,
                        lambda = private$lambda,
                        solver = private$solver_code, cg_steps = private$cg_steps)
-          # private$U = private$solver(private$components_, c_iu, n_threads = n_threads, ...)
         } else if (private$feedback == "explicit") {
           private$U = private$solver_explicit_feedback(c_iu, private$components_)
         }
@@ -190,10 +193,9 @@ WRMF = R6::R6Class(
         stopifnot(ncol(private$components_) == ncol(c_ui))
         if (private$feedback == "implicit") {
           # private$components_ will be modified in place
-          loss = als_implicit(c_ui, private$U, private$components_, n_threads = n_threads,
+          loss = als_implicit(c_ui, private$U, private$components_, n_threads = self$n_threads,
                               lambda = private$lambda,
                               private$solver_code, private$cg_steps)
-          # private$components_ = private$solver(private$U, c_ui, n_threads = n_threads, ...)
         } else if (private$feedback == "explicit") {
           private$components_ = private$solver_explicit_feedback(c_ui, private$U)
         }
@@ -205,7 +207,7 @@ WRMF = R6::R6Class(
         # calculate some metrics if needed in order to diagnose convergence
         #------------------------------------------------------------------------
         if (private$feedback == "explicit")
-          loss = als_loss_explicit(c_ui, private$U, private$components_, private$lambda, n_threads);
+          loss = als_loss_explicit(c_ui, private$U, private$components_, private$lambda, self$n_threads);
 
 
         j = 1L
@@ -245,7 +247,7 @@ WRMF = R6::R6Class(
       res
     },
     # project new users into latent user space - just make ALS step given fixed items matrix
-    transform = function(x, n_threads = private$n_threads, ...) {
+    transform = function(x, ...) {
       stopifnot(ncol(x) == ncol(private$components_))
       # allocate result matrix - will be modified in place
 
@@ -254,7 +256,7 @@ WRMF = R6::R6Class(
       if(private$feedback == "implicit") {
         res = matrix(0, nrow = private$rank, ncol = nrow(x))
 
-        als_implicit(t(x), private$components_, res, n_threads = n_threads,
+        als_implicit(t(x), private$components_, res, n_threads = self$n_threads,
                      lambda = private$lambda,
                      private$solver_code, private$cg_steps)
 
@@ -269,10 +271,10 @@ WRMF = R6::R6Class(
       res
     },
     # project new items into latent item space
-    get_items_embeddings = function(x, n_threads = private$n_threads, ...) {
+    get_items_embeddings = function(x, ...) {
       if(private$feedback == "implicit") {
         res = matrix(0, nrow = private$rank, ncol = nrow(x))
-        als_implicit(x, private$U, res, n_threads = n_threads,
+        als_implicit(x, private$U, res, n_threads = self$n_threads,
                      lambda = private$lambda,
                      private$solver_code, private$cg_steps)
       } else if(private$feedback == "explicit") {
@@ -285,7 +287,7 @@ WRMF = R6::R6Class(
 
       res
     },
-    predict = function(x, k, n_threads = private$n_threads, not_recommend = x, ...) {
+    predict = function(x, k, not_recommend = x, ...) {
       stopifnot(private$item_ids == colnames(x))
       stopifnot(is.null(not_recommend) || inherits(not_recommend, "sparseMatrix"))
       if(!is.null(not_recommend))
@@ -295,7 +297,7 @@ WRMF = R6::R6Class(
       # transform user features into latent space
       # calculate scores for each item
       # user_item_score = self$transform(x) %*% private$components_
-      indices = dotprod_top_k(self$transform(x), private$components_, k, n_threads, not_recommend)
+      indices = dotprod_top_k(self$transform(x), private$components_, k, self$n_threads, not_recommend)
 
       scores = attr(indices, "scores", exact = TRUE)
       attr(indices, "scores") = NULL
@@ -354,7 +356,6 @@ WRMF = R6::R6Class(
     lambda = NULL,
     init_stdv = NULL,
     rank = NULL,
-    n_threads = NULL,
     non_negative = NULL,
     # user factor matrix = rank * n_users
     U = NULL,
@@ -373,7 +374,7 @@ WRMF = R6::R6Class(
     # C_UI = user-item confidence matrix
 
     # R solver for reference. Now replaced with fast Armadillo solver
-    solver = function(X, C_UI, n_threads = private$n_threads, ...) {
+    solver = function(X, C_UI, ...) {
 
       XtX_reg = tcrossprod(X) + diag(x = private$lambda, nrow = private$rank, ncol = private$rank)
       m_rank = nrow(X)
@@ -390,7 +391,7 @@ WRMF = R6::R6Class(
       C_UI_I = C_UI@i
       C_UI_X = C_UI@x
 
-      splits = parallel::splitIndices(nc, n_threads)
+      splits = parallel::splitIndices(nc, self$n_threads)
 
       RES = parallel::mclapply(splits, function(chunk) {
         # MAP PHASE
@@ -448,13 +449,12 @@ WRMF = R6::R6Class(
           #------------------------------------
         }
         RES_WORKER
-      }, mc.cores = n_threads, ...)
+      }, mc.cores = self$n_threads, ...)
       # GLOBAL REDUCE
       do.call(cbind, RES)
     }
   )
 )
-
 
 #' @export
 ALS = WRMF
