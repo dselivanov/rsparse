@@ -3,13 +3,17 @@
 \docType{data}
 \name{LinearFlow}
 \alias{LinearFlow}
-\title{Linear Flow method for collaborative filtering}
+\title{Linear-FLow method for one-class collaborative filtering}
 \format{\code{R6Class} object.}
 \usage{
 LinearFlow
 }
 \description{
-Creates model which seeks for item similarity matrix
+Creates \bold{Linear-FLow} model described in
+\href{http://www.bkveton.com/docs/ijcai2016.pdf}{Practical Linear Models for Large-Scale One-Class Collaborative Filtering}.
+The goal is to find item-item (or user-user) similarity matrix which is \bold{low-rank and has small Frobenius norm}. Such
+double regularization allows to better control the generalization error of the model.
+Idea of the method is somewhat similar to \bold{Sparse Linear Methods(SLIM)} but scales to large datasets much better.
 }
 \section{Usage}{
 
@@ -18,14 +22,77 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
   model = LinearFlow$new( rank = 8L,
                           lambda = 0,
                           svd_solver = c("irlba", "randomized_svd"),
-                          Q = NULL)
+                          n_threads = parallel::detectCores(),
+                          Q = NULL, ...)
   model$fit_transform(x, ...)
-  model$predict(x, k, n_threads = 1L, not_recommend = x, ...)
+  model$transform(x, ...)
+  model$predict(x, k, not_recommend = x, ...)
   model$components
   model$Q
-  model$cv = function(x, x_cv_train, x_cv_cv, lambdas = "auto@50", metric = "map@10",
-                      n_threads = 1L, not_recommend = x_cv_train, ...)
+  model$cross_validate_lambda(x, x_cv_train, x_cv_cv, lambda = "auto@50",
+                       metric = "map@10", not_recommend = x_cv_train, ...)
+}
+
+
+}
+
+\section{Methods}{
+
+\describe{
+  \item{\code{$new(rank = 8L, lambda = 0,
+              svd_solver = c("irlba", "randomized_svd"),
+              n_threads = parallel::detectCores(),
+              Q = NULL, ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
+    If \code{Q} (right singular vectors of the user-item interactions matrix)
+    is provided then model initialized with its values.}
+  \item{\code{$fit_transform(x, ...)}}{ fits model to
+    an input user-item matrix. (preferably in \code{CsparseMatrix}/\code{dgCMatrix} format
+    for \code{irlba} SVD solver and \code{RsparseMatrix}/\code{dgRMatrix} for \code{randomized_svd} SVD solver).
+    \bold{Returns factor matrix for users of size \code{n_users * rank}}}
+  \item{\code{$transform(x, ...)}}{transforms (new) sparse user-item interaction matrix into user-embeddings matrix.}
+  \item{\code{$predict(x, k, not_recommend = x, ...)}}{predict \bold{top k}
+    item ids for users \code{x}. Users features should be defined the same way as they were defined in
+    training data - as \bold{sparse matrix}. Column names (=item ids) should be in the same order as
+    in the \code{fit_transform()}.}
+  \item{\code{$cross_validate_lambda(x, x_cv_train, x_cv_cv, lambda = "auto@50", metric = "map@10",
+                              not_recommend = x_cv_train, ...)}}{perfroms search of the
+  best regularization parameter \code{lambda}:
+  \enumerate{
+    \item Model is trained on \code{x} data
+    \item Then model makes predictions based on \code{x_cv_train} data
+    \item And finally these predications are validated using specified \code{metric} against \code{x_cv_cv} data
+  }
+  Note that this is implemented smartly with \bold{"warm starts"}.
+  So it is very cheap - \bold{cost is almost the same as for single fit} of the model. The only considerable additional cost is
+  time to predict \emph{top k} items. In most cases automatic lambda like \code{lambda = "auto@20"} is able to find good value of the parameter}
+  \item{\code{$components}}{item factors matrix of size \code{rank * n_items}. In the paper this matrix is called \bold{Y}}
+  \item{\code{$Q}}{right singular vector of the user-item matrix. Size is \code{n_items * rank}. In the paper this matrix is called \bold{Q}}
 }
 }
 
+\section{Arguments}{
+
+\describe{
+ \item{model}{A \code{LinearFlow} model.}
+ \item{x}{An input sparse user-item matrix (inherits from \code{sparseMatrix})}
+ \item{rank}{\code{integer} - number of latent factors}
+ \item{lambda}{\code{numeric} - regularization parameter or sequence of regularization values for \code{cross_validate_lambda} method.}
+ \item{n_threads}{\code{numeric} default number of threads to use during prediction (if OpenMP is available).
+ At the training most expensive stage is truncated SVD calculation. \code{irlba} method on \code{dgCMatrix} relies on system BLAS,
+ so it also can benefit from multithreded BLAS. But this is not controlled by \code{n_threads} parameter.
+ For changing number of BLAS threads at runtime please check \href{https://cran.r-project.org/package=RhpcBLASctl}{RhpcBLASctl package}.}
+ \item{not_recommend}{\code{sparse matrix} or \code{NULL} - points which items should be excluided from recommendations for a user.
+   By default it excludes previously seen/consumed items.}
+ \item{metric}{metric to use in evaluation of top-k recommendations.
+   Currently only \code{map@k} and \code{ndcg@k} are supported (\code{k} can be any integer).}
+ \item{...}{other arguments (not used at the moment)}
+}
+}
+
+\seealso{
+\itemize{
+  \item{\url{http://www.bkveton.com/docs/ijcai2016.pdf}}
+  \item{\url{http://www-users.cs.umn.edu/~xning/slides/ICDM2011_slides.pdf}}
+}
+}
 \keyword{datasets}

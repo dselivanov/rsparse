@@ -108,7 +108,8 @@ WRMF = R6::R6Class(
                           non_negative = FALSE,
                           solver = c("conjugate_gradient", "cholesky"),
                           cg_steps = 3L,
-                          components = NULL) {
+                          components = NULL,
+                          ...) {
       stopifnot(is.null(components) || is.matrix(components))
       private$components_ = components
       solver = match.arg(solver)
