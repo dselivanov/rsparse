@@ -17,6 +17,7 @@ Encoding: UTF-8
 LazyData: true
 ByteCompile: true
 Depends:
+    R (>= 3.1.0),
     methods
 Imports:
     mlapi, 

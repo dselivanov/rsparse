@@ -456,6 +456,3 @@ WRMF = R6::R6Class(
     }
   )
 )
-
-#' @export
-ALS = WRMF

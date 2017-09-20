@@ -1,6 +1,6 @@
 futile.logger::flog.threshold(futile.logger::WARN)
-train = movielens_100k_ratings[1:900, , drop = F]
-cv = movielens_100k_ratings[901:nrow(movielens_100k_ratings), , drop = F]
+train = movielens100k[1:900, , drop = F]
+cv = movielens100k[901:nrow(movielens100k), , drop = F]
 
 test_that("test WRMF core", {
   p_impl = expand.grid(solver = c("conjugate_gradient", "cholesky"),
@@ -54,7 +54,7 @@ test_that("test WRMF extra", {
   nnmf = FALSE
   solver = "cholesky"
   n_iter = 10
-  cv_split = split_into_cv(cv)
+  cv_split = train_test_split(cv)
   for(feedback in c("explicit", "implicit")) {
     model = WRMF$new(rank = rank,  lambda = lambda, feedback = feedback, non_negative = nnmf, solver = solver)
     # model$add_scorers(x_train = cv_split$x_train, x_cv = cv_split$x_cv,

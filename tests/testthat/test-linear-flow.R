@@ -1,13 +1,13 @@
 futile.logger::flog.threshold(futile.logger::WARN)
-train = movielens_100k_ratings[1:900, , drop = F]
-cv = movielens_100k_ratings[901:nrow(movielens_100k_ratings), , drop = F]
+train = movielens100k[1:900, , drop = F]
+cv = movielens100k[901:nrow(movielens100k), , drop = F]
 futile.logger::flog.threshold(futile.logger::INFO)
 
 test_that("test linear-flow", {
   lambda = 0
   rank = 8
   K = 10
-  cv_split = split_into_cv(cv)
+  cv_split = train_test_split(cv)
   model = LinearFlow$new(rank = rank, lambda = lambda,
                          svd_solver = "irlba", Q = NULL)
 
