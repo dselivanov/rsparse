@@ -299,16 +299,17 @@ WRMF = R6::R6Class(
       # calculate scores for each item
       # user_item_score = self$transform(x) %*% private$components_
       indices = dotprod_top_k(self$transform(x), private$components_, k, self$n_threads, not_recommend)
+      data.table::setattr(indices, "dimnames", list(rownames(x), NULL))
+      data.table::setattr(indices, "indices", NULL)
 
-      scores = attr(indices, "scores", exact = TRUE)
-      attr(indices, "scores") = NULL
+      if(!is.null(private$item_ids)) {
+        predicted_item_ids = private$item_ids[indices]
+        data.table::setattr(predicted_item_ids, "dim", dim(indices))
+        data.table::setattr(predicted_item_ids, "dimnames", list(rownames(x), NULL))
+        data.table::setattr(indices, "indices", predicted_item_ids)
+      }
 
-      predicted_item_ids = private$item_ids[indices]
-      data.table::setattr(predicted_item_ids, "dim", dim(indices))
-      data.table::setattr(predicted_item_ids, "indices", indices)
-      data.table::setattr(predicted_item_ids, "scores", scores)
-      data.table::setattr(predicted_item_ids, "dimnames", list(rownames(x), NULL))
-      predicted_item_ids
+      indices
     },
     add_scorers = function(x_train, x_cv, specs = list("map10" = "map@10"), ...) {
       stopifnot(data.table::uniqueN(names(specs)) == length(specs))

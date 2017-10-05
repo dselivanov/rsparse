@@ -97,7 +97,6 @@ LinearFlow = R6::R6Class(
       self$Q = Q
     },
     fit_transform = function(x, ...) {
-      stopifnot(!is.null(colnames(x)))
       private$item_ids = colnames(x)
       self$Q = private$calc_Q(x, ...)
       flog.debug("calculating RHS")
@@ -117,7 +116,6 @@ LinearFlow = R6::R6Class(
     cross_validate_lambda = function(x, x_cv_train, x_cv_cv, lambda = "auto@50", metric = "map@10",
                   not_recommend = x_cv_train, ...) {
 
-      stopifnot(!is.null(colnames(x)))
       private$item_ids = colnames(x)
 
 
@@ -229,17 +227,17 @@ LinearFlow = R6::R6Class(
 
       flog.debug("predicting top %d values", k)
       indices = dotprod_top_k(xq, Y, k, self$n_threads, not_recommend)
+      data.table::setattr(indices, "dimnames", list(rownames(xq), NULL))
+      data.table::setattr(indices, "indices", NULL)
 
-      scores = attr(indices, "scores", exact = TRUE)
-      data.table::setattr(indices, "scores", NULL)
+      if(!is.null(private$item_ids)) {
+        predicted_item_ids = private$item_ids[indices]
+        data.table::setattr(predicted_item_ids, "dim", dim(indices))
+        data.table::setattr(predicted_item_ids, "dimnames", list(rownames(xq), NULL))
+        data.table::setattr(indices, "indices", predicted_item_ids)
+      }
 
-      # predicted_item_ids = colnames(x)[indices]
-      predicted_item_ids = private$item_ids[indices]
-      data.table::setattr(predicted_item_ids, "dim", dim(indices))
-      data.table::setattr(predicted_item_ids, "indices", indices)
-      data.table::setattr(predicted_item_ids, "scores", scores)
-      data.table::setattr(predicted_item_ids, "dimnames", list(rownames(xq), NULL))
-      predicted_item_ids
+      indices
     }
   )
 )
