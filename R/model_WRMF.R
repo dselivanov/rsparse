@@ -141,7 +141,7 @@ WRMF = R6::R6Class(
       # x = 1 + alpha * r
 
       flog.debug("convert input to %s if needed", private$internal_matrix_formats$sparse)
-      c_ui = private$check_convert_input(x, private$internal_matrix_formats)
+      c_ui = private$check_convert_input(x)
 
       # strore item_ids in order to use them in predict method
       private$item_ids = colnames(c_ui)
@@ -252,7 +252,7 @@ WRMF = R6::R6Class(
       stopifnot(ncol(x) == ncol(private$components_))
       # allocate result matrix - will be modified in place
 
-      x = private$check_convert_input(x, private$internal_matrix_formats)
+      x = private$check_convert_input(x)
 
       if(private$feedback == "implicit") {
         res = matrix(0, nrow = private$rank, ncol = nrow(x))
