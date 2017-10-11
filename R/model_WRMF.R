@@ -243,6 +243,7 @@ WRMF = R6::R6Class(
       data.table::setattr(private$components_, "dimnames", list(NULL, colnames(x)))
 
       res = t(private$U)
+      private$U = NULL
       setattr(res, "trace", rbindlist(trace_lst))
       setattr(res, "dimnames", list(rownames(x), NULL))
       res
@@ -272,22 +273,22 @@ WRMF = R6::R6Class(
       res
     },
     # project new items into latent item space
-    get_items_embeddings = function(x, ...) {
-      if(private$feedback == "implicit") {
-        res = matrix(0, nrow = private$rank, ncol = nrow(x))
-        als_implicit(x, private$U, res, n_threads = self$n_threads,
-                     lambda = private$lambda,
-                     private$solver_code, private$cg_steps)
-      } else if(private$feedback == "explicit") {
-        res = private$solver_explicit_feedback(x, private$U)
-      } else
-        stop(sprintf("don't know how to work with feedback = '%s'", private$feedback))
-
-      if(private$non_negative)
-        res[res < 0] = 0
-
-      res
-    },
+    # get_items_embeddings = function(x, ...) {
+    #   if(private$feedback == "implicit") {
+    #     res = matrix(0, nrow = private$rank, ncol = nrow(x))
+    #     als_implicit(x, private$U, res, n_threads = self$n_threads,
+    #                  lambda = private$lambda,
+    #                  private$solver_code, private$cg_steps)
+    #   } else if(private$feedback == "explicit") {
+    #     res = private$solver_explicit_feedback(x, private$U)
+    #   } else
+    #     stop(sprintf("don't know how to work with feedback = '%s'", private$feedback))
+    #
+    #   if(private$non_negative)
+    #     res[res < 0] = 0
+    #
+    #   res
+    # },
     predict = function(x, k, not_recommend = x, ...) {
       stopifnot(private$item_ids == colnames(x))
       stopifnot(is.null(not_recommend) || inherits(not_recommend, "sparseMatrix"))
