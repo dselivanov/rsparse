@@ -84,6 +84,10 @@
 #'  \item{cg_steps}{\code{integer > 0} - max number of internal steps in conjugate gradient
 #'     (if "conjugate_gradient" solver used). \code{cg_steps = 3} by default.
 #'     Controls precision of linear equation solution at the each ALS step. Usually no need to tune this parameter.}
+#'  \item{preprocess}{\code{function} = \code{identity()} by default. User spectified function which will be applied to user-item interaction matrix
+#'     before running matrix factorization (also applied in inference time before making predictions). For example we may
+#'     want to normalize each row of user-item matrix to have 1 norm. Or apply \code{log1p()} to discount large counts.
+#'     This essentially corresponds to the "confidence" function from (Hu, Koren, Volinsky)'2008 paper \url{http://yifanhu.net/PUB/cf.pdf}}
 #'  \item{n_threads}{\code{numeric} default number of threads to use during training and prediction
 #'  (if OpenMP is available).}
 #'  \item{not_recommend}{\code{sparse matrix} or \code{NULL} - points which items should be excluided from recommendations for a user.
@@ -109,6 +113,7 @@ WRMF = R6::R6Class(
                           solver = c("conjugate_gradient", "cholesky"),
                           cg_steps = 3L,
                           components = NULL,
+                          preprocess = identity,
                           ...) {
       stopifnot(is.null(components) || is.matrix(components))
       private$components_ = components
@@ -128,6 +133,8 @@ WRMF = R6::R6Class(
       private$lambda = as.numeric(lambda)
       private$init_stdv = as.numeric(init_stdv)
       private$rank = as.integer(rank)
+      stopifnot(is.function(preprocess))
+      private$preprocess = preprocess
 
       private$scorers = new.env(hash = TRUE, parent = emptyenv())
       self$n_threads = n_threads
@@ -142,7 +149,7 @@ WRMF = R6::R6Class(
 
       flog.debug("convert input to %s if needed", private$internal_matrix_formats$sparse)
       c_ui = private$check_convert_input(x)
-
+      c_ui = private$preprocess(c_ui)
       # strore item_ids in order to use them in predict method
       private$item_ids = colnames(c_ui)
 
@@ -254,6 +261,7 @@ WRMF = R6::R6Class(
       # allocate result matrix - will be modified in place
 
       x = private$check_convert_input(x)
+      x = private$preprocess(x)
 
       if(private$feedback == "implicit") {
         res = matrix(0, nrow = private$rank, ncol = nrow(x))
@@ -272,23 +280,6 @@ WRMF = R6::R6Class(
       data.table::setattr(res, "dimnames", list(rownames(x), NULL))
       res
     },
-    # project new items into latent item space
-    # get_items_embeddings = function(x, ...) {
-    #   if(private$feedback == "implicit") {
-    #     res = matrix(0, nrow = private$rank, ncol = nrow(x))
-    #     als_implicit(x, private$U, res, n_threads = self$n_threads,
-    #                  lambda = private$lambda,
-    #                  private$solver_code, private$cg_steps)
-    #   } else if(private$feedback == "explicit") {
-    #     res = private$solver_explicit_feedback(x, private$U)
-    #   } else
-    #     stop(sprintf("don't know how to work with feedback = '%s'", private$feedback))
-    #
-    #   if(private$non_negative)
-    #     res[res < 0] = 0
-    #
-    #   res
-    # },
     predict = function(x, k, not_recommend = x, ...) {
       stopifnot(private$item_ids == colnames(x))
       stopifnot(is.null(not_recommend) || inherits(not_recommend, "sparseMatrix"))
@@ -364,6 +355,10 @@ WRMF = R6::R6Class(
     U = NULL,
     # item factor matrix = rank * n_items
     I = NULL,
+    # preprocess - transformation of input matrix before passing it to ALS
+    # for example we can scale each row or apply log() to values
+    # this is essentially "confidence" transformation from WRMF article
+    preprocess = NULL,
     feedback = NULL,
     item_ids = NULL,
     cv_data = NULL,
@@ -372,89 +367,6 @@ WRMF = R6::R6Class(
     solver_explicit_feedback = function(R, X) {
       XtX = tcrossprod(X) + diag(x = private$lambda, nrow = private$rank, ncol = private$rank)
       solve(XtX, as(X %*% R, "matrix"))
-    },
-    # X = factor matrix n_factors * (n_users or n_items)
-    # C_UI = user-item confidence matrix
-
-    # R solver for reference. Now replaced with fast Armadillo solver
-    solver = function(X, C_UI, ...) {
-
-      XtX_reg = tcrossprod(X) + diag(x = private$lambda, nrow = private$rank, ncol = private$rank)
-      m_rank = nrow(X)
-
-      # BLAS multithreading should be switched off
-      # https://stat.ethz.ch/pipermail/r-sig-hpc/2012-July/001432.html
-      # https://hyperspec.wordpress.com/2012/07/26/altering-openblas-threads/
-      # https://stat.ethz.ch/pipermail/r-sig-debian/2016-August/002586.html
-
-      nc = ncol(C_UI)
-
-      # aliases to sparse matrix components for convenience
-      C_UI_P = C_UI@p
-      C_UI_I = C_UI@i
-      C_UI_X = C_UI@x
-
-      splits = parallel::splitIndices(nc, self$n_threads)
-
-      RES = parallel::mclapply(splits, function(chunk) {
-        # MAP PHASE
-        chunk_len = length(chunk)
-        chunk_start = chunk[[1]]
-        chunk_end = chunk[[chunk_len]]
-        n_print = as.integer(chunk_len / 16)
-
-        RES_WORKER = matrix(data = 0, nrow = m_rank, ncol = chunk_len)
-
-        # RES_WORKER = lapply(chunk, function(i) {
-
-        for(j in seq_along(chunk)) {
-          i = chunk[[j]]
-          if(isTRUE(i %% n_print == 0)) {
-            flog.debug("worker %d progress %d%%", Sys.getpid(), as.integer(100 * (i - chunk_start) / chunk_len))
-          }
-
-          # column pointers
-          p1 = C_UI_P[[i]]
-          p2 = C_UI_P[[i + 1L]]
-          pind = p1 + seq_len(p2 - p1)
-
-          # add 1L because in C_UI indices are 0-based and in dense matrices they are 1-based
-          ind = C_UI_I[pind] + 1L
-          confidence = C_UI_X[pind]
-
-          # corresponds to Y for a given user by we take only columns which have non-zero interactions
-          # drop = FALSE - don't simplify matrices with 1 column to a vector
-          X_nnz = X[, ind, drop = FALSE]
-
-          # line below corresponds to [(YtY + lambda * I) + Yt %*% (C_u - I) %*% Y] in paper Hu, Koren, Volinsky paper
-          # XtX_reg = (YtY + lambda * I)
-          # confidence - 1 = C_u - I
-          # X_nnz %*% (t.default(X_nnz) * (confidence - 1)) = Yt %*% (C_u - I) %*% Y
-
-          inv = XtX_reg + X_nnz %*% (t.default(X_nnz) * (confidence - 1))
-          rhs = X_nnz %*% confidence
-
-
-          # same as RES_WORKER[, j] = solve(inv, rhs)
-          # but doesn't perform many checks, doesn't copy attributes, etc. So it is notably faster.
-          RES_WORKER[, j] = .Internal(La_solve(inv, rhs, .Machine$double.eps))
-
-          #------------------------------------
-          # what didn't work
-          #------------------------------------
-          # This was slower
-          # X_nnz = t.default(X[, ind, drop = FALSE])
-          # inv = XtX_reg + base::crossprod(X_nnz, X_nnz * (confidence - 1))
-          # rhs = base::crossprod(X_nnz, confidence)
-
-          # Cholesky was slower as well
-          # RES_WORKER[, j] = chol2inv(chol.default(inv)) %*% rhs
-          #------------------------------------
-        }
-        RES_WORKER
-      }, mc.cores = self$n_threads, ...)
-      # GLOBAL REDUCE
-      do.call(cbind, RES)
     }
   )
 )

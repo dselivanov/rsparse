@@ -88,6 +88,10 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
  \item{cg_steps}{\code{integer > 0} - max number of internal steps in conjugate gradient
     (if "conjugate_gradient" solver used). \code{cg_steps = 3} by default.
     Controls precision of linear equation solution at the each ALS step. Usually no need to tune this parameter.}
+ \item{preprocess}{\code{function} = \code{identity()} by default. User spectified function which will be applied to user-item interaction matrix
+    before running matrix factorization (also applied in inference time before making predictions). For example we may
+    want to normalize each row of user-item matrix to have 1 norm. Or apply \code{log1p()} to discount large counts.
+    This essentially corresponds to the "confidence" function from (Hu, Koren, Volinsky)'2008 paper \url{http://yifanhu.net/PUB/cf.pdf}}
  \item{n_threads}{\code{numeric} default number of threads to use during training and prediction
  (if OpenMP is available).}
  \item{not_recommend}{\code{sparse matrix} or \code{NULL} - points which items should be excluided from recommendations for a user.
