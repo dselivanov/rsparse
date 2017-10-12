@@ -6,4 +6,5 @@
 #' @import Rcpp
 #' @import futile.logger
 #' @useDynLib reco
+
 NULL

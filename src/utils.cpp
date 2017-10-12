@@ -14,10 +14,9 @@ using namespace Rcpp;
 // https://stackoverflow.com/a/38391603/1069256
 // [[Rcpp::export]]
 IntegerMatrix dotprod_top_k(const arma::mat &x, const arma::mat &y, unsigned k, unsigned n_threads, Rcpp::Nullable<const arma::sp_mat> &not_recommend) {
-  arma::sp_mat mat;
+
   int not_empty_filter_matrix = not_recommend.isNotNull();
-  if(not_empty_filter_matrix)
-    mat = as<arma::sp_mat>(not_recommend.get());
+  const arma::sp_mat mat = (not_empty_filter_matrix) ? as<arma::sp_mat>(not_recommend.get()) : arma::sp_mat();
 
   size_t nr = x.n_rows;
   size_t nc = y.n_cols;
