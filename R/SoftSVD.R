@@ -1,0 +1,87 @@
+# implements Rank-Restricted Soft SVD
+# algorithm 2.1 from https://arxiv.org/pdf/1410.2596.pdf
+
+soft_svd = function(x, rank = 10L, lambda = 0, n_iter = 10L, convergence_tol = 1e-3, init = NULL) {
+  if(is.null(init)) {
+    # draw random matrix and make columns orthogonal with QR decomposition
+    U = matrix(rnorm(n = nrow(x) * rank), nrow = nrow(x))
+    U = qr.Q(qr(U, LAPACK = TRUE))
+    # init with dummy values
+    D  = rep(1, rank)
+    V = matrix(rep(0, ncol(x) * rank), nrow = ncol(x))
+    svd_old = list(d = D, u = U, v = V); rm(U, V)
+  } else {
+    # warm start with another SVD
+    stopifnot(is.list(init))
+    stopifnot(all(names(init) %in% c("u", "d", "v")))
+    stopifnot(isTRUE(all.equal(dim(init$u), c(nrow(x), rank))))
+    stopifnot(isTRUE(all.equal(dim(init$v), c(ncol(x), rank))))
+    stopifnot(length(init$d) == rank)
+    svd_old = init
+  }
+
+  svd_new = svd_old
+  CONVERGED = FALSE
+  for(i in seq_len(n_iter)) {
+
+    B_new = (svd_new$d / (svd_new$d + lambda)) * crossprod(svd_new$u, x)
+
+    # same as below, but faster
+    Bsvd =  svd(t(B_new)); rm(B_new)
+    svd_new$v = Bsvd$u
+    # Bsvd =  svd(B_new)
+    # svd_new$v = Bsvd$v
+
+    svd_new$d = Bsvd$d
+
+    A_new = t( t(x %*% svd_new$v) * (svd_new$d / (svd_new$d + lambda)))
+    Asvd =  svd(A_new); rm(A_new)
+
+    svd_new$u = Asvd$u
+    svd_new$d = Asvd$d
+    # not sure about this line - found in reference implementation
+    # https://github.com/cran/softImpute/blob/a5c6e4bd5a660d6a79119991b0cbd4923dbe9b66/R/Ssvd.als.R#L64
+    svd_new$v = svd_new$v %*% Asvd$v
+    frob_delta = calc_frobenius_norm_delta(svd_old, svd_new)
+
+    futile.logger::flog.debug("soft_svd: iter %d, delta frobenious norm %.5f", i, frob_delta)
+    svd_old = svd_new
+    if(frob_delta < convergence_tol) {
+      futile.logger::flog.debug("soft_svd: converged with tol %f after %d iter", convergence_tol, i)
+      CONVERGED = TRUE
+      break
+    }
+  }
+  if(!CONVERGED)
+    futile.logger::flog.warn("soft_svd: didn't converged with tol %f after %d iterations - returning latest solution", convergence_tol, i)
+  svd_new
+}
+
+
+calc_frobenius_norm_delta = function(svd_old, svd_new) {
+  denom = sum(svd_old$d ^ 2)
+  utu = svd_new$d * (t(svd_new$u) %*% svd_old$u)
+  vtv = svd_old$d * (t(svd_old$v) %*% svd_new$v)
+  uvprod = sum(diag(utu %*% vtv))
+  num = denom + sum(svd_new$d ^ 2) - 2 * uvprod
+  num / max(denom, 1e-09)
+}
+
+setMethod("crossprod",signature(x="matrix",y="SparseplusLowRank"),
+          # y is splr, x is a dense matrix
+          function(x, y) {
+            {
+              a=y@a
+              b=y@b
+              sx=y@x
+
+              if(is.null(a)|is.null(b)) {
+                crossprod(x, sx)
+              } else {
+                part1 = crossprod(x, sx)
+                part2 = crossprod(x, a)
+                part2 = part2 %*% t(b)
+                part1 + part2
+              }
+            }
+          })
