@@ -25,8 +25,8 @@
 #'   model$predict(x, k, not_recommend = x, ...)
 #'   model$components
 #'   model$Q
-#'   model$cross_validate_lambda(x, x_cv_train, x_cv_cv, lambda = "auto@@50",
-#'                        metric = "map@@10", not_recommend = x_cv_train, ...)
+#'   model$cross_validate_lambda(x, x_train, x_test, lambda = "auto@@10",
+#'                        metric = "map@@10", not_recommend = x_train, ...)
 #' }
 #' @format \code{R6Class} object.
 #' @section Usage:
@@ -47,13 +47,13 @@
 #'     item ids for users \code{x}. Users features should be defined the same way as they were defined in
 #'     training data - as \bold{sparse matrix}. Column names (=item ids) should be in the same order as
 #'     in the \code{fit_transform()}.}
-#'   \item{\code{$cross_validate_lambda(x, x_cv_train, x_cv_cv, lambda = "auto@@50", metric = "map@@10",
-#'                               not_recommend = x_cv_train, ...)}}{perfroms search of the
+#'   \item{\code{$cross_validate_lambda(x, x_train, x_test, lambda = "auto@@10", metric = "map@@10",
+#'                               not_recommend = x_train, ...)}}{perfroms search of the
 #'   best regularization parameter \code{lambda}:
 #'   \enumerate{
 #'     \item Model is trained on \code{x} data
-#'     \item Then model makes predictions based on \code{x_cv_train} data
-#'     \item And finally these predications are validated using specified \code{metric} against \code{x_cv_cv} data
+#'     \item Then model makes predictions based on \code{x_train} data
+#'     \item And finally these predications are validated using specified \code{metric} against \code{x_test} data
 #'   }
 #'   Note that this is implemented smartly with \bold{"warm starts"}.
 #'   So it is very cheap - \bold{cost is almost the same as for single fit} of the model. The only considerable additional cost is
@@ -97,6 +97,10 @@ LinearFlow = R6::R6Class(
       self$Q = Q
     },
     fit_transform = function(x, ...) {
+      stopifnot(inherits(x, "sparseMatrix") || inherits(x, "SparseplusLowRank"))
+      if(inherits(x, "sparseMatrix"))
+        x = as(x, "RsparseMatrix")
+
       private$item_ids = colnames(x)
       self$Q = private$calc_Q(x, ...)
       flog.debug("calculating RHS")
@@ -111,16 +115,21 @@ LinearFlow = R6::R6Class(
       invisible(as.matrix(x %*% self$Q))
     },
     transform = function(x, ...) {
-      invisible(as.matrix(x %*% self$Q))
+      stopifnot(inherits(x, "sparseMatrix"))
+      x = as(x, "RsparseMatrix")
+      res = x %*% self$Q
+      if(!is.matrix(res))
+        res = as.matrix(res)
+      invisible(res)
     },
-    cross_validate_lambda = function(x, x_cv_train, x_cv_cv, lambda = "auto@50", metric = "map@10",
-                  not_recommend = x_cv_train, ...) {
+    cross_validate_lambda = function(x, x_train, x_test, lambda = "auto@10", metric = "map@10",
+                  not_recommend = x_train, ...) {
 
       private$item_ids = colnames(x)
 
 
-      stopifnot(private$item_ids == colnames(x_cv_cv))
-      stopifnot(private$item_ids == colnames(x_cv_train))
+      stopifnot(private$item_ids == colnames(x_test))
+      stopifnot(private$item_ids == colnames(x_train))
 
       lambda_auto = FALSE
       if(is.character(lambda)) {
@@ -147,7 +156,7 @@ LinearFlow = R6::R6Class(
 
       flog.info("calculating LHS")
       lhs = rhs %*% self$Q
-      # calculate "reasonable" lambda from values of main diagonal of LSH
+      # calculate "reasonable" lambda from values of main diagonal of LHS
       if(lambda_auto) {
         lhs_ridge = diag(lhs)
         # generate sequence of lambda
@@ -156,7 +165,7 @@ LinearFlow = R6::R6Class(
       }
 
       cv_res = data.frame(lambda = lambda, score = NA_real_)
-      xq_cv_train = as.matrix(x_cv_train %*% self$Q)
+      xq_cv_train = as.matrix(x_train %*% self$Q)
 
       for(i in seq_along(lambda)) {
         lambda_i = lambda[[i]]
@@ -164,9 +173,9 @@ LinearFlow = R6::R6Class(
         preds = private$predict_internal(xq_cv_train, k = metric_k, Y = Y, not_recommend = not_recommend)
         score = NULL
         if(metric_name == "map")
-          score = mean(ap_k(preds, x_cv_cv, ...), na.rm = T)
+          score = mean(ap_k(preds, x_test, ...), na.rm = T)
         if(metric_name == "ndcg")
-          score = mean(ndcg_k(preds, x_cv_cv, ...), na.rm = T)
+          score = mean(ndcg_k(preds, x_test, ...), na.rm = T)
 
         cv_res$score[[i]] = score
         if(score >= max(cv_res$score, na.rm = T) || is.null(private$components_)) {
@@ -198,25 +207,29 @@ LinearFlow = R6::R6Class(
         result = self$Q
       } else {
         if(is.null(self$Q)) {
-          if(private$svd_solver == "irlba") {
-            flog.info("fitting truncated SVD with irlba")
-            trunc_svd = irlba::irlba(x, nv = private$rank, tol = 1e-4)
-          } else {
-            if(private$svd_solver == "randomized_svd") {
-              flog.info("fitting truncated SVD with randomized algorithm")
-              trunc_svd = irlba::svdr(x, private$rank)
-            } else
-                stop(sprintf("don't know %s", private$svd_solver))
-          }
+          trunc_svd = soft_svd(x, rank = private$rank,
+                               lambda = 0, n_iter = 100L,
+                               convergence_tol = 1e-3,
+                               init = NULL)
+          # if(private$svd_solver == "irlba") {
+          #   flog.info("fitting truncated SVD with irlba")
+          #   trunc_svd = irlba::irlba(x, nv = private$rank, tol = 1e-4)
+          # } else {
+          #   if(private$svd_solver == "randomized_svd") {
+          #     flog.info("fitting truncated SVD with randomized algorithm")
+          #     trunc_svd = irlba::svdr(x, private$rank)
+          #   } else
+          #       stop(sprintf("don't know %s", private$svd_solver))
+          # }
         }
         result = trunc_svd$v
       }
       stopifnot(is.numeric(result))
       result
     },
-    fit_transform_internal = function(lsh, rhs, lambda, ...) {
+    fit_transform_internal = function(lhs, rhs, lambda, ...) {
       flog.debug("solving least squares with lambda %.3f", lambda)
-      lhs_ridge = lsh + Diagonal(private$rank, lambda)
+      lhs_ridge = lhs + diag(rep(lambda, private$rank))
       as.matrix(solve(lhs_ridge, rhs))
     },
     predict_internal = function(xq, k, Y, not_recommend = x, ...) {

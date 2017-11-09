@@ -29,8 +29,8 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
   model$predict(x, k, not_recommend = x, ...)
   model$components
   model$Q
-  model$cross_validate_lambda(x, x_cv_train, x_cv_cv, lambda = "auto@50",
-                       metric = "map@10", not_recommend = x_cv_train, ...)
+  model$cross_validate_lambda(x, x_train, x_test, lambda = "auto@10",
+                       metric = "map@10", not_recommend = x_train, ...)
 }
 
 
@@ -54,13 +54,13 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
     item ids for users \code{x}. Users features should be defined the same way as they were defined in
     training data - as \bold{sparse matrix}. Column names (=item ids) should be in the same order as
     in the \code{fit_transform()}.}
-  \item{\code{$cross_validate_lambda(x, x_cv_train, x_cv_cv, lambda = "auto@50", metric = "map@10",
-                              not_recommend = x_cv_train, ...)}}{perfroms search of the
+  \item{\code{$cross_validate_lambda(x, x_train, x_test, lambda = "auto@10", metric = "map@10",
+                              not_recommend = x_train, ...)}}{perfroms search of the
   best regularization parameter \code{lambda}:
   \enumerate{
     \item Model is trained on \code{x} data
-    \item Then model makes predictions based on \code{x_cv_train} data
-    \item And finally these predications are validated using specified \code{metric} against \code{x_cv_cv} data
+    \item Then model makes predictions based on \code{x_train} data
+    \item And finally these predications are validated using specified \code{metric} against \code{x_test} data
   }
   Note that this is implemented smartly with \bold{"warm starts"}.
   So it is very cheap - \bold{cost is almost the same as for single fit} of the model. The only considerable additional cost is

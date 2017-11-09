@@ -33,5 +33,6 @@ LinkingTo:
 Suggests:
     testthat
 Remotes:
-    dselivanov/mlapi
+    dselivanov/mlapi,
+    dselivanov/MatrixCSR
 RoxygenNote: 6.0.1
