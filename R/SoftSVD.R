@@ -3,6 +3,8 @@
 solve_iter_als_svd = function(xx, svd_current, lambda, mult = c("u", "v")) {
   mult = match.arg(mult)
   tmp = (xx %*% svd_current[[mult]]) %*% diag((svd_current$d / (svd_current$d + lambda)))
+  is(!is.matrix(tmp))
+    tmp = as.matrix(tmp)
   svd_econ(tmp)
 }
 
