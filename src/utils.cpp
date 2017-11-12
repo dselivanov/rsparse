@@ -85,9 +85,6 @@ IntegerMatrix dotprod_top_k(const arma::mat &x, const arma::mat &y, unsigned k, 
   return(res);
 }
 
-
-
-
 // [[Rcpp::export]]
 NumericVector make_sparse_approximation(const arma::sp_mat& mat_template,
                        arma::mat& X, arma::mat& Y,
@@ -109,4 +106,19 @@ NumericVector make_sparse_approximation(const arma::sp_mat& mat_template,
     }
   }
   return(approximated_values);
+}
+
+// [[Rcpp::export]]
+List  arma_svd_econ(const arma::mat& X) {
+  int k = std::min(X.n_rows, X.n_cols);
+  NumericMatrix UR(X.n_rows, k);
+  NumericMatrix VR(X.n_cols, k);
+  NumericVector dR(k);
+  arma::mat U(UR.begin(), UR.nrow(), UR.ncol(),  false, true);
+  arma::mat V(VR.begin(), VR.nrow(), VR.ncol(),  false, true);
+  arma::vec d(dR.begin(), dR.size(),  false, true);
+  int status = svd_econ(U, d, V, X);
+  if(!status)
+    ::Rf_error("arma::svd_econ failed");
+  return(List::create(_["d"] = dR, _["u"] = UR, _["v"] = VR));
 }

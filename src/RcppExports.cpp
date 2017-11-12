@@ -67,12 +67,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// arma_svd_econ
+List arma_svd_econ(const arma::mat& X);
+RcppExport SEXP _reco_arma_svd_econ(SEXP XSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    rcpp_result_gen = Rcpp::wrap(arma_svd_econ(X));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_reco_als_implicit", (DL_FUNC) &_reco_als_implicit, 7},
     {"_reco_als_loss_explicit", (DL_FUNC) &_reco_als_loss_explicit, 5},
     {"_reco_dotprod_top_k", (DL_FUNC) &_reco_dotprod_top_k, 5},
     {"_reco_make_sparse_approximation", (DL_FUNC) &_reco_make_sparse_approximation, 4},
+    {"_reco_arma_svd_econ", (DL_FUNC) &_reco_arma_svd_econ, 1},
     {NULL, NULL, 0}
 };
 

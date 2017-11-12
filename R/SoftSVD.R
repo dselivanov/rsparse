@@ -1,7 +1,13 @@
 # implements Rank-Restricted Soft SVD
 # algorithm 2.1 from https://arxiv.org/pdf/1410.2596.pdf
+solve_iter_als_svd = function(xx, svd_current, lambda, mult = c("u", "v")) {
+  mult = match.arg(mult)
+  tmp = (xx %*% svd_current[[mult]]) %*% diag((svd_current$d / (svd_current$d + lambda)))
+  svd_econ(tmp)
+}
 
 soft_svd = function(x, rank = 10L, lambda = 0, n_iter = 10L, convergence_tol = 1e-3, init = NULL) {
+  tx = t(x)
   if(is.null(init)) {
     # draw random matrix and make columns orthogonal with QR decomposition
     U = matrix(rnorm(n = nrow(x) * rank), nrow = nrow(x))
@@ -23,20 +29,10 @@ soft_svd = function(x, rank = 10L, lambda = 0, n_iter = 10L, convergence_tol = 1
   svd_new = svd_old
   CONVERGED = FALSE
   for(i in seq_len(n_iter)) {
-
-    B_new = (svd_new$d / (svd_new$d + lambda)) * crossprod(svd_new$u, x)
-
-    # same as below, but faster
-    Bsvd =  svd(t(B_new)); rm(B_new)
+    Bsvd = solve_iter_als_svd(tx, svd_new, lambda, "u")
     svd_new$v = Bsvd$u
-    # Bsvd =  svd(B_new)
-    # svd_new$v = Bsvd$v
-
     svd_new$d = Bsvd$d
-
-    A_new = t( t(x %*% svd_new$v) * (svd_new$d / (svd_new$d + lambda)))
-    Asvd =  svd(A_new); rm(A_new)
-
+    Asvd = solve_iter_als_svd(x, svd_new, lambda, "v")
     svd_new$u = Asvd$u
     svd_new$d = Asvd$d
     # not sure about this line - found in reference implementation
@@ -57,7 +53,6 @@ soft_svd = function(x, rank = 10L, lambda = 0, n_iter = 10L, convergence_tol = 1
   svd_new
 }
 
-
 calc_frobenius_norm_delta = function(svd_old, svd_new) {
   denom = sum(svd_old$d ^ 2)
   utu = svd_new$d * (t(svd_new$u) %*% svd_old$u)
@@ -67,21 +62,8 @@ calc_frobenius_norm_delta = function(svd_old, svd_new) {
   num / max(denom, 1e-09)
 }
 
-setMethod("crossprod",signature(x="matrix",y="SparseplusLowRank"),
-          # y is splr, x is a dense matrix
-          function(x, y) {
-            {
-              a=y@a
-              b=y@b
-              sx=y@x
-
-              if(is.null(a)|is.null(b)) {
-                crossprod(x, sx)
-              } else {
-                part1 = crossprod(x, sx)
-                part2 = crossprod(x, a)
-                part2 = part2 %*% t(b)
-                part1 + part2
-              }
-            }
-          })
+svd_econ = function(x) {
+  stopifnot(is.matrix(x))
+  stopifnot(is.numeric(x))
+  arma_svd_econ(x)
+}

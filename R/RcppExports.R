@@ -17,3 +17,7 @@ make_sparse_approximation <- function(mat_template, X, Y, n_threads) {
     .Call('_reco_make_sparse_approximation', PACKAGE = 'reco', mat_template, X, Y, n_threads)
 }
 
+arma_svd_econ <- function(X) {
+    .Call('_reco_arma_svd_econ', PACKAGE = 'reco', X)
+}
+
