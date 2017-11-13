@@ -1,11 +1,9 @@
 # implements Rank-Restricted Soft SVD
 # algorithm 2.1 from https://arxiv.org/pdf/1410.2596.pdf
-solve_iter_als_svd = function(xx, svd_current, lambda, mult = c("u", "v")) {
-  mult = match.arg(mult)
-  tmp = (xx %*% svd_current[[mult]]) %*% diag((svd_current$d / (svd_current$d + lambda)))
-  is(!is.matrix(tmp))
-    tmp = as.matrix(tmp)
-  svd_econ(tmp)
+solve_iter_als_svd = function(x, svd_current, lambda, singular_vectors = c("u", "v")) {
+  mult = match.arg(singular_vectors)
+  m = (x %*% svd_current[[singular_vectors]]) %*% diag((svd_current$d / (svd_current$d + lambda)))
+  svd_econ(m)
 }
 
 soft_svd = function(x, rank = 10L, lambda = 0, n_iter = 10L, convergence_tol = 1e-3, init = NULL) {
@@ -65,6 +63,7 @@ calc_frobenius_norm_delta = function(svd_old, svd_new) {
 }
 
 svd_econ = function(x) {
+  if(inherits(x, "denseMatrix")) x = as.matrix(x)
   stopifnot(is.matrix(x))
   stopifnot(is.numeric(x))
   arma_svd_econ(x)
