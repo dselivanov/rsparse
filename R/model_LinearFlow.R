@@ -98,8 +98,6 @@ LinearFlow = R6::R6Class(
     },
     fit_transform = function(x, ...) {
       stopifnot(inherits(x, "sparseMatrix") || inherits(x, "SparseplusLowRank"))
-      if(inherits(x, "sparseMatrix"))
-        x = as(x, "RsparseMatrix")
 
       private$item_ids = colnames(x)
       self$Q = private$calc_Q(x, ...)
@@ -115,8 +113,7 @@ LinearFlow = R6::R6Class(
       invisible(as.matrix(x %*% self$Q))
     },
     transform = function(x, ...) {
-      stopifnot(inherits(x, "sparseMatrix"))
-      x = as(x, "RsparseMatrix")
+      stopifnot(inherits(x, "sparseMatrix") || inherits(x, "SparseplusLowRank"))
       res = x %*% self$Q
       if(!is.matrix(res))
         res = as.matrix(res)
