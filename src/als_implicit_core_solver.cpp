@@ -101,13 +101,13 @@ double als_loss_explicit(const arma::sp_mat& mat, arma::mat& X, arma::mat& Y, do
   for(size_t i = 0; i < nc; i++) {
     int p1 = mat.col_ptrs[i];
     int p2 = mat.col_ptrs[i + 1];
-    if(p1 < p2) {
-      arma::uvec idx = uvec(&mat.row_indices[p1], p2 - p1);
-      arma::vec rating = vec(&mat.values[p1], p2 - p1);
-      loss += accu(square( rating.t() - (Y.col(i).t() * X.cols(idx))));
+    for(int pp = p1; pp < p2; pp++) {
+      size_t ind = mat.row_indices[pp];
+      double diff = mat.values[pp] - as_scalar(Y.col(i).t() * X.col(ind));
+      loss += diff * diff;
     }
   }
   if(lambda > 0)
     loss += lambda * (accu(square(X)) + accu(square(Y)));
-  return loss / accu(mat);
+  return loss / mat.n_nonzero;
 }
