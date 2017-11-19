@@ -1,46 +1,3 @@
-make_sparse_approximation = function(x, A, B, n_threads = parallel::detectCores()) {
-  stopifnot(nrow(x) == ncol(A))
-  stopifnot(ncol(x) == ncol(B))
-  UseMethod("make_sparse_approximation")
-}
-
-make_sparse_approximation.CsparseMatrix = function(x, A, B, n_threads = parallel::detectCores()) {
-  CSC = 1L
-  CSR = 2L
-  cpp_make_sparse_approximation(x, A, B, CSC, n_threads)
-}
-
-make_sparse_approximation.RsparseMatrix = function(x, A, B, n_threads = parallel::detectCores()) {
-  CSC = 1L
-  CSR = 2L
-  cpp_make_sparse_approximation(x, A, B, CSR, n_threads)
-}
-
-solve_iter_als_softimpute = function(x, svd_current, lambda, singular_vectors = c("u", "v")) {
-  singular_vectors = match.arg(singular_vectors)
-
-  if(singular_vectors == "v") {
-    A = t(svd_current$u) * sqrt(svd_current$d)
-    B = t(svd_current$v) * sqrt(svd_current$d)
-  } else {
-    A = t(svd_current$v) * sqrt(svd_current$d)
-    B = t(svd_current$u) * sqrt(svd_current$d)
-  }
-
-  x_delta = x
-  # make_sparse_approximation calculates values of sparse matrix X_new = X - A %*% B
-  # for only non-zero values of X
-  upd = make_sparse_approximation(x, A, B)
-  x_delta@x = x@x - upd
-  flog.debug("soft_impute_als objective %.5f", (as.numeric(crossprod(x_delta@x)) + lambda * sum(svd_current$d)) / length(x_delta@x))
-
-  first = (x_delta %*% svd_current[[singular_vectors]]) %*% diag( sqrt(svd_current$d) / (svd_current$d + lambda))
-  second = t(A * (svd_current$d / (svd_current$d + lambda)))
-
-  m = first + second
-  reco:::svd_econ(m %*% diag(sqrt(svd_current$d)))
-}
-
 soft_impute = function(x, rank = 10L, lambda = 0, n_iter = 10L, convergence_tol = 1e-3, init = NULL) {
   tx = t(x)
   if(is.null(init)) {
@@ -60,6 +17,10 @@ soft_impute = function(x, rank = 10L, lambda = 0, n_iter = 10L, convergence_tol 
     stopifnot(length(init$d) == rank)
     svd_old = init
   }
+
+  trace_iter = vector("list", n_iter)
+  k = 1L
+
   svd_new = svd_old
   CONVERGED = FALSE
   for(i in seq_len(n_iter)) {
@@ -80,15 +41,53 @@ soft_impute = function(x, rank = 10L, lambda = 0, n_iter = 10L, convergence_tol 
     svd_new$v = svd_new$v %*% Asvd$v
 
     frob_delta = calc_frobenius_norm_delta(svd_old, svd_new)
-    futile.logger::flog.debug("soft_impute: iter %d, delta frobenious norm %.5f", i, frob_delta)
+    loss =  attr(Asvd, "loss")
+
+    trace_iter[[k]] = list(iter = i, scorer = "frob_delta", value = frob_delta)
+    k = k + 1L
+    trace_iter[[k]] = list(iter = i, scorer = "loss", value = loss)
+    k = k + 1L
+
+    futile.logger::flog.debug("reco:::soft_impute: iter %03d, loss %.3f frobenious norm delta %.3f",
+                              i, loss, frob_delta)
+    rm(Asvd, Bsvd)
     svd_old = svd_new
     if(frob_delta < convergence_tol) {
-      futile.logger::flog.debug("soft_impute: converged with tol %f after %d iter", convergence_tol, i)
+      futile.logger::flog.debug("reco:::soft_impute: converged with tol %f after %d iter", convergence_tol, i)
       CONVERGED = TRUE
       break
     }
   }
+  setattr(svd_new, "trace", data.table::rbindlist(trace_iter))
   if(!CONVERGED)
-    futile.logger::flog.warn("soft_impute: didn't converged with tol %f after %d iterations - returning latest solution", convergence_tol, i)
+    futile.logger::flog.warn("reco:::soft_impute: didn't converged with tol %f after %d iterations - returning latest solution",
+                             convergence_tol, i)
   svd_new
+}
+
+# workhorse for soft_impute
+solve_iter_als_softimpute = function(x, svd_current, lambda, singular_vectors = c("u", "v")) {
+  singular_vectors = match.arg(singular_vectors)
+
+  if(singular_vectors == "v") {
+    A = t(svd_current$u) * sqrt(svd_current$d)
+    B = t(svd_current$v) * sqrt(svd_current$d)
+  } else {
+    A = t(svd_current$v) * sqrt(svd_current$d)
+    B = t(svd_current$u) * sqrt(svd_current$d)
+  }
+
+  x_delta = x
+  # make_sparse_approximation calculates values of sparse matrix X_new = X - A %*% B
+  # for only non-zero values of X
+  x_delta@x = x@x - make_sparse_approximation(x, A, B)
+  loss = (as.numeric(crossprod(x_delta@x)) + lambda * sum(svd_current$d)) / length(x_delta@x)
+
+  first = (x_delta %*% svd_current[[singular_vectors]]) %*% diag( sqrt(svd_current$d) / (svd_current$d + lambda))
+  rm(x_delta)
+
+  second = t(A * (svd_current$d / (svd_current$d + lambda)))
+  res = reco:::svd_econ((first + second) %*% diag(sqrt(svd_current$d)))
+  data.table::setattr(res, "loss", loss)
+  res
 }

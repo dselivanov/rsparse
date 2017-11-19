@@ -1,10 +1,5 @@
 # implements Rank-Restricted Soft SVD
 # algorithm 2.1 from https://arxiv.org/pdf/1410.2596.pdf
-solve_iter_als_svd = function(x, svd_current, lambda, singular_vectors = c("u", "v")) {
-  mult = match.arg(singular_vectors)
-  m = (x %*% svd_current[[singular_vectors]]) %*% diag((svd_current$d / (svd_current$d + lambda)))
-  svd_econ(m)
-}
 
 soft_svd = function(x, rank = 10L, lambda = 0, n_iter = 10L, convergence_tol = 1e-3, init = NULL) {
   tx = t(x)
@@ -28,6 +23,9 @@ soft_svd = function(x, rank = 10L, lambda = 0, n_iter = 10L, convergence_tol = 1
 
   svd_new = svd_old
   CONVERGED = FALSE
+  trace_iter = vector("list", n_iter)
+
+  k = 1L
   for(i in seq_len(n_iter)) {
     Bsvd = solve_iter_als_svd(tx, svd_new, lambda, "u")
     svd_new$v = Bsvd$u
@@ -40,31 +38,26 @@ soft_svd = function(x, rank = 10L, lambda = 0, n_iter = 10L, convergence_tol = 1
     svd_new$v = svd_new$v %*% Asvd$v
     frob_delta = calc_frobenius_norm_delta(svd_old, svd_new)
 
-    futile.logger::flog.debug("soft_svd: iter %d, delta frobenious norm %.5f", i, frob_delta)
+    trace_iter[[k]] = list(iter = i, scorer = "frob_delta", value = frob_delta)
+    k = k + 1L
+
+    futile.logger::flog.debug("reco:::soft_svd: iter %d, frobenious norm delta %.3f", i, frob_delta)
     svd_old = svd_new
     if(frob_delta < convergence_tol) {
-      futile.logger::flog.debug("soft_svd: converged with tol %f after %d iter", convergence_tol, i)
+      futile.logger::flog.debug("reco:::soft_svd: converged with tol %f after %d iter", convergence_tol, i)
       CONVERGED = TRUE
       break
     }
   }
+  data.table::setattr(svd_new, "trace", data.table::rbindlist(trace_iter))
   if(!CONVERGED)
-    futile.logger::flog.warn("soft_svd: didn't converged with tol %f after %d iterations - returning latest solution", convergence_tol, i)
+    futile.logger::flog.warn("reco:::soft_svd: didn't converged with tol %f after %d iterations - returning latest solution", convergence_tol, i)
   svd_new
 }
 
-calc_frobenius_norm_delta = function(svd_old, svd_new) {
-  denom = sum(svd_old$d ^ 2)
-  utu = svd_new$d * (t(svd_new$u) %*% svd_old$u)
-  vtv = svd_old$d * (t(svd_old$v) %*% svd_new$v)
-  uvprod = sum(diag(utu %*% vtv))
-  num = denom + sum(svd_new$d ^ 2) - 2 * uvprod
-  num / max(denom, 1e-09)
-}
-
-svd_econ = function(x) {
-  if(inherits(x, "denseMatrix")) x = as.matrix(x)
-  stopifnot(is.matrix(x))
-  stopifnot(is.numeric(x))
-  arma_svd_econ(x)
+# workhorse for soft_svd
+solve_iter_als_svd = function(x, svd_current, lambda, singular_vectors = c("u", "v")) {
+  singular_vectors = match.arg(singular_vectors)
+  m = (x %*% svd_current[[singular_vectors]]) %*% diag((svd_current$d / (svd_current$d + lambda)))
+  svd_econ(m)
 }
