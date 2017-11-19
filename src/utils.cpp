@@ -8,6 +8,9 @@
 
 #define GRAIN_SIZE 10
 
+#define CSC 1
+#define CSR 2
+
 using namespace Rcpp;
 using namespace RcppArmadillo;
 using namespace arma;
@@ -86,24 +89,50 @@ IntegerMatrix dotprod_top_k(const arma::mat &x, const arma::mat &y, unsigned k, 
 }
 
 // [[Rcpp::export]]
-NumericVector make_sparse_approximation(const arma::sp_mat& mat_template,
-                       arma::mat& X, arma::mat& Y,
-                       unsigned n_threads) {
-  size_t nc = mat_template.n_cols;
-  NumericVector approximated_values(mat_template.n_nonzero);
+NumericVector cpp_make_sparse_approximation(const S4 &mat_template,
+                                            arma::mat& X,
+                                            arma::mat& Y,
+                                            int sparse_matrix_type,
+                                            unsigned n_threads) {
+  IntegerVector rp = mat_template.slot("p");
+  int* p = rp.begin();
+  IntegerVector rj;
+  if(sparse_matrix_type == CSR) {
+    rj = mat_template.slot("j");
+  } else if(sparse_matrix_type == CSC) {
+    rj = mat_template.slot("i");
+  } else
+    ::Rf_error("make_sparse_approximation_csr doesn't know sparse matrix type. Should be CSC=1 or CSR=2");
+
+  uint32_t* j = (uint32_t *)rj.begin();
+  IntegerVector dim = mat_template.slot("Dim");
+
+  size_t nr = dim[0];
+  size_t nc = dim[1];
+  int N;
+  if(sparse_matrix_type == CSR)
+    N = nr;
+  else
+    N = nc;
+
+  NumericVector approximated_values(rj.length());
+
   double *ptr_approximated_values = approximated_values.begin();
   double loss = 0;
   #ifdef _OPENMP
   #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE) reduction(+:loss)
   #endif
-  for(size_t i = 0; i < nc; i++) {
-    int p1 = mat_template.col_ptrs[i];
-    int p2 = mat_template.col_ptrs[i + 1];
-    if(p1 < p2) {
-      arma::uvec idx = uvec(&mat_template.row_indices[p1], p2 - p1);
-      arma::rowvec approximation(&ptr_approximated_values[p1], p2 - p1, false, true);
-      approximation = Y.col(i).t() * X.cols(idx);
+  for(size_t i = 0; i < N; i++) {
+    int p1 = p[i];
+    int p2 = p[i + 1];
+    for(int pp = p1; pp < p2; pp++) {
+      uint64_t ind = (size_t)j[pp];
+      if(sparse_matrix_type == CSR)
+        ptr_approximated_values[pp] = as_scalar(X.col(i).t() * Y.col(ind));
+      else
+        ptr_approximated_values[pp] = as_scalar(Y.col(i).t() * X.col(ind));
     }
+
   }
   return(approximated_values);
 }

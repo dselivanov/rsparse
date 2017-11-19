@@ -13,8 +13,8 @@ dotprod_top_k <- function(x, y, k, n_threads, not_recommend) {
     .Call('_reco_dotprod_top_k', PACKAGE = 'reco', x, y, k, n_threads, not_recommend)
 }
 
-make_sparse_approximation <- function(mat_template, X, Y, n_threads) {
-    .Call('_reco_make_sparse_approximation', PACKAGE = 'reco', mat_template, X, Y, n_threads)
+cpp_make_sparse_approximation <- function(mat_template, X, Y, sparse_matrix_type, n_threads) {
+    .Call('_reco_cpp_make_sparse_approximation', PACKAGE = 'reco', mat_template, X, Y, sparse_matrix_type, n_threads)
 }
 
 arma_svd_econ <- function(X) {

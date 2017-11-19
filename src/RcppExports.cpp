@@ -53,17 +53,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// make_sparse_approximation
-NumericVector make_sparse_approximation(const arma::sp_mat& mat_template, arma::mat& X, arma::mat& Y, unsigned n_threads);
-RcppExport SEXP _reco_make_sparse_approximation(SEXP mat_templateSEXP, SEXP XSEXP, SEXP YSEXP, SEXP n_threadsSEXP) {
+// cpp_make_sparse_approximation
+NumericVector cpp_make_sparse_approximation(const S4& mat_template, arma::mat& X, arma::mat& Y, int sparse_matrix_type, unsigned n_threads);
+RcppExport SEXP _reco_cpp_make_sparse_approximation(SEXP mat_templateSEXP, SEXP XSEXP, SEXP YSEXP, SEXP sparse_matrix_typeSEXP, SEXP n_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type mat_template(mat_templateSEXP);
+    Rcpp::traits::input_parameter< const S4& >::type mat_template(mat_templateSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< int >::type sparse_matrix_type(sparse_matrix_typeSEXP);
     Rcpp::traits::input_parameter< unsigned >::type n_threads(n_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(make_sparse_approximation(mat_template, X, Y, n_threads));
+    rcpp_result_gen = Rcpp::wrap(cpp_make_sparse_approximation(mat_template, X, Y, sparse_matrix_type, n_threads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -83,7 +84,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_reco_als_implicit", (DL_FUNC) &_reco_als_implicit, 7},
     {"_reco_als_loss_explicit", (DL_FUNC) &_reco_als_loss_explicit, 5},
     {"_reco_dotprod_top_k", (DL_FUNC) &_reco_dotprod_top_k, 5},
-    {"_reco_make_sparse_approximation", (DL_FUNC) &_reco_make_sparse_approximation, 4},
+    {"_reco_cpp_make_sparse_approximation", (DL_FUNC) &_reco_cpp_make_sparse_approximation, 5},
     {"_reco_arma_svd_econ", (DL_FUNC) &_reco_arma_svd_econ, 1},
     {NULL, NULL, 0}
 };
