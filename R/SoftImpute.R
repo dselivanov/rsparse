@@ -24,25 +24,30 @@ soft_impute = function(x, rank = 10L, lambda = 0, n_iter = 10L, convergence_tol 
   svd_new = svd_old
   CONVERGED = FALSE
   for(i in seq_len(n_iter)) {
-    # Bsvd = solve_iter_als_softimpute(tx, t(B), t(A), svd_new, lambda, "u")
-    Bsvd = solve_iter_als_softimpute(tx, svd_new, lambda, "u")
-    # str(Bsvd)
+    # Alternating algorithm
+    # 1. calculate for items
+    B_hat = solve_iter_als_softimpute(tx, svd_new, lambda, "u")
+    Bsvd = reco:::svd_econ(B_hat %*% diag(sqrt(svd_new$d)))
+    rm(B_hat)
+
     svd_new$v = Bsvd$u
     svd_new$d = Bsvd$d
     # not sure why this line is required
     svd_new$u = svd_new$u %*% Bsvd$v
 
-    Asvd = solve_iter_als_softimpute(x, svd_new, lambda, "v")
-    # str(Asvd)
+    # 2. calculate for users
+    A_hat = solve_iter_als_softimpute(x, svd_new, lambda, "v")
+    Asvd = reco:::svd_econ(A_hat %*% diag(sqrt(svd_new$d)))
+    loss =  attr(A_hat, "loss")
+    rm(A_hat)
 
     svd_new$u = Asvd$u
     svd_new$d = Asvd$d
     # not sure why this line is required
     svd_new$v = svd_new$v %*% Asvd$v
-
+    rm(Asvd, Bsvd)
+    #log values of loss and change in frobenious norm
     frob_delta = calc_frobenius_norm_delta(svd_old, svd_new)
-    loss =  attr(Asvd, "loss")
-
     trace_iter[[k]] = list(iter = i, scorer = "frob_delta", value = frob_delta)
     k = k + 1L
     trace_iter[[k]] = list(iter = i, scorer = "loss", value = loss)
@@ -50,8 +55,8 @@ soft_impute = function(x, rank = 10L, lambda = 0, n_iter = 10L, convergence_tol 
 
     futile.logger::flog.debug("reco:::soft_impute: iter %03d, loss %.3f frobenious norm delta %.3f",
                               i, loss, frob_delta)
-    rm(Asvd, Bsvd)
     svd_old = svd_new
+    # check convergence and
     if(frob_delta < convergence_tol) {
       futile.logger::flog.debug("reco:::soft_impute: converged with tol %f after %d iter", convergence_tol, i)
       CONVERGED = TRUE
@@ -87,7 +92,7 @@ solve_iter_als_softimpute = function(x, svd_current, lambda, singular_vectors = 
   rm(x_delta)
 
   second = t(A * (svd_current$d / (svd_current$d + lambda)))
-  res = reco:::svd_econ((first + second) %*% diag(sqrt(svd_current$d)))
+  res = first + second
   data.table::setattr(res, "loss", loss)
   res
 }
