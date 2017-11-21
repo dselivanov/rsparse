@@ -1,7 +1,7 @@
 # implements Rank-Restricted Soft SVD
 # algorithm 2.1 from https://arxiv.org/pdf/1410.2596.pdf
 
-soft_svd = function(x, rank = 10L, lambda = 0, n_iter = 10L, convergence_tol = 1e-3, init = NULL) {
+soft_svd = function(x, rank = 10L, lambda = 0, n_iter = 100L, convergence_tol = 1e-3, init = NULL) {
   tx = t(x)
   if(is.null(init)) {
     # draw random matrix and make columns orthogonal with QR decomposition

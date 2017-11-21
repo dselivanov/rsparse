@@ -86,13 +86,13 @@ LinearFlow = R6::R6Class(
     n_threads = NULL,
     initialize = function(rank = 8L,
                           lambda = 0,
-                          svd_solver = c("irlba", "randomized_svd"),
+                          q_solver = c("soft_impute", "svd"),
                           n_threads = parallel::detectCores(),
                           Q = NULL
     ) {
       self$n_threads = n_threads
       private$rank = as.integer(rank)
-      private$svd_solver = match.arg(svd_solver)
+      private$q_solver = match.arg(q_solver)
       private$lambda = as.numeric(lambda)
       self$Q = Q
     },
@@ -146,18 +146,18 @@ LinearFlow = R6::R6Class(
       metric_name = metric[[1]]
 
       self$Q = private$calc_Q(x, ...)
-      flog.info("calculating RHS")
+      flog.debug("calculating RHS")
       # rhs = t(self$Q) %*% t(x) %*% x
       # same as above but a bit faster:
       rhs = crossprod(x %*% self$Q, x)
 
-      flog.info("calculating LHS")
+      flog.debug("calculating LHS")
       lhs = rhs %*% self$Q
       # calculate "reasonable" lambda from values of main diagonal of LHS
       if(lambda_auto) {
         lhs_ridge = diag(lhs)
         # generate sequence of lambda
-        lambda = seq(log10(0.1 * min(lhs_ridge)), log10(100 * max(lhs_ridge)), length.out = lambdas_k)
+        lambda = seq(log10(0.1 * min(lhs_ridge)), log10(10 * max(lhs_ridge)), length.out = lambdas_k)
         lambda = 10 ^ lambda
       }
 
@@ -192,7 +192,7 @@ LinearFlow = R6::R6Class(
   ),
   private = list(
     rank = NULL,
-    svd_solver = NULL,
+    q_solver = NULL,
     lambda = NULL,
     item_ids = NULL,
     calc_Q = function(x, ...) {
@@ -204,10 +204,18 @@ LinearFlow = R6::R6Class(
         result = self$Q
       } else {
         if(is.null(self$Q)) {
-          trunc_svd = soft_svd(x, rank = private$rank,
-                               lambda = 0, n_iter = 100L,
-                               convergence_tol = 1e-3,
-                               init = NULL)
+
+          if(private$q_solver == "soft_impute")
+            q_solver_fun = soft_impute
+          else if(private$q_solver == "svd")
+            q_solver_fun = soft_svd
+          else
+            stop(sprintf("don't know solver '%s'", private$q_solver))
+
+          trunc_svd = q_solver_fun(x,
+                               rank = private$rank,
+                               lambda = 0,
+                               ...)
           # if(private$svd_solver == "irlba") {
           #   flog.info("fitting truncated SVD with irlba")
           #   trunc_svd = irlba::irlba(x, nv = private$rank, tol = 1e-4)

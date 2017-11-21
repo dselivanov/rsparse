@@ -1,4 +1,4 @@
-soft_impute = function(x, rank = 10L, lambda = 0, n_iter = 10L, convergence_tol = 1e-3, init = NULL) {
+soft_impute = function(x, rank = 10L, lambda = 0, n_iter = 100L, convergence_tol = 1e-3, init = NULL) {
   tx = t(x)
   if(is.null(init)) {
     # draw random matrix and make columns orthogonal with QR decomposition
