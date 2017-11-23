@@ -75,10 +75,9 @@ soft_als = function(x,
     # warm start with another SVD
     stopifnot(is.list(init))
     stopifnot(all(names(init) %in% c("u", "d", "v")))
-    stopifnot(isTRUE(all.equal(dim(init$u), c(nrow(x), rank))))
-    stopifnot(isTRUE(all.equal(dim(init$v), c(ncol(x), rank))))
-    stopifnot(length(init$d) == rank)
-    svd_old = init
+    if(length(init$d) > rank)
+      stop("provided initial svd 'init' has bigger rank than model rank")
+    svd_old = pad_svd(init, rank)
   }
 
   trace_iter = vector("list", n_iter)
