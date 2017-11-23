@@ -31,3 +31,29 @@ svd_econ = function(x) {
   stopifnot(is.numeric(x))
   arma_svd_econ(x)
 }
+
+pad_svd = function(x, rank) {
+  stopifnot(length(x$d) <= rank)
+  nr = nrow(x$u)
+  nc = nrow(x$v)
+
+  x_rank = length(x$d)
+  x_rank_true = sum(x$d > 0)
+  n_pad = rank - x_rank
+  if(n_pad > 0) {
+    x$d = c(x$d, rep(x$d[x_rank], n_pad) )
+
+    u_pad = matrix(rnorm(n_pad * nr), nr, n_pad)
+    u_pad = u_pad - x$u %*% (t(x$u) %*% u_pad)
+    u_pad = qr.Q(qr(u_pad, LAPACK = TRUE))
+    x$u = cbind(x$u, u_pad); rm(u_pad)
+
+    v_pad = matrix(rnorm(n_pad * nc), nc, n_pad)
+    v_pad = v_pad - x$v %*% crossprod(x$v, v_pad)
+    v_pad = qr.Q(qr(v_pad, LAPACK = TRUE))
+    x$v = cbind(x$v, v_pad)
+    x
+  } else {
+    x
+  }
+}
