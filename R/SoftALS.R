@@ -90,10 +90,10 @@ soft_als = function(x,
     # 1. calculate for items
     if(target == "soft_impute") {
       B_hat = solve_iter_als_softimpute(tx, svd_new, lambda, "u")
-      Bsvd = reco:::svd_econ(B_hat %*% diag(sqrt(svd_new$d)))
+      Bsvd = svd_econ(B_hat %*% diag(sqrt(svd_new$d)))
     } else if(target == "svd") {
       B_hat = solve_iter_als_svd(tx, svd_new, lambda, "u")
-      Bsvd = reco:::svd_econ(B_hat)
+      Bsvd = svd_econ(B_hat)
     }
     rm(B_hat)
     svd_new$v = Bsvd$u
@@ -104,10 +104,10 @@ soft_als = function(x,
     # 2. calculate for users
     if(target == "soft_impute") {
       A_hat = solve_iter_als_softimpute(x, svd_new, lambda, "v")
-      Asvd = reco:::svd_econ(A_hat %*% diag(sqrt(svd_new$d)))
+      Asvd = svd_econ(A_hat %*% diag(sqrt(svd_new$d)))
     } else if(target == "svd") {
       A_hat = solve_iter_als_svd(x, svd_new, lambda, "v")
-      Asvd = reco:::svd_econ(A_hat)
+      Asvd = svd_econ(A_hat)
     } else {
       stop(sprintf("unknown target = %s", target))
     }
@@ -126,10 +126,10 @@ soft_als = function(x,
     if(!is.null(loss)) {
       trace_iter[[k]] = list(iter = i, scorer = "loss", value = loss)
       k = k + 1L
-      futile.logger::flog.debug("reco:::soft_impute: iter %03d, loss %.3f frobenious norm change %.3f",
+      futile.logger::flog.debug("soft_impute: iter %03d, loss %.3f frobenious norm change %.3f",
                                 i, loss, frob_delta)
     } else {
-      futile.logger::flog.debug("reco:::soft_impute: iter %03d, frobenious norm change %.3f",
+      futile.logger::flog.debug("soft_impute: iter %03d, frobenious norm change %.3f",
                                 i, frob_delta)
     }
 
@@ -137,14 +137,14 @@ soft_als = function(x,
     svd_old = svd_new
     # check convergence and
     if(frob_delta < convergence_tol) {
-      futile.logger::flog.debug("reco:::soft_impute: converged with tol %f after %d iter", convergence_tol, i)
+      futile.logger::flog.debug("soft_impute: converged with tol %f after %d iter", convergence_tol, i)
       CONVERGED = TRUE
       break
     }
   }
   setattr(svd_new, "trace", data.table::rbindlist(trace_iter))
   if(!CONVERGED)
-    futile.logger::flog.warn("reco:::soft_impute: didn't converged with tol %f after %d iterations - returning latest solution",
+    futile.logger::flog.warn("soft_impute: didn't converged with tol %f after %d iterations - returning latest solution",
                              convergence_tol, i)
   if(final_svd) {
     if(target == "soft_impute") {

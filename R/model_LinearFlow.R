@@ -17,7 +17,7 @@
 #' \preformatted{
 #'   model = LinearFlow$new( rank = 8L,
 #'                           lambda = 0,
-#'                           svd_solver = c("irlba", "randomized_svd"),
+#'                           q_solver = c("svd", "soft_impute"),
 #'                           n_threads = parallel::detectCores(),
 #'                           Q = NULL, ...)
 #'   model$fit_transform(x, ...)
@@ -33,14 +33,13 @@
 #' @section Methods:
 #' \describe{
 #'   \item{\code{$new(rank = 8L, lambda = 0,
-#'               svd_solver = c("irlba", "randomized_svd"),
+#'               q_solver = c("svd", "soft_impute"),
 #'               n_threads = parallel::detectCores(),
 #'               Q = NULL, ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
 #'     If \code{Q} (right singular vectors of the user-item interactions matrix)
 #'     is provided then model initialized with its values.}
 #'   \item{\code{$fit_transform(x, ...)}}{ fits model to
-#'     an input user-item matrix. (preferably in \code{CsparseMatrix}/\code{dgCMatrix} format
-#'     for \code{irlba} SVD solver and \code{RsparseMatrix}/\code{dgRMatrix} for \code{randomized_svd} SVD solver).
+#'     an input user-item matrix.
 #'     \bold{Returns factor matrix for users of size \code{n_users * rank}}}
 #'   \item{\code{$transform(x, ...)}}{transforms (new) sparse user-item interaction matrix into user-embeddings matrix.}
 #'   \item{\code{$predict(x, k, not_recommend = x, ...)}}{predict \bold{top k}
@@ -68,7 +67,7 @@
 #'  \item{rank}{\code{integer} - number of latent factors}
 #'  \item{lambda}{\code{numeric} - regularization parameter or sequence of regularization values for \code{cross_validate_lambda} method.}
 #'  \item{n_threads}{\code{numeric} default number of threads to use during prediction (if OpenMP is available).
-#'  At the training most expensive stage is truncated SVD calculation. \code{irlba} method on \code{dgCMatrix} relies on system BLAS,
+#'  At the training most expensive stage is truncated SVD calculation. \code{svd} method on \code{dgCMatrix} relies on system BLAS,
 #'  so it also can benefit from multithreded BLAS. But this is not controlled by \code{n_threads} parameter.
 #'  For changing number of BLAS threads at runtime please check \href{https://cran.r-project.org/package=RhpcBLASctl}{RhpcBLASctl package}.}
 #'  \item{not_recommend}{\code{sparse matrix} or \code{NULL} - points which items should be excluided from recommendations for a user.
@@ -216,16 +215,6 @@ LinearFlow = R6::R6Class(
                                rank = private$rank,
                                lambda = 0,
                                ...)
-          # if(private$svd_solver == "irlba") {
-          #   flog.info("fitting truncated SVD with irlba")
-          #   trunc_svd = irlba::irlba(x, nv = private$rank, tol = 1e-4)
-          # } else {
-          #   if(private$svd_solver == "randomized_svd") {
-          #     flog.info("fitting truncated SVD with randomized algorithm")
-          #     trunc_svd = irlba::svdr(x, private$rank)
-          #   } else
-          #       stop(sprintf("don't know %s", private$svd_solver))
-          # }
         }
         result = trunc_svd$v
       }

@@ -9,7 +9,7 @@ test_that("test linear-flow", {
   K = 10
   cv_split = train_test_split(cv)
   model = LinearFlow$new(rank = rank, lambda = lambda,
-                         svd_solver = "irlba", Q = NULL)
+                         q_solver = "svd", Q = NULL)
 
   user_emb = model$fit_transform(train)
   expect_equal(dim(user_emb), c(nrow(train), rank))
