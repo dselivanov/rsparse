@@ -19,7 +19,9 @@
 #'                           lambda = 0,
 #'                           solve_right_singular_vectors = c("soft_impute", "svd"),
 #'                           n_threads = parallel::detectCores(),
-#'                           v = NULL, ...)
+#'                           v = NULL,
+#'                           preprocess = identity,
+#'                           ...)
 #'   model$fit_transform(x, ...)
 #'   model$transform(x, ...)
 #'   model$predict(x, k, not_recommend = x, ...)
@@ -35,7 +37,7 @@
 #'   \item{\code{$new(rank = 8L, lambda = 0,
 #'               solve_right_singular_vectors = c("svd", "soft_impute"),
 #'               n_threads = parallel::detectCores(),
-#'               v = NULL, ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
+#'               v = NULL, preprocess = identity, ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
 #'     If \code{v} (right singular vectors of the user-item interactions matrix)
 #'     is provided then model initialized with its values.}
 #'   \item{\code{$fit_transform(x, ...)}}{ fits model to
@@ -46,6 +48,9 @@
 #'     item ids for users \code{x}. Users features should be defined the same way as they were defined in
 #'     training data - as \bold{sparse matrix}. Column names (=item ids) should be in the same order as
 #'     in the \code{fit_transform()}.}
+#'   \item{preprocess}{\code{function} = \code{identity()} by default. User spectified function which will
+#'     be applied to user-item interaction matrix before running matrix factorization
+#'     (also applied in inference time before making predictions).}
 #'   \item{\code{$cross_validate_lambda(x, x_train, x_test, lambda = "auto@@10", metric = "map@@10",
 #'                               not_recommend = x_train, ...)}}{perfroms search of the
 #'   best regularization parameter \code{lambda}:
@@ -87,9 +92,10 @@ LinearFlow = R6::R6Class(
                           lambda = 0,
                           solve_right_singular_vectors = c("soft_impute", "svd"),
                           n_threads = parallel::detectCores(),
-                          v = NULL
-    ) {
+                          v = NULL,
+                          preprocess = identity) {
       self$n_threads = n_threads
+      private$preprocess = preprocess
       private$rank = as.integer(rank)
       private$solve_right_singular_vectors = match.arg(solve_right_singular_vectors)
       private$lambda = as.numeric(lambda)
@@ -97,7 +103,7 @@ LinearFlow = R6::R6Class(
     },
     fit_transform = function(x, ...) {
       stopifnot(inherits(x, "sparseMatrix") || inherits(x, "SparseplusLowRank"))
-
+      x = private$preprocess(x)
       private$item_ids = colnames(x)
       self$v = private$get_right_singular_vectors(x, ...)
       flog.debug("calculating RHS")
@@ -113,6 +119,7 @@ LinearFlow = R6::R6Class(
     },
     transform = function(x, ...) {
       stopifnot(inherits(x, "sparseMatrix") || inherits(x, "SparseplusLowRank"))
+      x = private$preprocess(x)
       res = x %*% self$v
       if(!is.matrix(res))
         res = as.matrix(res)
@@ -126,6 +133,10 @@ LinearFlow = R6::R6Class(
 
       stopifnot(private$item_ids == colnames(x_test))
       stopifnot(private$item_ids == colnames(x_train))
+
+      x = private$preprocess(x)
+      x_train = private$preprocess(x_train)
+      x_test = private$preprocess(x_test)
 
       lambda_auto = FALSE
       if(is.character(lambda)) {
@@ -191,6 +202,7 @@ LinearFlow = R6::R6Class(
   ),
   private = list(
     rank = NULL,
+    preprocess = NULL,
     solve_right_singular_vectors = NULL,
     lambda = NULL,
     item_ids = NULL,

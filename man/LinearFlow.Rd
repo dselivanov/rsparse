@@ -23,7 +23,9 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
                           lambda = 0,
                           solve_right_singular_vectors = c("soft_impute", "svd"),
                           n_threads = parallel::detectCores(),
-                          v = NULL, ...)
+                          v = NULL,
+                          preprocess = identity,
+                          ...)
   model$fit_transform(x, ...)
   model$transform(x, ...)
   model$predict(x, k, not_recommend = x, ...)
@@ -42,7 +44,7 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
   \item{\code{$new(rank = 8L, lambda = 0,
               solve_right_singular_vectors = c("svd", "soft_impute"),
               n_threads = parallel::detectCores(),
-              v = NULL, ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
+              v = NULL, preprocess = identity, ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
     If \code{v} (right singular vectors of the user-item interactions matrix)
     is provided then model initialized with its values.}
   \item{\code{$fit_transform(x, ...)}}{ fits model to
@@ -53,6 +55,9 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
     item ids for users \code{x}. Users features should be defined the same way as they were defined in
     training data - as \bold{sparse matrix}. Column names (=item ids) should be in the same order as
     in the \code{fit_transform()}.}
+  \item{preprocess}{\code{function} = \code{identity()} by default. User spectified function which will
+    be applied to user-item interaction matrix before running matrix factorization
+    (also applied in inference time before making predictions).}
   \item{\code{$cross_validate_lambda(x, x_train, x_test, lambda = "auto@10", metric = "map@10",
                               not_recommend = x_train, ...)}}{perfroms search of the
   best regularization parameter \code{lambda}:

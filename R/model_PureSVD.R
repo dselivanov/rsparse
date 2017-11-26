@@ -93,13 +93,13 @@ PureSVD = R6::R6Class(
                      ...)
       private$components_ = t(private$svd$v * sqrt(private$svd$d))
       res = private$svd$u * sqrt(private$svd$d)
-      as.matrix(res)
+      invisible(res)
     },
     transform = function(x, ...) {
       x = private$check_convert_input(x)
       x = private$preprocess(x)
       res = solve_iter_als_svd(x = x, svd_current = private$svd, lambda = private$lambda, singular_vectors = "v")
-      as.matrix(res)
+      invisible(as.matrix(res))
     },
     predict = function(x, k, not_recommend = x, ...) {
       stopifnot(private$item_ids == colnames(x))
@@ -129,6 +129,7 @@ PureSVD = R6::R6Class(
     rank = NULL,
     lambda = NULL,
     init = NULL,
-    svd = NULL
+    svd = NULL,
+    preprocess = NULL
   )
 )
