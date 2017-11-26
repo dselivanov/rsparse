@@ -1,3 +1,25 @@
+#' @title SoftImpute/SoftSVD matrix factorization
+#' @description Fit SoftImpute/SoftSVD via fast alternating least squares. Based on the
+#' paper by Trevor Hastie, Rahul Mazumder, Jason D. Lee, Reza Zadeh
+#' by "Matrix Completion and Low-Rank SVD via Fast Alternating Least Squares" -
+#' \url{https://arxiv.org/pdf/1410.2596.pdf}
+#' @param x sparse matrix. Both CSR \code{dgRMatrix} and CSC \code{dgCMatrix} are supported.
+#' in case of CSR matrix we suggest to load \url{https://github.com/dselivanov/MatrixCSR} package
+#' which provides multithreaded CSR*dense matrix products (if OpenMP is supported on your platform).
+#' On many-cores machines this reduces fitting time significantly.
+#' @param rank maximum rank of the low-rank solution.
+#' @param lambda regularization parameter for nuclear norm
+#' @param n_iter maximum number of iterations of the algorithms
+#' @param convergence_tol convergence tolerance.
+#' Internally we keep track relative change of frobenious norm of two consequent iterations.
+#' @param init \link{svd} like object with \code{u, v, d} components to initialize algorithm.
+#' Algorithm benefit from warm starts. \code{init} could be rank up \code{rank} of the maximum allowed rank.
+#' If \code{init} has rank less than max rank it will be padded automatically.
+#' @param final_svd \code{logical} whether need to make final preprocessing with SVD.
+#' This is not necessary but cleans up rank nicely - hithly recommnded to leave it \code{TRUE}.
+#' @return \link{svd}-like object - \code{list} with \code{u, v, d}
+#' components - left, right singular vectors and singular vectors.
+#' @export
 soft_impute = function(x,
                        rank = 10L, lambda = 0,
                        n_iter = 100L, convergence_tol = 1e-3,
@@ -9,6 +31,9 @@ soft_impute = function(x,
           target = "soft_impute")
 }
 
+
+#' @rdname soft_impute
+#' @export
 soft_svd = function(x,
                     rank = 10L, lambda = 0,
                     n_iter = 100L, convergence_tol = 1e-3,
@@ -20,7 +45,9 @@ soft_svd = function(x,
            target = "svd")
 }
 
+#--------------------------------------------------------------------------------------------
 # workhorse for soft_impute
+#--------------------------------------------------------------------------------------------
 solve_iter_als_softimpute = function(x, svd_current, lambda, singular_vectors = c("u", "v")) {
   singular_vectors = match.arg(singular_vectors)
 
@@ -47,13 +74,18 @@ solve_iter_als_softimpute = function(x, svd_current, lambda, singular_vectors = 
   res
 }
 
+#--------------------------------------------------------------------------------------------
 # workhorse for soft_svd
+#--------------------------------------------------------------------------------------------
 solve_iter_als_svd = function(x, svd_current, lambda, singular_vectors = c("u", "v")) {
   singular_vectors = match.arg(singular_vectors)
   m = (x %*% svd_current[[singular_vectors]]) %*% diag((svd_current$d / (svd_current$d + lambda)))
   m
 }
 
+#--------------------------------------------------------------------------------------------
+# core EM-like algorithm for soft-svd and soft-impute
+#--------------------------------------------------------------------------------------------
 soft_als = function(x,
                     rank = 10L, lambda = 0,
                     n_iter = 100L, convergence_tol = 1e-3,

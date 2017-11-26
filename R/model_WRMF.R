@@ -59,7 +59,6 @@
 #'   \item{\code{$components}}{item factors matrix of size \code{rank * n_items}}
 #'   \item{n_threads}{\code{numeric} default number of threads to use during training and prediction
 #'   (if OpenMP is available).}
-
 #'}
 #' @section Arguments:
 #' \describe{
@@ -101,7 +100,7 @@
 #' @export
 WRMF = R6::R6Class(
   inherit = mlapi::mlapiDecomposition,
-  classname = "AlternatingLeastSquares",
+  classname = "WRMF",
   public = list(
     n_threads = NULL,
     initialize = function(rank = 10L,

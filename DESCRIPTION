@@ -4,14 +4,21 @@ Title: Matrix factorizations for recommender systems
 Version: 0.2.0
 Author: Dmitriy Selivanov
 Maintainer: Dmitriy Selivanov <selivanov.dmitriy@gmail.com>
-Description: Matrix factorizations for recommender systems. 
+Description: Implements many (sparse) matrix factorizations algorithms. 
+    Focus is applications for recommender systems. 
     Following algorithms are implemented at the moment: 
-    1) Weighted Regularazied Matrix Factorization with ALS 
-      for implicit feedback (Cholesky solver, Conjugate Gradient solver)
+    1) Weighted Regularazied Matrix Factorization with Alternationf Least Squares (ALS) 
+      for implicit feedback (inculding approximate Conjugate Gradient solver).
+      Possible to force non-negativity constraint.
     2) Regularazied Matrix Factorization with ALS for explicit feedback
-    3) LinearFlow method which can inferr item-item similarity matrix from the data
-    All algorithms work on sparse matrices, extensively use BLAS and LAPACK 
-    and parallelized if possible. So they are reasonably fast and scale to large datasets.
+      Possible to force non-negativity constraint.
+    3) Soft SVD with fast ALS
+    4) Soft Impute with fast ALS
+    5) LinearFlow method which learns item-item similarity matrix from the data
+    All algorithms work on sparse matrices. Extensively use BLAS and LAPACK 
+    and parallelized with OpenMP where applicable. 
+    Implementations are reasonably fast and nicely work on large 
+    datasets (millions of rows and millions of columns).
 License: GPL (>= 2) | file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -20,18 +27,18 @@ Depends:
     R (>= 3.1.0),
     methods
 Imports:
-    mlapi, 
+    mlapi,
     Matrix, 
     futile.logger,
     data.table (>= 1.10.0), 
-    irlba (>= 2.2.0), 
-    Rcpp, 
-    RcppArmadillo
-LinkingTo:
     Rcpp, 
     RcppArmadillo
 Suggests:
+    MatrixCSR,
     testthat
+LinkingTo:
+    Rcpp, 
+    RcppArmadillo
 Remotes:
     dselivanov/mlapi,
     dselivanov/MatrixCSR
