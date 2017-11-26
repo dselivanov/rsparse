@@ -17,14 +17,14 @@
 #' \preformatted{
 #'   model = LinearFlow$new( rank = 8L,
 #'                           lambda = 0,
-#'                           q_solver = c("svd", "soft_impute"),
+#'                           solve_right_singular_vectors = c("soft_impute", "svd"),
 #'                           n_threads = parallel::detectCores(),
-#'                           Q = NULL, ...)
+#'                           v = NULL, ...)
 #'   model$fit_transform(x, ...)
 #'   model$transform(x, ...)
 #'   model$predict(x, k, not_recommend = x, ...)
 #'   model$components
-#'   model$Q
+#'   model$v
 #'   model$cross_validate_lambda(x, x_train, x_test, lambda = "auto@@10",
 #'                        metric = "map@@10", not_recommend = x_train, ...)
 #' }
@@ -33,10 +33,10 @@
 #' @section Methods:
 #' \describe{
 #'   \item{\code{$new(rank = 8L, lambda = 0,
-#'               q_solver = c("svd", "soft_impute"),
+#'               solve_right_singular_vectors = c("svd", "soft_impute"),
 #'               n_threads = parallel::detectCores(),
-#'               Q = NULL, ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
-#'     If \code{Q} (right singular vectors of the user-item interactions matrix)
+#'               v = NULL, ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
+#'     If \code{v} (right singular vectors of the user-item interactions matrix)
 #'     is provided then model initialized with its values.}
 #'   \item{\code{$fit_transform(x, ...)}}{ fits model to
 #'     an input user-item matrix.
@@ -58,7 +58,7 @@
 #'   So it is very cheap - \bold{cost is almost the same as for single fit} of the model. The only considerable additional cost is
 #'   time to predict \emph{top k} items. In most cases automatic lambda like \code{lambda = "auto@@20"} is able to find good value of the parameter}
 #'   \item{\code{$components}}{item factors matrix of size \code{rank * n_items}. In the paper this matrix is called \bold{Y}}
-#'   \item{\code{$Q}}{right singular vector of the user-item matrix. Size is \code{n_items * rank}. In the paper this matrix is called \bold{Q}}
+#'   \item{\code{$v}}{right singular vector of the user-item matrix. Size is \code{n_items * rank}. In the paper this matrix is called \bold{v}}
 #'}
 #' @section Arguments:
 #' \describe{
@@ -81,39 +81,39 @@ LinearFlow = R6::R6Class(
   classname = "LinearFlow",
   inherit = mlapi::mlapiDecomposition,
   public = list(
-    Q = NULL,
+    v = NULL,
     n_threads = NULL,
     initialize = function(rank = 8L,
                           lambda = 0,
-                          q_solver = c("soft_impute", "svd"),
+                          solve_right_singular_vectors = c("soft_impute", "svd"),
                           n_threads = parallel::detectCores(),
-                          Q = NULL
+                          v = NULL
     ) {
       self$n_threads = n_threads
       private$rank = as.integer(rank)
-      private$q_solver = match.arg(q_solver)
+      private$solve_right_singular_vectors = match.arg(solve_right_singular_vectors)
       private$lambda = as.numeric(lambda)
-      self$Q = Q
+      self$v = v
     },
     fit_transform = function(x, ...) {
       stopifnot(inherits(x, "sparseMatrix") || inherits(x, "SparseplusLowRank"))
 
       private$item_ids = colnames(x)
-      self$Q = private$calc_Q(x, ...)
+      self$v = private$get_right_singular_vectors(x, ...)
       flog.debug("calculating RHS")
 
-      # rhs = t(self$Q) %*% t(x) %*% x
+      # rhs = t(self$v) %*% t(x) %*% x
       # same as above but a bit faster:
-      rhs = crossprod(x %*% self$Q, x)
+      rhs = crossprod(x %*% self$v, x)
 
       flog.debug("calculating LHS")
-      lhs = rhs %*% self$Q
+      lhs = rhs %*% self$v
       private$components_ = private$fit_transform_internal(lhs, rhs, private$lambda, ...)
-      invisible(as.matrix(x %*% self$Q))
+      invisible(as.matrix(x %*% self$v))
     },
     transform = function(x, ...) {
       stopifnot(inherits(x, "sparseMatrix") || inherits(x, "SparseplusLowRank"))
-      res = x %*% self$Q
+      res = x %*% self$v
       if(!is.matrix(res))
         res = as.matrix(res)
       invisible(res)
@@ -144,14 +144,14 @@ LinearFlow = R6::R6Class(
       metric_k = as.integer(metric[[2]])
       metric_name = metric[[1]]
 
-      self$Q = private$calc_Q(x, ...)
+      self$v = private$get_right_singular_vectors(x, ...)
       flog.debug("calculating RHS")
-      # rhs = t(self$Q) %*% t(x) %*% x
+      # rhs = t(self$v) %*% t(x) %*% x
       # same as above but a bit faster:
-      rhs = crossprod(x %*% self$Q, x)
+      rhs = crossprod(x %*% self$v, x)
 
       flog.debug("calculating LHS")
-      lhs = rhs %*% self$Q
+      lhs = rhs %*% self$v
       # calculate "reasonable" lambda from values of main diagonal of LHS
       if(lambda_auto) {
         lhs_ridge = diag(lhs)
@@ -161,7 +161,7 @@ LinearFlow = R6::R6Class(
       }
 
       cv_res = data.frame(lambda = lambda, score = NA_real_)
-      xq_cv_train = as.matrix(x_train %*% self$Q)
+      xq_cv_train = as.matrix(x_train %*% self$v)
 
       for(i in seq_along(lambda)) {
         lambda_i = lambda[[i]]
@@ -183,7 +183,7 @@ LinearFlow = R6::R6Class(
       cv_res
     },
     predict = function(x, k, not_recommend = x, ...) {
-      xq = x %*% self$Q
+      xq = x %*% self$v
       predicted_item_ids = private$predict_internal(xq, k = k, private$components_,
                                                     not_recommend = not_recommend, ...)
       predicted_item_ids
@@ -191,30 +191,24 @@ LinearFlow = R6::R6Class(
   ),
   private = list(
     rank = NULL,
-    q_solver = NULL,
+    solve_right_singular_vectors = NULL,
     lambda = NULL,
     item_ids = NULL,
-    calc_Q = function(x, ...) {
+    get_right_singular_vectors = function(x, ...) {
       result = NULL
-      if(!is.null(self$Q)) {
-        flog.debug("found Q, checking it...")
-        stopifnot(nrow((self$Q)) == ncol(x))
-        stopifnot(ncol((self$Q)) == private$rank)
-        result = self$Q
+      if(!is.null(self$v)) {
+        flog.debug("found v, checking it...")
+        stopifnot(nrow((self$v)) == ncol(x))
+        stopifnot(ncol((self$v)) == private$rank)
+        result = self$v
       } else {
-        if(is.null(self$Q)) {
-
-          if(private$q_solver == "soft_impute")
-            q_solver_fun = soft_impute
-          else if(private$q_solver == "svd")
-            q_solver_fun = soft_svd
+        if(is.null(self$v)) {
+          if(private$solve_right_singular_vectors == "soft_impute")
+            trunc_svd = soft_impute(x, rank = private$rank, lambda = 0, ...)
+          else if(private$solve_right_singular_vectors == "svd")
+            trunc_svd = soft_svd(x, rank = private$rank, lambda = 0, ...)
           else
-            stop(sprintf("don't know solver '%s'", private$q_solver))
-
-          trunc_svd = q_solver_fun(x,
-                               rank = private$rank,
-                               lambda = 0,
-                               ...)
+            stop(sprintf("don't know solver '%s'", private$solve_right_singular_vectors))
         }
         result = trunc_svd$v
       }

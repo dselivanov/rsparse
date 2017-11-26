@@ -21,14 +21,14 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 \preformatted{
   model = LinearFlow$new( rank = 8L,
                           lambda = 0,
-                          q_solver = c("svd", "soft_impute"),
+                          solve_right_singular_vectors = c("soft_impute", "svd"),
                           n_threads = parallel::detectCores(),
-                          Q = NULL, ...)
+                          v = NULL, ...)
   model$fit_transform(x, ...)
   model$transform(x, ...)
   model$predict(x, k, not_recommend = x, ...)
   model$components
-  model$Q
+  model$v
   model$cross_validate_lambda(x, x_train, x_test, lambda = "auto@10",
                        metric = "map@10", not_recommend = x_train, ...)
 }
@@ -40,10 +40,10 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 
 \describe{
   \item{\code{$new(rank = 8L, lambda = 0,
-              q_solver = c("svd", "soft_impute"),
+              solve_right_singular_vectors = c("svd", "soft_impute"),
               n_threads = parallel::detectCores(),
-              Q = NULL, ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
-    If \code{Q} (right singular vectors of the user-item interactions matrix)
+              v = NULL, ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
+    If \code{v} (right singular vectors of the user-item interactions matrix)
     is provided then model initialized with its values.}
   \item{\code{$fit_transform(x, ...)}}{ fits model to
     an input user-item matrix.
@@ -65,7 +65,7 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
   So it is very cheap - \bold{cost is almost the same as for single fit} of the model. The only considerable additional cost is
   time to predict \emph{top k} items. In most cases automatic lambda like \code{lambda = "auto@20"} is able to find good value of the parameter}
   \item{\code{$components}}{item factors matrix of size \code{rank * n_items}. In the paper this matrix is called \bold{Y}}
-  \item{\code{$Q}}{right singular vector of the user-item matrix. Size is \code{n_items * rank}. In the paper this matrix is called \bold{Q}}
+  \item{\code{$v}}{right singular vector of the user-item matrix. Size is \code{n_items * rank}. In the paper this matrix is called \bold{v}}
 }
 }
 
