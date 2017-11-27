@@ -5,7 +5,7 @@ Version: 0.2.0
 Author: Dmitriy Selivanov
 Maintainer: Dmitriy Selivanov <selivanov.dmitriy@gmail.com>
 Description: Implements many (sparse) matrix factorizations algorithms. 
-    Focus is applications for recommender systems. 
+    Focus is on applications for recommender systems. 
     Following algorithms are implemented at the moment: 
     1) Weighted Regularazied Matrix Factorization with Alternationf Least Squares (ALS) 
       for implicit feedback (inculding approximate Conjugate Gradient solver).
