@@ -25,3 +25,18 @@ train_test_split = function(x, test_proportion = 0.5) {
                               dims = dim(x), dimnames = dimnames(x), index1 = FALSE)
   list(x_train = x_train, x_cv = x_cv)
 }
+
+
+find_top_product = function(x, y, k, n_threads = parallel::detectCores(), not_recommend = NULL) {
+  stopifnot(is.null(not_recommend) || inherits(not_recommend, "sparseMatrix"))
+  stopifnot(ncol(x) == nrow(y))
+
+  if(is.null(not_recommend))
+    not_recommend = new("dgRMatrix")
+  else {
+    stopifnot(nrow(x) == nrow(not_recommend))
+    stopifnot(ncol(y) == ncol(not_recommend))
+    not_recommend = as(not_recommend, "RsparseMatrix")
+  }
+  top_product(x, y, k, n_threads, not_recommend)
+}

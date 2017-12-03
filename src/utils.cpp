@@ -18,75 +18,6 @@ using namespace arma;
 // for sparse_hash_map < <uint32_t, uint32_t>, T >
 #include <unordered_map>
 #include <utility>
-namespace std {
-template <>
-struct hash<std::pair<uint32_t, uint32_t> >
-{
-  inline uint64_t operator()(const std::pair<uint32_t, uint32_t>& k) const
-  {
-    return (uint64_t) k.first << 32 | k.second;
-  }
-};
-
-}
-// Find top k elements (and their indices) of the dot-product of 2 matrices in O(n * log (k))
-// https://stackoverflow.com/a/38391603/1069256
-// [[Rcpp::export]]
-IntegerMatrix dotprod_top_k(const arma::mat &x, const arma::mat &y, unsigned k, unsigned n_threads,
-                            Rcpp::Nullable<const arma::sp_mat> &not_recommend) {
-
-  int not_empty_filter_matrix = not_recommend.isNotNull();
-  const arma::sp_mat mat = (not_empty_filter_matrix) ? arma::sp_mat( as<arma::sp_mat>(not_recommend.get()) ) : arma::sp_mat();
-
-  std::map< std::pair<uint32_t, uint32_t>, double > x_triplets;
-  std::map < std::pair<uint32_t, uint32_t>, double > :: const_iterator triplet_iterator;
-  for(sp_mat::const_iterator it = mat.begin(); it != mat.end(); ++it) {
-    x_triplets[std::make_pair(it.row(), it.col())] = *it;
-  }
-
-  size_t nr = x.n_rows;
-  size_t nc = y.n_cols;
-
-  IntegerMatrix res(nr, k);
-  int *res_ptr = res.begin();
-  NumericMatrix scores(nr, k);
-  double *scores_ptr = scores.begin();
-  #ifdef _OPENMP
-  #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE)
-  #endif
-  for(size_t j = 0; j < nr; j++) {
-
-    arma::rowvec yvec = x.row(j) * y;
-    std::priority_queue< std::pair<double, int>, std::vector< std::pair<double, int> >, std::greater <std::pair<double, int> > > q;
-    for (size_t i = 0; i < nc; ++i) {
-      double val = arma::as_scalar(yvec.at(i));
-      double m_ji = 0;
-
-      if(not_empty_filter_matrix) {
-        triplet_iterator = x_triplets.find(std::make_pair(j, i));
-        if(triplet_iterator != x_triplets.end())
-          m_ji = triplet_iterator->second;
-      }
-
-      if(q.size() < k){
-        if (m_ji == 0) q.push(std::pair<double, int>(val, i));
-      } else if (q.top().first < val && m_ji == 0) {
-        q.pop();
-        q.push(std::pair<double, int>(val, i));
-      }
-    }
-    for (size_t i = 0; i < k; ++i) {
-      res_ptr[nr * (k - i - 1) + j] = q.top().second + 1;
-      scores_ptr[nr * (k - i - 1) + j] = q.top().first;
-      q.pop();
-      // pathologic case
-      // break if there were less than k predictions
-      if(q.size() == 0) break;
-    }
-  }
-  res.attr("scores") = scores;
-  return(res);
-}
 
 // [[Rcpp::export]]
 NumericVector cpp_make_sparse_approximation(const S4 &mat_template,
@@ -109,7 +40,7 @@ NumericVector cpp_make_sparse_approximation(const S4 &mat_template,
 
   size_t nr = dim[0];
   size_t nc = dim[1];
-  int N;
+  uint32_t N;
   if(sparse_matrix_type == CSR)
     N = nr;
   else
@@ -122,7 +53,7 @@ NumericVector cpp_make_sparse_approximation(const S4 &mat_template,
   #ifdef _OPENMP
   #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE) reduction(+:loss)
   #endif
-  for(size_t i = 0; i < N; i++) {
+  for(uint32_t i = 0; i < N; i++) {
     int p1 = p[i];
     int p2 = p[i + 1];
     for(int pp = p1; pp < p2; pp++) {

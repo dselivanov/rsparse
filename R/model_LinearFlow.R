@@ -129,7 +129,9 @@ LinearFlow = R6::R6Class(
                   not_recommend = x_train, ...) {
 
       private$item_ids = colnames(x)
-
+      stopifnot(inherits(not_recommend, "sparseMatrix") || is.null(not_recommend))
+      if(inherits(not_recommend, "sparseMatrix"))
+        not_recommend = as(not_recommend, "RsparseMatrix")
 
       stopifnot(private$item_ids == colnames(x_test))
       stopifnot(private$item_ids == colnames(x_train))
@@ -194,7 +196,8 @@ LinearFlow = R6::R6Class(
       cv_res
     },
     predict = function(x, k, not_recommend = x, ...) {
-      xq = x %*% self$v
+
+      xq = self$transform(x, ...)
       predicted_item_ids = private$predict_internal(xq, k = k, private$components_,
                                                     not_recommend = not_recommend, ...)
       predicted_item_ids
@@ -239,7 +242,7 @@ LinearFlow = R6::R6Class(
         Y = as.matrix(Y)
 
       flog.debug("predicting top %d values", k)
-      indices = dotprod_top_k(xq, Y, k, self$n_threads, not_recommend)
+      indices = find_top_product(xq, Y, k, self$n_threads, not_recommend)
       data.table::setattr(indices, "dimnames", list(rownames(xq), NULL))
       data.table::setattr(indices, "indices", NULL)
 

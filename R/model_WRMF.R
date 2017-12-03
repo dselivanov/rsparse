@@ -282,14 +282,12 @@ WRMF = R6::R6Class(
     predict = function(x, k, not_recommend = x, ...) {
       stopifnot(private$item_ids == colnames(x))
       stopifnot(is.null(not_recommend) || inherits(not_recommend, "sparseMatrix"))
-      if(!is.null(not_recommend))
-        not_recommend = as(not_recommend, "dgCMatrix")
       m = nrow(x)
 
       # transform user features into latent space
       # calculate scores for each item
       # user_item_score = self$transform(x) %*% private$components_
-      indices = dotprod_top_k(self$transform(x), private$components_, k, self$n_threads, not_recommend)
+      indices = find_top_product(self$transform(x), private$components_, k, self$n_threads, not_recommend)
       data.table::setattr(indices, "dimnames", list(rownames(x), NULL))
       data.table::setattr(indices, "indices", NULL)
 
