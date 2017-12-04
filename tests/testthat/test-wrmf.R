@@ -47,7 +47,6 @@ test_that("test WRMF core", {
   }
 })
 
-futile.logger::flog.threshold(futile.logger::INFO)
 test_that("test WRMF extra", {
   lambda = 0.1
   rank = 8

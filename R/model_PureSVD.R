@@ -61,10 +61,9 @@
 #' }
 #' @export
 PureSVD = R6::R6Class(
-  inherit = mlapi::mlapiDecomposition,
+  inherit = BaseRecommender,
   classname = "PureSVD",
   public = list(
-    n_threads = NULL,
     initialize = function(rank = 10L,
                           lambda = 0,
                           n_threads = parallel::detectCores(),
@@ -100,32 +99,9 @@ PureSVD = R6::R6Class(
       x = private$preprocess(x)
       res = solve_iter_als_svd(x = x, svd_current = private$svd, lambda = private$lambda, singular_vectors = "v")
       invisible(as.matrix(res))
-    },
-    predict = function(x, k, not_recommend = x, ...) {
-      stopifnot(private$item_ids == colnames(x))
-      stopifnot(is.null(not_recommend) || inherits(not_recommend, "sparseMatrix"))
-      if(!is.null(not_recommend))
-        not_recommend = as(not_recommend, "RsparseMatrix")
-      m = nrow(x)
-
-      # transform user features into latent space
-      # calculate scores for each item
-      indices = find_top_product(self$transform(x), private$components_, k, self$n_threads, not_recommend)
-
-      data.table::setattr(indices, "dimnames", list(rownames(x), NULL))
-      data.table::setattr(indices, "indices", NULL)
-
-      if(!is.null(private$item_ids)) {
-        predicted_item_ids = private$item_ids[indices]
-        data.table::setattr(predicted_item_ids, "dim", dim(indices))
-        data.table::setattr(predicted_item_ids, "dimnames", list(rownames(x), NULL))
-        data.table::setattr(indices, "indices", predicted_item_ids)
-      }
-      indices
     }
   ),
   private = list(
-    item_ids = NULL,
     rank = NULL,
     lambda = NULL,
     init = NULL,

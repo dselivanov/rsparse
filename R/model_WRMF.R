@@ -99,10 +99,9 @@
 #' }
 #' @export
 WRMF = R6::R6Class(
-  inherit = mlapi::mlapiDecomposition,
+  inherit = BaseRecommender,
   classname = "WRMF",
   public = list(
-    n_threads = NULL,
     initialize = function(rank = 10L,
                           lambda = 0,
                           feedback = c("implicit", "explicit"),
@@ -128,7 +127,7 @@ WRMF = R6::R6Class(
       stopifnot(is.integer(cg_steps) && length(cg_steps) == 1)
       private$cg_steps = cg_steps
 
-      private$set_internal_matrix_formats(sparse = "dgCMatrix", dense = NULL)
+      private$set_internal_matrix_formats(sparse = "CsparseMatrix", dense = NULL)
       private$lambda = as.numeric(lambda)
       private$init_stdv = as.numeric(init_stdv)
       private$rank = as.integer(rank)
@@ -139,12 +138,17 @@ WRMF = R6::R6Class(
       self$n_threads = n_threads
       private$non_negative = non_negative
     },
-    fit_transform = function(x, n_iter = 5L, convergence_tol = -Inf, ...) {
+    fit_transform = function(x, n_iter = 10L, convergence_tol = 0.005, ...) {
 
-      # x = confidense matrix, not ratings/interactions matrix!
-      # we expect user already transformed it
-      # default choice will be
-      # x = 1 + alpha * r
+      if(self$n_threads > 1 && private$feedback == "implicit" ) {
+        flog.debug("WRMF$fit_transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
+        RhpcBLASctl::blas_set_num_threads(1)
+        on.exit({
+          n_physical_cores = RhpcBLASctl::get_num_cores()
+          flog.debug("WRMF$fit_transform(): on exit `RhpcBLASctl::blas_set_num_threads(%d)` (=number of physical cores)", n_physical_cores)
+          RhpcBLASctl::blas_set_num_threads(n_physical_cores)
+        })
+      }
 
       flog.debug("convert input to %s if needed", private$internal_matrix_formats$sparse)
       c_ui = private$check_convert_input(x)
@@ -257,8 +261,15 @@ WRMF = R6::R6Class(
     # project new users into latent user space - just make ALS step given fixed items matrix
     transform = function(x, ...) {
       stopifnot(ncol(x) == ncol(private$components_))
-      # allocate result matrix - will be modified in place
-
+      if(self$n_threads > 1 && private$feedback == "implicit" ) {
+        flog.debug("WRMF$transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
+        RhpcBLASctl::blas_set_num_threads(1)
+        on.exit({
+          n_physical_cores = RhpcBLASctl::get_num_cores()
+          flog.debug("WRMF$transform(): on exit `RhpcBLASctl::blas_set_num_threads(%d)` (=number of physical cores)", n_physical_cores)
+          RhpcBLASctl::blas_set_num_threads(n_physical_cores)
+        })
+      }
       x = private$check_convert_input(x)
       x = private$preprocess(x)
 
@@ -278,27 +289,6 @@ WRMF = R6::R6Class(
       res = t(res)
       data.table::setattr(res, "dimnames", list(rownames(x), NULL))
       res
-    },
-    predict = function(x, k, not_recommend = x, ...) {
-      stopifnot(private$item_ids == colnames(x))
-      stopifnot(is.null(not_recommend) || inherits(not_recommend, "sparseMatrix"))
-      m = nrow(x)
-
-      # transform user features into latent space
-      # calculate scores for each item
-      # user_item_score = self$transform(x) %*% private$components_
-      indices = find_top_product(self$transform(x), private$components_, k, self$n_threads, not_recommend)
-      data.table::setattr(indices, "dimnames", list(rownames(x), NULL))
-      data.table::setattr(indices, "indices", NULL)
-
-      if(!is.null(private$item_ids)) {
-        predicted_item_ids = private$item_ids[indices]
-        data.table::setattr(predicted_item_ids, "dim", dim(indices))
-        data.table::setattr(predicted_item_ids, "dimnames", list(rownames(x), NULL))
-        data.table::setattr(indices, "indices", predicted_item_ids)
-      }
-
-      indices
     },
     add_scorers = function(x_train, x_cv, specs = list("map10" = "map@10"), ...) {
       stopifnot(data.table::uniqueN(names(specs)) == length(specs))
@@ -357,7 +347,6 @@ WRMF = R6::R6Class(
     # this is essentially "confidence" transformation from WRMF article
     preprocess = NULL,
     feedback = NULL,
-    item_ids = NULL,
     cv_data = NULL,
     scorers_ellipsis = NULL,
     #------------------------------------------------------------

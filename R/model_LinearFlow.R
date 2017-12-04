@@ -84,10 +84,9 @@
 #' @export
 LinearFlow = R6::R6Class(
   classname = "LinearFlow",
-  inherit = mlapi::mlapiDecomposition,
+  inherit = BaseRecommender,
   public = list(
     v = NULL,
-    n_threads = NULL,
     initialize = function(rank = 8L,
                           lambda = 0,
                           solve_right_singular_vectors = c("soft_impute", "svd"),
@@ -179,7 +178,8 @@ LinearFlow = R6::R6Class(
       for(i in seq_along(lambda)) {
         lambda_i = lambda[[i]]
         Y = private$fit_transform_internal(lhs, rhs, lambda_i, ...)
-        preds = private$predict_internal(xq_cv_train, k = metric_k, Y = Y, not_recommend = not_recommend)
+        # preds = private$predict_internal(xq_cv_train, k = metric_k, Y = Y, not_recommend = not_recommend)
+        preds = private$predict_low_level(xq_cv_train, Y, k = metric_k, not_recommend = not_recommend)
         score = NULL
         if(metric_name == "map")
           score = mean(ap_k(preds, x_test, ...), na.rm = T)
@@ -194,13 +194,6 @@ LinearFlow = R6::R6Class(
         flog.info("%d/%d lambda %.3f score = %.3f", i, length(lambda), lambda_i, score)
       }
       cv_res
-    },
-    predict = function(x, k, not_recommend = x, ...) {
-
-      xq = self$transform(x, ...)
-      predicted_item_ids = private$predict_internal(xq, k = k, private$components_,
-                                                    not_recommend = not_recommend, ...)
-      predicted_item_ids
     }
   ),
   private = list(
@@ -208,7 +201,7 @@ LinearFlow = R6::R6Class(
     preprocess = NULL,
     solve_right_singular_vectors = NULL,
     lambda = NULL,
-    item_ids = NULL,
+    # item_ids = NULL,
     get_right_singular_vectors = function(x, ...) {
       result = NULL
       if(!is.null(self$v)) {
@@ -234,26 +227,6 @@ LinearFlow = R6::R6Class(
       flog.debug("solving least squares with lambda %.3f", lambda)
       lhs_ridge = lhs + diag(rep(lambda, private$rank))
       as.matrix(solve(lhs_ridge, rhs))
-    },
-    predict_internal = function(xq, k, Y, not_recommend = x, ...) {
-      if(!is.matrix(xq))
-        xq = as.matrix(xq)
-      if(!is.matrix(Y))
-        Y = as.matrix(Y)
-
-      flog.debug("predicting top %d values", k)
-      indices = find_top_product(xq, Y, k, self$n_threads, not_recommend)
-      data.table::setattr(indices, "dimnames", list(rownames(xq), NULL))
-      data.table::setattr(indices, "indices", NULL)
-
-      if(!is.null(private$item_ids)) {
-        predicted_item_ids = private$item_ids[indices]
-        data.table::setattr(predicted_item_ids, "dim", dim(indices))
-        data.table::setattr(predicted_item_ids, "dimnames", list(rownames(xq), NULL))
-        data.table::setattr(indices, "indices", predicted_item_ids)
-      }
-
-      indices
     }
   )
 )

@@ -1,7 +1,6 @@
 futile.logger::flog.threshold(futile.logger::WARN)
 train = movielens100k[1:900, , drop = F]
 cv = movielens100k[901:nrow(movielens100k), , drop = F]
-futile.logger::flog.threshold(futile.logger::INFO)
 
 test_that("test linear-flow", {
   lambda = 0
