@@ -137,7 +137,6 @@ LinearFlow = R6::R6Class(
 
       x = private$preprocess(x)
       x_train = private$preprocess(x_train)
-      x_test = private$preprocess(x_test)
 
       lambda_auto = FALSE
       if(is.character(lambda)) {
