@@ -6,21 +6,6 @@
 
 using namespace Rcpp;
 
-// top_product
-IntegerMatrix top_product(const arma::mat& x, const arma::mat& y, unsigned k, unsigned n_threads, S4& not_recommend_r);
-RcppExport SEXP _reco_top_product(SEXP xSEXP, SEXP ySEXP, SEXP kSEXP, SEXP n_threadsSEXP, SEXP not_recommend_rSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< unsigned >::type k(kSEXP);
-    Rcpp::traits::input_parameter< unsigned >::type n_threads(n_threadsSEXP);
-    Rcpp::traits::input_parameter< S4& >::type not_recommend_r(not_recommend_rSEXP);
-    rcpp_result_gen = Rcpp::wrap(top_product(x, y, k, n_threads, not_recommend_r));
-    return rcpp_result_gen;
-END_RCPP
-}
 // als_implicit
 double als_implicit(const arma::sp_mat& Conf, arma::mat& X, arma::mat& Y, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps);
 RcppExport SEXP _reco_als_implicit(SEXP ConfSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP) {
@@ -53,6 +38,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// top_product
+IntegerMatrix top_product(const arma::mat& x, const arma::mat& y, unsigned k, unsigned n_threads, S4& not_recommend_r);
+RcppExport SEXP _reco_top_product(SEXP xSEXP, SEXP ySEXP, SEXP kSEXP, SEXP n_threadsSEXP, SEXP not_recommend_rSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< unsigned >::type k(kSEXP);
+    Rcpp::traits::input_parameter< unsigned >::type n_threads(n_threadsSEXP);
+    Rcpp::traits::input_parameter< S4& >::type not_recommend_r(not_recommend_rSEXP);
+    rcpp_result_gen = Rcpp::wrap(top_product(x, y, k, n_threads, not_recommend_r));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_make_sparse_approximation
 NumericVector cpp_make_sparse_approximation(const S4& mat_template, arma::mat& X, arma::mat& Y, int sparse_matrix_type, unsigned n_threads);
 RcppExport SEXP _reco_cpp_make_sparse_approximation(SEXP mat_templateSEXP, SEXP XSEXP, SEXP YSEXP, SEXP sparse_matrix_typeSEXP, SEXP n_threadsSEXP) {
@@ -81,9 +81,9 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_reco_top_product", (DL_FUNC) &_reco_top_product, 5},
     {"_reco_als_implicit", (DL_FUNC) &_reco_als_implicit, 7},
     {"_reco_als_loss_explicit", (DL_FUNC) &_reco_als_loss_explicit, 5},
+    {"_reco_top_product", (DL_FUNC) &_reco_top_product, 5},
     {"_reco_cpp_make_sparse_approximation", (DL_FUNC) &_reco_cpp_make_sparse_approximation, 5},
     {"_reco_arma_svd_econ", (DL_FUNC) &_reco_arma_svd_econ, 1},
     {NULL, NULL, 0}

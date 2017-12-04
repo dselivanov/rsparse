@@ -32,7 +32,8 @@ Imports:
     futile.logger,
     data.table (>= 1.10.0), 
     Rcpp, 
-    RcppArmadillo
+    RcppArmadillo, 
+    RhpcBLASctl
 Suggests:
     MatrixCSR,
     testthat

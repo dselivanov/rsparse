@@ -53,13 +53,6 @@ We follow [mlapi](https://github.com/dselivanov/mlapi) conventions.
 
 ### Notes on multithreading and BLAS
 
-**VERY IMPORTANT** if you use multithreaded BLAS (you generally should) such as OpenBLAS, Intel MKL, Apple Accelerate, I **highly recommend disable its internal multithreading ability**. This leads to **substantial speedups** for this package (can be easily 10x and more). Matrix factorization is already parallelized in package with OpenMP. This can be done by setting corresponding environment variables **before starting `R`**:
+If you use multithreaded BLAS (you generally should) such as OpenBLAS, Intel MKL, Apple Accelerate, it is recommended to disable its internal multithreading ability (since thread contention can be easily slow down 10x and more). Matrix factorization is already parallelized in package with OpenMP.
 
-1. OpenBLAS: `export OPENBLAS_NUM_THREADS=1`.
-1. Intel MKL: `export MKL_NUM_THREADS=1`
-1. Apple Accelerate: `export VECLIB_MAXIMUM_THREADS=1`
-
-It it also possible to change number of threads in runtime, see for example following packages:
-
-* [OpenBlasThreads](https://github.com/rundel/OpenBlasThreads)
-* [RhpcBLASctl](https://cran.r-project.org/web/packages/RhpcBLASctl/index.html)
+At the moment `reco` tries to  mitigate this issue automatically with the help of [RhpcBLASctl](https://cran.r-project.org/web/packages/RhpcBLASctl/index.html). If you encounter any issues - please report to our [issue tracker]
