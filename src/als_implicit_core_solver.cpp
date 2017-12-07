@@ -76,7 +76,8 @@ T als_implicit_cpp(const arma::sp_mat& Conf,
     // catch situation when some columns in matrix are empty, so p1 becomes equal to p2 or greater than number of columns
     if(p1 < p2) {
       arma::uvec idx = uvec(&Conf.row_indices[p1], p2 - p1);
-      arma::Col<T> confidence = Col<T>(&Conf.values[p1], p2 - p1);
+      vec conf_temp = vec(&Conf.values[p1], p2 - p1);
+      arma::Col<T> confidence = conv_to< Col<T> >::from(conf_temp);
       arma::Mat<T> X_nnz = X.cols(idx);
       if(solver == CHOLESKY)
         Y.col(i) = chol_solver<T>(XtX, X_nnz, confidence);
@@ -95,13 +96,27 @@ T als_implicit_cpp(const arma::sp_mat& Conf,
 
 
 // [[Rcpp::export]]
-double als_implicit(const arma::sp_mat& Conf,
+double als_implicit_double(const arma::sp_mat& Conf,
                     arma::mat& X,
                     arma::mat& Y,
                     double lambda,
                     unsigned n_threads,
                     unsigned solver, unsigned cg_steps = 3) {
   return (double)als_implicit_cpp<double>(Conf, X, Y, lambda, n_threads, solver, cg_steps);
+}
+
+// [[Rcpp::export]]
+double als_implicit_float(const arma::sp_mat& Conf,
+                    S4 &XR,
+                    S4 & YR,
+                    double lambda,
+                    unsigned n_threads,
+                    unsigned solver, unsigned cg_steps = 3) {
+  IntegerMatrix XRM = XR.slot("Data");
+  IntegerMatrix YRM = YR.slot("Data");
+  arma::fmat X = fmat((float *)XRM.begin(), XRM.nrow(), XRM.ncol(), false, true);
+  arma::fmat Y = fmat((float *)YRM.begin(), YRM.nrow(), YRM.ncol(), false, true);
+  return (double)als_implicit_cpp<float>(Conf, X, Y, lambda, n_threads, solver, cg_steps);
 }
 
 // [[Rcpp::export]]

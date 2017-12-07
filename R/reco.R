@@ -4,6 +4,7 @@
 #' @importFrom stats rnorm
 #' @import data.table
 #' @import Rcpp
+#' @import float
 #' @import futile.logger
 #' @useDynLib reco
 

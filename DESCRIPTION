@@ -33,7 +33,8 @@ Imports:
     data.table (>= 1.10.0), 
     Rcpp, 
     RcppArmadillo, 
-    RhpcBLASctl
+    RhpcBLASctl, 
+    float
 Suggests:
     MatrixCSR,
     testthat

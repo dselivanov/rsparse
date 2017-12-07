@@ -112,10 +112,12 @@ WRMF = R6::R6Class(
                           cg_steps = 3L,
                           components = NULL,
                           preprocess = identity,
+                          precision = c("double", "float"),
                           ...) {
       stopifnot(is.null(components) || is.matrix(components))
       private$components_ = components
       solver = match.arg(solver)
+      private$precision = match.arg(precision)
       private$feedback = match.arg(feedback)
       if(solver == "conjugate_gradient" && private$feedback == "explicit")
         flog.warn("only 'cholesky' is available for 'explicit' feedback")
@@ -166,17 +168,21 @@ WRMF = R6::R6Class(
       n_user = nrow(c_ui)
       n_item = ncol(c_ui)
 
-      private$U = matrix(0.0, ncol = n_user, nrow = private$rank)
+      if(private$precision == "double")
+        private$U = matrix(0.0, ncol = n_user, nrow = private$rank)
+      else
+        private$U = flrunif(private$rank, n_user, 0, 0)
 
       if(is.null(private$components_)) {
-        private$components_ = matrix(rnorm(n_item * private$rank, 0, private$init_stdv), ncol = n_item, nrow = private$rank)
+        if(private$precision == "double")
+          private$components_ = matrix(rnorm(n_item * private$rank, 0, private$init_stdv), ncol = n_item, nrow = private$rank)
+        else
+          private$components_ = flrnorm(private$rank, n_item)
       } else {
-        stopifnot(is.matrix(private$components_))
+        stopifnot(is.matrix(private$components_) || is.float(private$components_))
         stopifnot(ncol(private$components_) == n_item)
         stopifnot(nrow(private$components_) == private$rank)
       }
-
-      Lambda = diag(x = private$lambda, nrow = private$rank, ncol = private$rank)
 
       trace_values = vector("numeric", n_iter)
 
@@ -190,9 +196,14 @@ WRMF = R6::R6Class(
         stopifnot(ncol(private$U) == ncol(c_iu))
         if (private$feedback == "implicit") {
           # private$U will be modified in place
-          loss = als_implicit(c_iu, private$components_, private$U, n_threads = self$n_threads,
-                       lambda = private$lambda,
-                       solver = private$solver_code, cg_steps = private$cg_steps)
+          if(private$precision == "double") {
+            loss = als_implicit_double(c_iu, private$components_, private$U, n_threads = self$n_threads,
+                                       lambda = private$lambda, solver = private$solver_code, cg_steps = private$cg_steps)
+          } else {
+            loss = als_implicit_float(c_iu, private$components_, private$U, n_threads = self$n_threads,
+                                       lambda = private$lambda, solver = private$solver_code, cg_steps = private$cg_steps)
+          }
+
         } else if (private$feedback == "explicit") {
           private$U = private$solver_explicit_feedback(c_iu, private$components_)
         }
@@ -204,9 +215,14 @@ WRMF = R6::R6Class(
         stopifnot(ncol(private$components_) == ncol(c_ui))
         if (private$feedback == "implicit") {
           # private$components_ will be modified in place
-          loss = als_implicit(c_ui, private$U, private$components_, n_threads = self$n_threads,
-                              lambda = private$lambda,
-                              private$solver_code, private$cg_steps)
+          if(private$precision == "double") {
+          loss = als_implicit_double(c_ui, private$U, private$components_, n_threads = self$n_threads,
+                              lambda = private$lambda, private$solver_code, private$cg_steps)
+          } else {
+            loss = als_implicit_float(c_ui, private$U, private$components_, n_threads = self$n_threads,
+                                       lambda = private$lambda, private$solver_code, private$cg_steps)
+
+          }
         } else if (private$feedback == "explicit") {
           private$components_ = private$solver_explicit_feedback(c_ui, private$U)
         }
@@ -219,7 +235,6 @@ WRMF = R6::R6Class(
         #------------------------------------------------------------------------
         if (private$feedback == "explicit")
           loss = als_loss_explicit(c_ui, private$U, private$components_, private$lambda, self$n_threads);
-
 
         j = 1L
         trace_scors_string = ""
@@ -250,12 +265,18 @@ WRMF = R6::R6Class(
         #------------------------------------------------------------------------
       }
 
-      data.table::setattr(private$components_, "dimnames", list(NULL, colnames(x)))
+      if(private$precision == "double")
+        data.table::setattr(private$components_, "dimnames", list(NULL, colnames(x)))
+      else
+        data.table::setattr(private$components_@Data, "dimnames", list(NULL, colnames(x)))
 
       res = t(private$U)
       private$U = NULL
       setattr(res, "trace", rbindlist(trace_lst))
-      setattr(res, "dimnames", list(rownames(x), NULL))
+      if(private$precision == "double")
+        setattr(res, "dimnames", list(rownames(x), NULL))
+      else
+        setattr(res@Data, "dimnames", list(rownames(x), NULL))
       res
     },
     # project new users into latent user space - just make ALS step given fixed items matrix
@@ -276,7 +297,7 @@ WRMF = R6::R6Class(
       if(private$feedback == "implicit") {
         res = matrix(0, nrow = private$rank, ncol = nrow(x))
 
-        als_implicit(t(x), private$components_, res, n_threads = self$n_threads,
+        als_implicit_double(t(x), private$components_, res, n_threads = self$n_threads,
                      lambda = private$lambda,
                      private$solver_code, private$cg_steps)
 
@@ -349,6 +370,7 @@ WRMF = R6::R6Class(
     feedback = NULL,
     cv_data = NULL,
     scorers_ellipsis = NULL,
+    precision = NULL,
     #------------------------------------------------------------
     solver_explicit_feedback = function(R, X) {
       XtX = tcrossprod(X) + diag(x = private$lambda, nrow = private$rank, ncol = private$rank)
