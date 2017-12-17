@@ -13,25 +13,27 @@ using namespace Rcpp;
 using namespace RcppArmadillo;
 using namespace arma;
 
-arma::vec chol_solver(const arma::mat &XtX,
-                      const arma::mat &X_nnz,
-                      const arma::vec &confidence) {
-  arma::mat inv = XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
-  arma::mat rhs = X_nnz * confidence;
+template <class T>
+arma::Col<T> chol_solver(const arma::Mat<T> &XtX,
+                      const arma::Mat<T> &X_nnz,
+                      const arma::Col<T> &confidence) {
+  arma::Mat<T> inv = XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
+  arma::Mat<T> rhs = X_nnz * confidence;
   return solve(inv, rhs, solve_opts::fast );
 }
 
-inline arma::vec cg_solver(const arma::mat &XtX,
-                      const arma::mat &X_nnz,
-                      const arma::vec &confidence,
-                      const arma::vec &x_old,
+template <class T>
+arma::Col<T> cg_solver(const arma::Mat<T> &XtX,
+                      const arma::Mat<T> &X_nnz,
+                      const arma::Col<T> &confidence,
+                      const arma::Col<T> &x_old,
                       const int n_iter) {
-  arma::colvec x = x_old;
-  arma::vec confidence_1 = confidence - 1;
+  arma::Col<T> x = x_old;
+  arma::Col<T> confidence_1 = confidence - 1.0;
 
-  arma::mat Ap;
-  arma::vec r = X_nnz * (confidence - (confidence_1 % (X_nnz.t() * x))) - XtX * x;
-  arma::vec p = r;
+  arma::Mat<T> Ap;
+  arma::Col<T> r = X_nnz * (confidence - (confidence_1 % (X_nnz.t() * x))) - XtX * x;
+  arma::Col<T> p = r;
   double rsold, rsnew, alpha;
   rsold = as_scalar(r.t() * r);
 
@@ -48,38 +50,38 @@ inline arma::vec cg_solver(const arma::mat &XtX,
   return x;
 }
 
-// [[Rcpp::export]]
-double als_implicit(const arma::sp_mat& Conf,
-                    arma::mat& X,
-                    arma::mat& Y,
+template <class T>
+T als_implicit_cpp(const arma::sp_mat& Conf,
+                    arma::Mat<T>& X,
+                    arma::Mat<T>& Y,
                     double lambda,
                     unsigned n_threads,
                     unsigned solver, unsigned cg_steps = 3) {
 
-  arma::mat XtX = X * X.t();
+  arma::Mat<T> XtX = X * X.t();
   if(lambda > 0) {
-    arma::vec lambda_vec(X.n_rows);
+    arma::Col<T> lambda_vec(X.n_rows);
     lambda_vec.fill(lambda);
     XtX += diagmat(lambda_vec);
   }
 
-  double loss = 0;
+  T loss = 0;
   size_t nc = Conf.n_cols;
   #ifdef _OPENMP
   #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE) reduction(+:loss)
   #endif
   for(size_t i = 0; i < nc; i++) {
-    int p1 = Conf.col_ptrs[i];
-    int p2 = Conf.col_ptrs[i + 1];
+    uint32_t p1 = Conf.col_ptrs[i];
+    uint32_t p2 = Conf.col_ptrs[i + 1];
     // catch situation when some columns in matrix are empty, so p1 becomes equal to p2 or greater than number of columns
     if(p1 < p2) {
       arma::uvec idx = uvec(&Conf.row_indices[p1], p2 - p1);
-      arma::vec confidence = vec(&Conf.values[p1], p2 - p1);
-      arma::mat X_nnz = X.cols(idx);
+      arma::Col<T> confidence = Col<T>(&Conf.values[p1], p2 - p1);
+      arma::Mat<T> X_nnz = X.cols(idx);
       if(solver == CHOLESKY)
-        Y.col(i) = chol_solver(XtX, X_nnz, confidence);
+        Y.col(i) = chol_solver<T>(XtX, X_nnz, confidence);
       else if(solver == CONJUGATE_GRADIENT)
-        Y.col(i) = cg_solver(XtX, X_nnz, confidence, Y.col(i), cg_steps);
+        Y.col(i) = cg_solver<T>(XtX, X_nnz, confidence, Y.col(i), cg_steps);
       else stop("Unknown solver code %d", solver);
       if(lambda >= 0)
         loss += accu(square( 1 - (Y.col(i).t() * X_nnz) ) * confidence);
@@ -89,6 +91,17 @@ double als_implicit(const arma::sp_mat& Conf,
   if(lambda > 0)
     loss += lambda * (accu(square(X)) + accu(square(Y)));
   return (loss / accu(Conf));
+}
+
+
+// [[Rcpp::export]]
+double als_implicit(const arma::sp_mat& Conf,
+                    arma::mat& X,
+                    arma::mat& Y,
+                    double lambda,
+                    unsigned n_threads,
+                    unsigned solver, unsigned cg_steps = 3) {
+  return (double)als_implicit_cpp<double>(Conf, X, Y, lambda, n_threads, solver, cg_steps);
 }
 
 // [[Rcpp::export]]

@@ -1,7 +1,6 @@
 futile.logger::flog.threshold(futile.logger::WARN)
 train = movielens100k[1:900, , drop = F]
 cv = movielens100k[901:nrow(movielens100k), , drop = F]
-futile.logger::flog.threshold(futile.logger::INFO)
 
 test_that("test linear-flow", {
   lambda = 0
@@ -9,7 +8,7 @@ test_that("test linear-flow", {
   K = 10
   cv_split = train_test_split(cv)
   model = LinearFlow$new(rank = rank, lambda = lambda,
-                         q_solver = "svd", Q = NULL)
+                         solve_right_singular_vectors = "svd", v = NULL)
 
   user_emb = model$fit_transform(train)
   expect_equal(dim(user_emb), c(nrow(train), rank))

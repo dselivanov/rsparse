@@ -1,17 +1,24 @@
 Package: reco
 Type: Package
 Title: Matrix factorizations for recommender systems
-Version: 0.2.0
+Version: 0.2.0.2
 Author: Dmitriy Selivanov
 Maintainer: Dmitriy Selivanov <selivanov.dmitriy@gmail.com>
-Description: Matrix factorizations for recommender systems. 
-    Following algorithms are implemented at the moment: 
-    1) Weighted Regularazied Matrix Factorization with ALS 
-      for implicit feedback (Cholesky solver, Conjugate Gradient solver)
+Description: Implements many (sparse) matrix factorization algorithms. 
+    Focus is on applications for recommender systems. 
+    List of algorithms: 
+    1) Weighted Regularazied Matrix Factorization with Alternating Least Squares (ALS) 
+      for implicit feedback (inculding approximate Conjugate Gradient solver).
+      Optional non-negativity (NNMF, non-negative matrix factorization).
     2) Regularazied Matrix Factorization with ALS for explicit feedback
-    3) LinearFlow method which can inferr item-item similarity matrix from the data
-    All algorithms work on sparse matrices, extensively use BLAS and LAPACK 
-    and parallelized if possible. So they are reasonably fast and scale to large datasets.
+      Optional non-negativity (NNMF, non-negative matrix factorization).
+    3) Soft-SVD via fast ALS
+    4) Soft-Impute via fast ALS and solution in SVD form
+    5) LinearFlow method which learns item-item similarity matrix from the data
+    All algorithms work on sparse matrices. Extensively use BLAS and LAPACK 
+    and parallelized with OpenMP where applicable. 
+    Implementations are reasonably fast and nicely work with large 
+    datasets (millions of rows and millions of columns).
 License: GPL (>= 2) | file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -24,14 +31,15 @@ Imports:
     Matrix, 
     futile.logger,
     data.table (>= 1.10.0), 
-    irlba (>= 2.2.0), 
     Rcpp, 
-    RcppArmadillo
+    RcppArmadillo, 
+    RhpcBLASctl
+Suggests:
+    MatrixCSR,
+    testthat
 LinkingTo:
     Rcpp, 
     RcppArmadillo
-Suggests:
-    testthat
 Remotes:
     dselivanov/MatrixCSR
 RoxygenNote: 6.0.1

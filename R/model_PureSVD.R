@@ -61,10 +61,9 @@
 #' }
 #' @export
 PureSVD = R6::R6Class(
-  inherit = mlapi::mlapiDecomposition,
+  inherit = BaseRecommender,
   classname = "PureSVD",
   public = list(
-    n_threads = NULL,
     initialize = function(rank = 10L,
                           lambda = 0,
                           n_threads = parallel::detectCores(),
@@ -93,42 +92,20 @@ PureSVD = R6::R6Class(
                      ...)
       private$components_ = t(private$svd$v * sqrt(private$svd$d))
       res = private$svd$u * sqrt(private$svd$d)
-      as.matrix(res)
+      invisible(res)
     },
     transform = function(x, ...) {
       x = private$check_convert_input(x)
       x = private$preprocess(x)
       res = solve_iter_als_svd(x = x, svd_current = private$svd, lambda = private$lambda, singular_vectors = "v")
-      as.matrix(res)
-    },
-    predict = function(x, k, not_recommend = x, ...) {
-      stopifnot(private$item_ids == colnames(x))
-      stopifnot(is.null(not_recommend) || inherits(not_recommend, "sparseMatrix"))
-      if(!is.null(not_recommend))
-        not_recommend = as(not_recommend, "dgCMatrix")
-      m = nrow(x)
-
-      # transform user features into latent space
-      # calculate scores for each item
-      # user_item_score = self$transform(x) %*% private$components_
-      indices = dotprod_top_k(self$transform(x), private$components_, k, self$n_threads, not_recommend)
-      data.table::setattr(indices, "dimnames", list(rownames(x), NULL))
-      data.table::setattr(indices, "indices", NULL)
-
-      if(!is.null(private$item_ids)) {
-        predicted_item_ids = private$item_ids[indices]
-        data.table::setattr(predicted_item_ids, "dim", dim(indices))
-        data.table::setattr(predicted_item_ids, "dimnames", list(rownames(x), NULL))
-        data.table::setattr(indices, "indices", predicted_item_ids)
-      }
-      indices
+      invisible(as.matrix(res))
     }
   ),
   private = list(
-    item_ids = NULL,
     rank = NULL,
     lambda = NULL,
     init = NULL,
-    svd = NULL
+    svd = NULL,
+    preprocess = NULL
   )
 )

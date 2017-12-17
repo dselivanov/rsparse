@@ -1,5 +1,5 @@
 # at the moment borrowed from softImpute package
-setClass("SparseplusLowRank", representation(x = "sparseMatrix", a = "matrix", b = "matrix"))
+setClass("SparsePlusLowRank", representation(x = "sparseMatrix", a = "matrix", b = "matrix"))
 
 #' @export
 splr = function(x, a = NULL, b = NULL) {
@@ -19,10 +19,15 @@ splr = function(x, a = NULL, b = NULL) {
     if(da[2] != db[2])
       stop("number of columns of a not equal to number of columns of b")
   }
-  new("SparseplusLowRank", x = x, a = a, b = b)
+  new("SparsePlusLowRank", x = x, a = a, b = b)
 }
 
-setMethod("crossprod", signature(x = "matrix", y = "SparseplusLowRank"),
+#' @export
+t.SparsePlusLowRank = function(x) {
+  new("SparsePlusLowRank", x = t(x@x), a = x@b, b = x@a)
+}
+
+setMethod("crossprod", signature(x = "matrix", y = "SparsePlusLowRank"),
           # y is splr, x is a dense matrix
           function(x, y) {
             {
@@ -69,45 +74,45 @@ setMethod("crossprod", signature(x = "matrix", y = "SparseplusLowRank"),
   }
 }
 
-setMethod("%*%", signature(x = "SparseplusLowRank",y = "Matrix"), .rightmult)
-setMethod("%*%", signature(x = "Matrix", y = "SparseplusLowRank"), .leftmult)
-setMethod("%*%", signature(x = "SparseplusLowRank", y = "ANY"), .rightmult)
-setMethod("%*%", signature(x = "ANY", y = "SparseplusLowRank"), .leftmult)
+setMethod("%*%", signature(x = "SparsePlusLowRank",y = "Matrix"), .rightmult)
+setMethod("%*%", signature(x = "Matrix", y = "SparsePlusLowRank"), .leftmult)
+setMethod("%*%", signature(x = "SparsePlusLowRank", y = "ANY"), .rightmult)
+setMethod("%*%", signature(x = "ANY", y = "SparsePlusLowRank"), .leftmult)
 
-setMethod("dim", signature(x = "SparseplusLowRank"),
+setMethod("dim", signature(x = "SparsePlusLowRank"),
           function(x) dim(x@x), valueClass = "integer")
 
 .rsum  =function(x, ...){
-  #x is SparseplusLowRank matrix
+  #x is SparsePlusLowRank matrix
   rx = rowSums(x@x)
   cb = colSums(x@b)
   drop(rx + x@a %*% cb)
 }
-setMethod("rowSums", "SparseplusLowRank", .rsum)
+setMethod("rowSums", "SparsePlusLowRank", .rsum)
 
 .csum = function(x, ...){
-  #x is SparseplusLowRank matrix
+  #x is SparsePlusLowRank matrix
   cx = colSums(x@x)
   ca = colSums(x@a)
   drop( cx + x@b %*% ca)
 }
-setMethod("colSums", "SparseplusLowRank", .csum)
+setMethod("colSums", "SparsePlusLowRank", .csum)
 
 .rmean = function(x, ...){
-  #x is SparseplusLowRank matrix
+  #x is SparsePlusLowRank matrix
   rx = rowMeans(x@x)
   cb = colMeans(x@b)
   drop(rx + x@a %*% cb)
 }
-setMethod("rowMeans", "SparseplusLowRank", .rmean)
+setMethod("rowMeans", "SparsePlusLowRank", .rmean)
 
 .cmean = function(x, ...){
-  #x is SparseplusLowRank matrix
+  #x is SparsePlusLowRank matrix
   cx = colMeans(x@x)
   ca = colMeans(x@a)
   drop(cx + x@b %*% ca)
 }
-setMethod("colMeans", "SparseplusLowRank", .cmean)
+setMethod("colMeans", "SparsePlusLowRank", .cmean)
 
 as.matrix.splr = function(x, ...)  as.matrix(x@x) + x@a %*% t(x@b)
-setMethod("as.matrix","SparseplusLowRank", as.matrix.splr)
+setMethod("as.matrix","SparsePlusLowRank", as.matrix.splr)
