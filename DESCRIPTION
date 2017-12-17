@@ -20,7 +20,7 @@ Depends:
     R (>= 3.1.0),
     methods
 Imports:
-    mlapi, 
+    mlapi (>= 0.1.0), 
     Matrix, 
     futile.logger,
     data.table (>= 1.10.0), 
@@ -33,6 +33,5 @@ LinkingTo:
 Suggests:
     testthat
 Remotes:
-    dselivanov/mlapi,
     dselivanov/MatrixCSR
 RoxygenNote: 6.0.1
