@@ -27,7 +27,7 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
                   cg_steps = 3L,
                   components = NULL)
   model$fit_transform(x, n_iter = 5L, ...)
-  model$predict(x, k, not_recommend = x, ...)
+  model$predict(x, k, not_recommend = x, items_exclude = NULL, ...)
   model$components
   model$add_scorers(x_train, x_cv, specs = list("map10" = "map@10"), ...)
   model$remove_scorer(name)
@@ -96,6 +96,8 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
  (if OpenMP is available).}
  \item{not_recommend}{\code{sparse matrix} or \code{NULL} - points which items should be excluided from recommendations for a user.
    By default it excludes previously seen/consumed items.}
+ \item{items_exclude}{\code{character} = item ids or \code{integer} = item indices or \code{NULL} -
+ items to exclude from recommendations for \bold{all} users.}
  \item{convergence_tol}{{\code{numeric = -Inf} defines early stopping strategy. We stop fitting
     when one of two following conditions will be satisfied: (a) we have used
     all iterations, or (b) \code{loss_previous_iter / loss_current_iter - 1 < convergence_tol}}}

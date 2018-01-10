@@ -3,26 +3,27 @@ BaseRecommender = R6::R6Class(
   classname = "BaseRecommender",
   public = list(
     n_threads = NULL,
-    predict = function(x, k, not_recommend = x, ...) {
+    predict = function(x, k, not_recommend = x, items_exclude = NULL, ...) {
+      items_exclude = unique(items_exclude)
+
+      if(!(is.null(items_exclude) || is.character(items_exclude) || is.integer(items_exclude)))
+        stop("items_exclude should be one of NULL/character/integer")
+
       stopifnot(private$item_ids == colnames(x))
       stopifnot(is.null(not_recommend) || inherits(not_recommend, "sparseMatrix"))
-      if(!is.null(not_recommend))
-        not_recommend = as(not_recommend, "RsparseMatrix")
       m = nrow(x)
 
       user_embeddings = self$transform(x)
-      private$predict_low_level(user_embeddings, private$components_, k, not_recommend)
+      private$predict_low_level(user_embeddings, private$components_, k, not_recommend, items_exclude)
     },
     get_similar_items = function(item_id, k = ncol(self$components), ... ) {
       stopifnot(is.character(item_id) && length(item_id) == 1)
-      if(is.null(private$components_l2)) {
-        private$init_components_l2(...)
-      }
-      stopifnot()
       if(is.null(private$item_ids)) {
         stop("can't run 'get_similar_items()' - model doesn't have item ids (item_ids = NULL)")
       }
-
+      if(is.null(private$components_l2)) {
+        private$init_components_l2(...)
+      }
       i = which(colnames(private$components_l2) == item_id)
       if(length(i) == 0) {
         stop(sprintf("There is no item with id = '%s' in the model.", item_id))
@@ -46,7 +47,7 @@ BaseRecommender = R6::R6Class(
     }
   ),
   private = list(
-    predict_low_level = function(user_embeddings, item_embeddings, k, not_recommend, ...) {
+    predict_low_level = function(user_embeddings, item_embeddings, k, not_recommend, items_exclude, ...) {
 
       if(isTRUE(self$n_threads > 1)) {
         flog.debug("BaseRecommender$predict(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
@@ -58,9 +59,41 @@ BaseRecommender = R6::R6Class(
         })
       }
 
+      if(is.character(items_exclude)) {
+        if(is.null(private$item_ids))
+          stop("model doesn't contain item ids")
+        items_exclude = match(items_exclude, private$item_ids)
+        items_exclude = items_exclude[!is.na(items_exclude)]
+      }
+      if(is.integer(items_exclude) && length(items_exclude) > 0) {
+        if(max(items_exclude) > ncol(item_embeddings))
+          stop("some of items_exclude indices larger than mumber of items")
+        flog.debug("found %d items to exclude for all recommendations", length(items_exclude))
+        # filter out items which we can'r recommend
+        item_embeddings = item_embeddings[, -items_exclude]
+        # filter out from not_recommend user-specific matrix if it was provided
+        if(!is.null(not_recommend))
+          not_recommend = not_recommend[, -items_exclude]
+      }
+
+      if(!is.null(not_recommend))
+        not_recommend = as(not_recommend, "RsparseMatrix")
 
       uids = rownames(user_embeddings)
       indices = find_top_product(user_embeddings, item_embeddings, k, self$n_threads, not_recommend)
+      # convert back to original indices because we filtered out items_exclude and now indices are shifted
+      # 1 2 3 4 5 6 7 8 9 10 - indices
+      # * - - - - * - - - -- filter mask
+      # - 1 2 3 4 - 5 6 7 8  new index
+      # - + - - + - + - - -- "true" expected items 2-5-7 on original scale
+      # so returned will be 1-4-5 but "true" actual should be 2-5-7
+      if(is.integer(items_exclude) && length(items_exclude) > 0) {
+        # FIXME - check how to calculate more efficiently with cumsum
+        for(ie in items_exclude) {
+          j = indices >= ie
+          indices[j] = indices[j] + 1L
+        }
+      }
 
       data.table::setattr(indices, "dimnames", list(uids, NULL))
       data.table::setattr(indices, "indices", NULL)
