@@ -70,10 +70,10 @@ BaseRecommender = R6::R6Class(
           stop("some of items_exclude indices larger than mumber of items")
         flog.debug("found %d items to exclude for all recommendations", length(items_exclude))
         # filter out items which we can'r recommend
-        item_embeddings = item_embeddings[, -items_exclude]
+        item_embeddings = item_embeddings[, -items_exclude, drop = FALSE]
         # filter out from not_recommend user-specific matrix if it was provided
         if(!is.null(not_recommend))
-          not_recommend = not_recommend[, -items_exclude]
+          not_recommend = not_recommend[, -items_exclude, drop = FALSE]
       }
 
       if(!is.null(not_recommend))
