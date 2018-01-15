@@ -47,7 +47,7 @@ BaseRecommender = R6::R6Class(
     }
   ),
   private = list(
-    predict_low_level = function(user_embeddings, item_embeddings, k, not_recommend, items_exclude, ...) {
+    predict_low_level = function(user_embeddings, item_embeddings, k, not_recommend, items_exclude = NULL, ...) {
 
       if(isTRUE(self$n_threads > 1)) {
         flog.debug("BaseRecommender$predict(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
@@ -96,13 +96,13 @@ BaseRecommender = R6::R6Class(
       }
 
       data.table::setattr(indices, "dimnames", list(uids, NULL))
-      data.table::setattr(indices, "indices", NULL)
+      data.table::setattr(indices, "ids", NULL)
 
       if(!is.null(private$item_ids)) {
         predicted_item_ids = private$item_ids[indices]
         data.table::setattr(predicted_item_ids, "dim", dim(indices))
         data.table::setattr(predicted_item_ids, "dimnames", list(uids, NULL))
-        data.table::setattr(indices, "indices", predicted_item_ids)
+        data.table::setattr(indices, "ids", predicted_item_ids)
       }
       indices
     },

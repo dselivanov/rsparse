@@ -47,10 +47,13 @@
 #'     Usually \code{r_ui} corresponds to the number of interactions of user \code{u} and item \code{i}.
 #'     For explicit feedback values in \code{x} represents ratings.
 #'     \bold{Returns factor matrix for users of size \code{n_users * rank}}}
-#'   \item{\code{$predict(x, k, not_recommend = x, ...)}}{predict \code{top k}
-#'     item ids for users \code{x} (= column names from the matrix passed to \code{fit_transform()} method).
-#'     Users features should be defined the same way as they were defined in training data - as \bold{sparse matrix}
-#'     of confidence values (implicit feedback) or ratings (explicit feedback).
+#'   \item{\code{$predict(x, k, not_recommend = x, ...)}}{predicts \code{top k}
+#'     item indices for users \code{x}. Additionally contains \code{scores} attribute - "score"
+#'     values for each prediction. If model contains item ids (input matrix to \code{fit_transform()} had column-names
+#'     then result additionally will have \code{ids} attribute - item ids which
+#'     correspond to item indices.
+#'     Users features \code{x} should be defined the same way as they were defined in training data -
+#'     as \bold{sparse matrix} of confidence values (implicit feedback) or ratings (explicit feedback).
 #'     Column names (=item ids) should be in the same order as in the \code{fit_transform()}.}
 #'   \item{\code{$add_scorers(x_train, x_cv, specs = list("map10" = "map@@10"), ...)}}{add a metric to watchlist.
 #'   Metric will be evaluated after each ALS interation. At the moment following metrices are supported:
