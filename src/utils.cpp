@@ -49,9 +49,8 @@ NumericVector cpp_make_sparse_approximation(const S4 &mat_template,
   NumericVector approximated_values(rj.length());
 
   double *ptr_approximated_values = approximated_values.begin();
-  double loss = 0;
   #ifdef _OPENMP
-  #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE) reduction(+:loss)
+  #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE)
   #endif
   for(uint32_t i = 0; i < N; i++) {
     int p1 = p[i];
