@@ -28,6 +28,7 @@ Depends:
     methods
 Imports:
     mlapi (>= 0.1.0), 
+    float (>= 0.1-2),
     Matrix, 
     futile.logger,
     data.table (>= 1.10.0), 
@@ -41,5 +42,6 @@ LinkingTo:
     Rcpp, 
     RcppArmadillo
 Remotes:
-    dselivanov/MatrixCSR
+    dselivanov/MatrixCSR, 
+    wrathematics/float
 RoxygenNote: 6.0.1

@@ -79,8 +79,7 @@ solve_iter_als_softimpute = function(x, svd_current, lambda, singular_vectors = 
 #--------------------------------------------------------------------------------------------
 solve_iter_als_svd = function(x, svd_current, lambda, singular_vectors = c("u", "v")) {
   singular_vectors = match.arg(singular_vectors)
-  m = (x %*% svd_current[[singular_vectors]]) %*% diag((svd_current$d / (svd_current$d + lambda)))
-  m
+  (x %*% svd_current[[singular_vectors]]) %*% diag((svd_current$d / (svd_current$d + lambda)))
 }
 
 #--------------------------------------------------------------------------------------------
@@ -94,14 +93,22 @@ soft_als = function(x,
 
   target = match.arg(target)
   stopifnot(is.logical(final_svd) && length(final_svd) == 1)
+  is_input_float = inherits(x, "float32")
+  if(is_input_float) lambda = float::fl(lambda)
   tx = t(x)
   if(is.null(init)) {
     # draw random matrix and make columns orthogonal with QR decomposition
     U = matrix(rnorm(n = nrow(x) * rank), nrow = nrow(x))
+    if(is_input_float) U = float::fl(U)
+
     U = qr.Q(qr(U, LAPACK = TRUE))
     # init with dummy values
     D  = rep(1, rank)
+    if(is_input_float) D = float::fl(D)
+
     V = matrix(rep(0, ncol(x) * rank), nrow = ncol(x))
+    if(is_input_float) V = float::fl(V)
+
     svd_old = list(d = D, u = U, v = V); rm(U, V)
   } else {
     # warm start with another SVD
@@ -193,11 +200,11 @@ soft_als = function(x,
 
     m_svd = svd_econ(m)
     final_singular_values = pmax(m_svd$d - lambda, 0)
+    # FIXME cast back to float because there is no pmax/pmin in float at the moment
+    if(is_input_float) final_singular_values = fl(final_singular_values)
+
     n_nonzero_singular_values = sum(final_singular_values > 0)
 
-    m_svd = svd_econ(m)
-    final_singular_values = pmax(m_svd$d - lambda, 0)
-    n_nonzero_singular_values = sum(final_singular_values > 0)
     if(n_nonzero_singular_values == 0) {
       stop(sprintf("regularization lambda=%f is too high - all singular vectors are zero", lambda))
     } else {
