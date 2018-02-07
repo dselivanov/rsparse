@@ -97,6 +97,9 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
     This essentially corresponds to the "confidence" function from (Hu, Koren, Volinsky)'2008 paper \url{http://yifanhu.net/PUB/cf.pdf}}
  \item{n_threads}{\code{numeric} default number of threads to use during training and prediction
  (if OpenMP is available).}
+ \item{precision}{one of \code{c("double", "float")}. Should embeeding matrices be usual numeric or
+ float (from \code{float} package). The latter is usually 2x faster and consumes less RAM. BUT \code{float} matrices
+ are not "base" objects. Use carefully.}
  \item{not_recommend}{\code{sparse matrix} or \code{NULL} - points which items should be excluided from recommendations for a user.
    By default it excludes previously seen/consumed items.}
  \item{items_exclude}{\code{character} = item ids or \code{integer} = item indices or \code{NULL} -
