@@ -40,8 +40,9 @@ Suggests:
     testthat
 LinkingTo:
     Rcpp, 
-    RcppArmadillo
+    RcppArmadillo, 
+    float (>= 0.1-2)
 Remotes:
     dselivanov/MatrixCSR, 
-    wrathematics/float
+    dselivanov/float
 RoxygenNote: 6.0.1
