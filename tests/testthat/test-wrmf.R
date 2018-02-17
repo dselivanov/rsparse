@@ -47,6 +47,26 @@ test_that("test WRMF core", {
   }
 })
 
+test_that("test WRMF FLOAT", {
+  params = expand.grid(solver = c("conjugate_gradient", "cholesky"),
+                       feedback = c("implicit"),
+                       lambda = c(0, 1000),
+                       stringsAsFactors = FALSE)
+  for(i in 1:nrow(params)) {
+    rank = 8
+    solver = params$solver[[i]]
+    feedback = params$feedback[[i]]
+    lambda = params$lambda[[i]]
+    message(sprintf("testing WRMF FLOAT with parameters: solver = '%s' feedback = '%s' lambda = %.3f, rank = %d",
+                    solver, feedback, lambda, rank))
+    model = WRMF$new(rank = rank,  lambda = lambda, feedback = feedback, solver = solver, precision = "float")
+    user_emb = model$fit_transform(train, n_iter = 5, convergence_tol = -1)
+    expect_true(inherits(user_emb, "float32"))
+    expect_true(inherits(model$components, "float32"))
+  }
+  }
+)
+
 test_that("test WRMF extra", {
   lambda = 0.1
   rank = 8
@@ -56,11 +76,6 @@ test_that("test WRMF extra", {
   cv_split = train_test_split(cv)
   for(feedback in c("explicit", "implicit")) {
     model = WRMF$new(rank = rank,  lambda = lambda, feedback = feedback, non_negative = nnmf, solver = solver)
-    # model$add_scorers(x_train = cv_split$x_train, x_cv = cv_split$x_cv,
-    #                   specs = list(map10 = "map@10", ndcg10 = "ndcg@10"))
-    # expect_gte(fit_trace[scorer == "map10"][which.max(iter), value], fit_trace[scorer == "map10"][which.min(iter), value])
-    # expect_gte(fit_trace[scorer == "ndcg10"][which.max(iter), value], fit_trace[scorer == "ndcg10"][which.min(iter), value])
-
     user_emb = model$fit_transform(train, n_iter = n_iter, convergence_tol = 0.05)
     fit_trace = attr(user_emb, "trace")
     setDT(fit_trace)
