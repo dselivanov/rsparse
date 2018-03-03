@@ -13,6 +13,22 @@ als_loss_explicit <- function(mat, X, Y, lambda, n_threads) {
     .Call('_reco_als_loss_explicit', PACKAGE = 'reco', mat, X, Y, lambda, n_threads)
 }
 
+prod_csr_dense <- function(csr_r, dense_m_r) {
+    .Call('_reco_prod_csr_dense', PACKAGE = 'reco', csr_r, dense_m_r)
+}
+
+prod_dense_csr <- function(dense_m_r, csr_r) {
+    .Call('_reco_prod_dense_csr', PACKAGE = 'reco', dense_m_r, csr_r)
+}
+
+tcrossprod_dense_csr <- function(dense_m_r, csr_r) {
+    .Call('_reco_tcrossprod_dense_csr', PACKAGE = 'reco', dense_m_r, csr_r)
+}
+
+crossprod_csr_dense <- function(csr_r, dense_m_r) {
+    .Call('_reco_crossprod_csr_dense', PACKAGE = 'reco', csr_r, dense_m_r)
+}
+
 top_product <- function(x, y, k, n_threads, not_recommend_r) {
     .Call('_reco_top_product', PACKAGE = 'reco', x, y, k, n_threads, not_recommend_r)
 }

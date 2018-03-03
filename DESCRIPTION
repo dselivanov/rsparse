@@ -27,22 +27,22 @@ Depends:
     R (>= 3.1.0),
     methods
 Imports:
-    mlapi (>= 0.1.0), 
-    float (>= 0.1-2),
     Matrix, 
-    futile.logger,
-    data.table (>= 1.10.0), 
     Rcpp, 
     RcppArmadillo, 
+    RcppEigen (>= 0.3.3.3.0),
+    mlapi (>= 0.1.0), 
+    float (>= 0.1-2),
+    data.table (>= 1.10.0), 
+    futile.logger,
     RhpcBLASctl
 Suggests:
-    MatrixCSR,
     testthat
 LinkingTo:
     Rcpp, 
     RcppArmadillo, 
+    RcppEigen (>= 0.3.3.3.0),
     float (>= 0.1-2)
 Remotes:
-    dselivanov/MatrixCSR, 
     dselivanov/float
 RoxygenNote: 6.0.1

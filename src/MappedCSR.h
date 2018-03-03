@@ -1,5 +1,9 @@
 #include <cstdint>
 #include <stddef.h>
+#include <RcppArmadillo.h>
+#include <RcppEigen.h>
+
+using namespace Rcpp;
 
 template< typename T>
 class MappedCSR {
@@ -22,3 +26,13 @@ public:
 
 using dMappedCSR = MappedCSR<double>;
 using fMappedCSR = MappedCSR<float>;
+
+static dMappedCSR extract_mapped_csr(S4 input) {
+  IntegerVector dim = input.slot("Dim");
+  NumericVector rx = input.slot("x");
+  uint32_t nrows = dim[0];
+  uint32_t ncols = dim[1];
+  IntegerVector rj = input.slot("j");
+  IntegerVector rp = input.slot("p");
+  return dMappedCSR(nrows, ncols, rx.length(), (uint32_t *)rj.begin(), (uint32_t *)rp.begin(), rx.begin());
+}

@@ -1,5 +1,4 @@
 #include "MappedCSR.h"
-#include <RcppArmadillo.h>
 #include <queue>
 #include <iostream>
 #include <vector>
@@ -15,16 +14,6 @@
 using namespace Rcpp;
 using namespace RcppArmadillo;
 using namespace arma;
-
-dMappedCSR extract_mapped_csr(S4 input) {
-  IntegerVector dim = input.slot("Dim");
-  NumericVector rx = input.slot("x");
-  uint32_t nrows = dim[0];
-  uint32_t ncols = dim[1];
-  IntegerVector rj = input.slot("j");
-  IntegerVector rp = input.slot("p");
-  return dMappedCSR(nrows, ncols, rx.length(), (uint32_t *)rj.begin(), (uint32_t *)rp.begin(), rx.begin());
-}
 
 // Find top k elements (and their indices) of the dot-product of 2 matrices in O(n * log (k))
 // https://stackoverflow.com/a/38391603/1069256
