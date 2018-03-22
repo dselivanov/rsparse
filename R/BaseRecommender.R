@@ -22,7 +22,7 @@ BaseRecommender = R6::R6Class(
         stop("can't run 'get_similar_items()' - model doesn't have item ids (item_ids = NULL)")
       }
       if(is.null(private$components_l2)) {
-        private$init_components_l2(...)
+        private$components_l2 = private$init_components_l2(...)
       }
       i = which(colnames(private$components_l2) == item_id)
       if(length(i) == 0) {
@@ -112,7 +112,7 @@ BaseRecommender = R6::R6Class(
     init_components_l2 = function(force_init = FALSE) {
       if(is.null(private$components_l2) || force_init) {
         flog.debug("calculating components_l2")
-        private$components_l2 = t(t(private$components_) / sqrt(colSums(private$components_ ^ 2)))
+        t(t(private$components_) / sqrt(colSums(private$components_ ^ 2)))
       }
     },
     # L2 normalized components
