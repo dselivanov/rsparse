@@ -6,7 +6,7 @@
 #include <omp.h>
 #endif
 
-#define GRAIN_SIZE 10
+#define GRAIN_SIZE 100
 
 #define CSC 1
 #define CSR 2
@@ -55,12 +55,17 @@ NumericVector cpp_make_sparse_approximation(const S4 &mat_template,
   for(uint32_t i = 0; i < N; i++) {
     int p1 = p[i];
     int p2 = p[i + 1];
+    rowvec xc;
+    if(sparse_matrix_type == CSR)
+      xc = X.col(i).t();
+    else
+      xc = Y.col(i).t();
     for(int pp = p1; pp < p2; pp++) {
       uint64_t ind = (size_t)j[pp];
       if(sparse_matrix_type == CSR)
-        ptr_approximated_values[pp] = as_scalar(X.col(i).t() * Y.col(ind));
+        ptr_approximated_values[pp] = as_scalar(xc * Y.col(ind));
       else
-        ptr_approximated_values[pp] = as_scalar(Y.col(i).t() * X.col(ind));
+        ptr_approximated_values[pp] = as_scalar(xc * X.col(ind));
     }
 
   }

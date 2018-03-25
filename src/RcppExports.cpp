@@ -7,6 +7,54 @@
 
 using namespace Rcpp;
 
+// prod_csr_dense
+NumericMatrix prod_csr_dense(const S4& csr_r, const SEXP& dense_m_r);
+RcppExport SEXP _reco_prod_csr_dense(SEXP csr_rSEXP, SEXP dense_m_rSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const S4& >::type csr_r(csr_rSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type dense_m_r(dense_m_rSEXP);
+    rcpp_result_gen = Rcpp::wrap(prod_csr_dense(csr_r, dense_m_r));
+    return rcpp_result_gen;
+END_RCPP
+}
+// prod_dense_csr
+NumericMatrix prod_dense_csr(const SEXP& dense_m_r, const S4& csr_r);
+RcppExport SEXP _reco_prod_dense_csr(SEXP dense_m_rSEXP, SEXP csr_rSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const SEXP& >::type dense_m_r(dense_m_rSEXP);
+    Rcpp::traits::input_parameter< const S4& >::type csr_r(csr_rSEXP);
+    rcpp_result_gen = Rcpp::wrap(prod_dense_csr(dense_m_r, csr_r));
+    return rcpp_result_gen;
+END_RCPP
+}
+// tcrossprod_dense_csr
+NumericMatrix tcrossprod_dense_csr(const SEXP& dense_m_r, const S4& csr_r);
+RcppExport SEXP _reco_tcrossprod_dense_csr(SEXP dense_m_rSEXP, SEXP csr_rSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const SEXP& >::type dense_m_r(dense_m_rSEXP);
+    Rcpp::traits::input_parameter< const S4& >::type csr_r(csr_rSEXP);
+    rcpp_result_gen = Rcpp::wrap(tcrossprod_dense_csr(dense_m_r, csr_r));
+    return rcpp_result_gen;
+END_RCPP
+}
+// crossprod_csr_dense
+NumericMatrix crossprod_csr_dense(const S4& csr_r, const SEXP& dense_m_r);
+RcppExport SEXP _reco_crossprod_csr_dense(SEXP csr_rSEXP, SEXP dense_m_rSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const S4& >::type csr_r(csr_rSEXP);
+    Rcpp::traits::input_parameter< const SEXP& >::type dense_m_r(dense_m_rSEXP);
+    rcpp_result_gen = Rcpp::wrap(crossprod_csr_dense(csr_r, dense_m_r));
+    return rcpp_result_gen;
+END_RCPP
+}
 // als_implicit_double
 double als_implicit_double(const arma::sp_mat& Conf, arma::mat& X, arma::mat& Y, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps);
 RcppExport SEXP _reco_als_implicit_double(SEXP ConfSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP) {
@@ -56,54 +104,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// prod_csr_dense
-NumericMatrix prod_csr_dense(const S4& csr_r, const SEXP& dense_m_r);
-RcppExport SEXP _reco_prod_csr_dense(SEXP csr_rSEXP, SEXP dense_m_rSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const S4& >::type csr_r(csr_rSEXP);
-    Rcpp::traits::input_parameter< const SEXP& >::type dense_m_r(dense_m_rSEXP);
-    rcpp_result_gen = Rcpp::wrap(prod_csr_dense(csr_r, dense_m_r));
-    return rcpp_result_gen;
-END_RCPP
-}
-// prod_dense_csr
-NumericMatrix prod_dense_csr(const SEXP& dense_m_r, const S4& csr_r);
-RcppExport SEXP _reco_prod_dense_csr(SEXP dense_m_rSEXP, SEXP csr_rSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const SEXP& >::type dense_m_r(dense_m_rSEXP);
-    Rcpp::traits::input_parameter< const S4& >::type csr_r(csr_rSEXP);
-    rcpp_result_gen = Rcpp::wrap(prod_dense_csr(dense_m_r, csr_r));
-    return rcpp_result_gen;
-END_RCPP
-}
-// tcrossprod_dense_csr
-NumericMatrix tcrossprod_dense_csr(const SEXP& dense_m_r, const S4& csr_r);
-RcppExport SEXP _reco_tcrossprod_dense_csr(SEXP dense_m_rSEXP, SEXP csr_rSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const SEXP& >::type dense_m_r(dense_m_rSEXP);
-    Rcpp::traits::input_parameter< const S4& >::type csr_r(csr_rSEXP);
-    rcpp_result_gen = Rcpp::wrap(tcrossprod_dense_csr(dense_m_r, csr_r));
-    return rcpp_result_gen;
-END_RCPP
-}
-// crossprod_csr_dense
-NumericMatrix crossprod_csr_dense(const S4& csr_r, const SEXP& dense_m_r);
-RcppExport SEXP _reco_crossprod_csr_dense(SEXP csr_rSEXP, SEXP dense_m_rSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const S4& >::type csr_r(csr_rSEXP);
-    Rcpp::traits::input_parameter< const SEXP& >::type dense_m_r(dense_m_rSEXP);
-    rcpp_result_gen = Rcpp::wrap(crossprod_csr_dense(csr_r, dense_m_r));
-    return rcpp_result_gen;
-END_RCPP
-}
 // top_product
 IntegerMatrix top_product(const arma::mat& x, const arma::mat& y, unsigned k, unsigned n_threads, S4& not_recommend_r);
 RcppExport SEXP _reco_top_product(SEXP xSEXP, SEXP ySEXP, SEXP kSEXP, SEXP n_threadsSEXP, SEXP not_recommend_rSEXP) {
@@ -147,13 +147,13 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_reco_als_implicit_double", (DL_FUNC) &_reco_als_implicit_double, 7},
-    {"_reco_als_implicit_float", (DL_FUNC) &_reco_als_implicit_float, 7},
-    {"_reco_als_loss_explicit", (DL_FUNC) &_reco_als_loss_explicit, 5},
     {"_reco_prod_csr_dense", (DL_FUNC) &_reco_prod_csr_dense, 2},
     {"_reco_prod_dense_csr", (DL_FUNC) &_reco_prod_dense_csr, 2},
     {"_reco_tcrossprod_dense_csr", (DL_FUNC) &_reco_tcrossprod_dense_csr, 2},
     {"_reco_crossprod_csr_dense", (DL_FUNC) &_reco_crossprod_csr_dense, 2},
+    {"_reco_als_implicit_double", (DL_FUNC) &_reco_als_implicit_double, 7},
+    {"_reco_als_implicit_float", (DL_FUNC) &_reco_als_implicit_float, 7},
+    {"_reco_als_loss_explicit", (DL_FUNC) &_reco_als_loss_explicit, 5},
     {"_reco_top_product", (DL_FUNC) &_reco_top_product, 5},
     {"_reco_cpp_make_sparse_approximation", (DL_FUNC) &_reco_cpp_make_sparse_approximation, 5},
     {"_reco_arma_svd_econ", (DL_FUNC) &_reco_arma_svd_econ, 1},
