@@ -34,6 +34,109 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fm_create_param
+SEXP fm_create_param(float learning_rate, int rank, float lambda_w, float lambda_v, IntegerVector& w0_R, IntegerVector& w_R, IntegerMatrix& v_R, IntegerVector& grad_w2_R, IntegerMatrix& grad_v2_R, const String task, int intercept);
+RcppExport SEXP _rsparse_fm_create_param(SEXP learning_rateSEXP, SEXP rankSEXP, SEXP lambda_wSEXP, SEXP lambda_vSEXP, SEXP w0_RSEXP, SEXP w_RSEXP, SEXP v_RSEXP, SEXP grad_w2_RSEXP, SEXP grad_v2_RSEXP, SEXP taskSEXP, SEXP interceptSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< float >::type learning_rate(learning_rateSEXP);
+    Rcpp::traits::input_parameter< int >::type rank(rankSEXP);
+    Rcpp::traits::input_parameter< float >::type lambda_w(lambda_wSEXP);
+    Rcpp::traits::input_parameter< float >::type lambda_v(lambda_vSEXP);
+    Rcpp::traits::input_parameter< IntegerVector& >::type w0_R(w0_RSEXP);
+    Rcpp::traits::input_parameter< IntegerVector& >::type w_R(w_RSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix& >::type v_R(v_RSEXP);
+    Rcpp::traits::input_parameter< IntegerVector& >::type grad_w2_R(grad_w2_RSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix& >::type grad_v2_R(grad_v2_RSEXP);
+    Rcpp::traits::input_parameter< const String >::type task(taskSEXP);
+    Rcpp::traits::input_parameter< int >::type intercept(interceptSEXP);
+    rcpp_result_gen = Rcpp::wrap(fm_create_param(learning_rate, rank, lambda_w, lambda_v, w0_R, w_R, v_R, grad_w2_R, grad_v2_R, task, intercept));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fm_create_model
+SEXP fm_create_model(SEXP params_ptr);
+RcppExport SEXP _rsparse_fm_create_model(SEXP params_ptrSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type params_ptr(params_ptrSEXP);
+    rcpp_result_gen = Rcpp::wrap(fm_create_model(params_ptr));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fill_float_matrix_randn
+void fill_float_matrix_randn(IntegerMatrix& x, double stdev);
+RcppExport SEXP _rsparse_fill_float_matrix_randn(SEXP xSEXP, SEXP stdevSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< double >::type stdev(stdevSEXP);
+    fill_float_matrix_randn(x, stdev);
+    return R_NilValue;
+END_RCPP
+}
+// fill_float_matrix
+void fill_float_matrix(IntegerMatrix& x, double val);
+RcppExport SEXP _rsparse_fill_float_matrix(SEXP xSEXP, SEXP valSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< double >::type val(valSEXP);
+    fill_float_matrix(x, val);
+    return R_NilValue;
+END_RCPP
+}
+// fill_float_vector_randn
+void fill_float_vector_randn(IntegerVector& x, double stdev);
+RcppExport SEXP _rsparse_fill_float_vector_randn(SEXP xSEXP, SEXP stdevSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< double >::type stdev(stdevSEXP);
+    fill_float_vector_randn(x, stdev);
+    return R_NilValue;
+END_RCPP
+}
+// fill_float_vector
+void fill_float_vector(IntegerVector& x, double val);
+RcppExport SEXP _rsparse_fill_float_vector(SEXP xSEXP, SEXP valSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< double >::type val(valSEXP);
+    fill_float_vector(x, val);
+    return R_NilValue;
+END_RCPP
+}
+// fm_partial_fit
+NumericVector fm_partial_fit(SEXP ptr, const S4& X, const NumericVector& y, const NumericVector& w, int n_threads, int do_update);
+RcppExport SEXP _rsparse_fm_partial_fit(SEXP ptrSEXP, SEXP XSEXP, SEXP ySEXP, SEXP wSEXP, SEXP n_threadsSEXP, SEXP do_updateSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
+    Rcpp::traits::input_parameter< const S4& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type w(wSEXP);
+    Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
+    Rcpp::traits::input_parameter< int >::type do_update(do_updateSEXP);
+    rcpp_result_gen = Rcpp::wrap(fm_partial_fit(ptr, X, y, w, n_threads, do_update));
+    return rcpp_result_gen;
+END_RCPP
+}
+// is_invalid_ptr
+int is_invalid_ptr(SEXP sexp_ptr);
+RcppExport SEXP _rsparse_is_invalid_ptr(SEXP sexp_ptrSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type sexp_ptr(sexp_ptrSEXP);
+    rcpp_result_gen = Rcpp::wrap(is_invalid_ptr(sexp_ptr));
+    return rcpp_result_gen;
+END_RCPP
+}
 // prod_csr_dense
 NumericMatrix prod_csr_dense(const S4& csr_r, const SEXP& dense_m_r);
 RcppExport SEXP _rsparse_prod_csr_dense(SEXP csr_rSEXP, SEXP dense_m_rSEXP) {
@@ -176,6 +279,14 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_get_ftrl_weights", (DL_FUNC) &_rsparse_get_ftrl_weights, 1},
     {"_rsparse_ftrl_partial_fit", (DL_FUNC) &_rsparse_ftrl_partial_fit, 6},
+    {"_rsparse_fm_create_param", (DL_FUNC) &_rsparse_fm_create_param, 11},
+    {"_rsparse_fm_create_model", (DL_FUNC) &_rsparse_fm_create_model, 1},
+    {"_rsparse_fill_float_matrix_randn", (DL_FUNC) &_rsparse_fill_float_matrix_randn, 2},
+    {"_rsparse_fill_float_matrix", (DL_FUNC) &_rsparse_fill_float_matrix, 2},
+    {"_rsparse_fill_float_vector_randn", (DL_FUNC) &_rsparse_fill_float_vector_randn, 2},
+    {"_rsparse_fill_float_vector", (DL_FUNC) &_rsparse_fill_float_vector, 2},
+    {"_rsparse_fm_partial_fit", (DL_FUNC) &_rsparse_fm_partial_fit, 6},
+    {"_rsparse_is_invalid_ptr", (DL_FUNC) &_rsparse_is_invalid_ptr, 1},
     {"_rsparse_prod_csr_dense", (DL_FUNC) &_rsparse_prod_csr_dense, 2},
     {"_rsparse_prod_dense_csr", (DL_FUNC) &_rsparse_prod_dense_csr, 2},
     {"_rsparse_tcrossprod_dense_csr", (DL_FUNC) &_rsparse_tcrossprod_dense_csr, 2},

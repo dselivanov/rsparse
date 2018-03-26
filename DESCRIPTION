@@ -9,7 +9,10 @@ Description: Implements several algorithms for
     matrix factorizations
     (sparse matrices with the focus on applications for recommender systems). 
     List of algorithms for supervised learning:
-    1) Elastic net with Follow the proximally-regularized leader algorithm
+    1) Elastic net regression via Follow The Proximally-Regularized leader algorithm
+    2) Second order Factorization Machines via stochastic gradient descent with 
+       adaptive learning rates. Allows to learn model parameters out-of-core. 
+       Fast - asynchronous parallel, SIMD accelerated.
     List of algorithms for matrix factorization:
     1) Weighted Regularazied Matrix Factorization with Alternating Least Squares (ALS) 
       for implicit feedback (inculding approximate Conjugate Gradient solver).

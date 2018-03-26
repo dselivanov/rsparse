@@ -9,6 +9,38 @@ ftrl_partial_fit <- function(m, y, R_model, weights, do_update = 1L, n_threads =
     .Call('_rsparse_ftrl_partial_fit', PACKAGE = 'rsparse', m, y, R_model, weights, do_update, n_threads)
 }
 
+fm_create_param <- function(learning_rate, rank, lambda_w, lambda_v, w0_R, w_R, v_R, grad_w2_R, grad_v2_R, task, intercept) {
+    .Call('_rsparse_fm_create_param', PACKAGE = 'rsparse', learning_rate, rank, lambda_w, lambda_v, w0_R, w_R, v_R, grad_w2_R, grad_v2_R, task, intercept)
+}
+
+fm_create_model <- function(params_ptr) {
+    .Call('_rsparse_fm_create_model', PACKAGE = 'rsparse', params_ptr)
+}
+
+fill_float_matrix_randn <- function(x, stdev = 0.001) {
+    invisible(.Call('_rsparse_fill_float_matrix_randn', PACKAGE = 'rsparse', x, stdev))
+}
+
+fill_float_matrix <- function(x, val) {
+    invisible(.Call('_rsparse_fill_float_matrix', PACKAGE = 'rsparse', x, val))
+}
+
+fill_float_vector_randn <- function(x, stdev = 0.001) {
+    invisible(.Call('_rsparse_fill_float_vector_randn', PACKAGE = 'rsparse', x, stdev))
+}
+
+fill_float_vector <- function(x, val) {
+    invisible(.Call('_rsparse_fill_float_vector', PACKAGE = 'rsparse', x, val))
+}
+
+fm_partial_fit <- function(ptr, X, y, w, n_threads = 1L, do_update = 1L) {
+    .Call('_rsparse_fm_partial_fit', PACKAGE = 'rsparse', ptr, X, y, w, n_threads, do_update)
+}
+
+is_invalid_ptr <- function(sexp_ptr) {
+    .Call('_rsparse_is_invalid_ptr', PACKAGE = 'rsparse', sexp_ptr)
+}
+
 prod_csr_dense <- function(csr_r, dense_m_r) {
     .Call('_rsparse_prod_csr_dense', PACKAGE = 'rsparse', csr_r, dense_m_r)
 }
