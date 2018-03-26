@@ -1,13 +1,13 @@
 Package: rsparse
 Type: Package
 Title: 
-Version: 0.2.0.5
+Version: 0.3.0.0
 Author: Dmitriy Selivanov
 Maintainer: Dmitriy Selivanov <selivanov.dmitriy@gmail.com>
 Description: Implements several algorithms for
     supervised learning on sparse data and many
-    matrix factorizations
-    (sparse matrices with the focus on applications for recommender systems). 
+    matrix factorizations of sparse matrices
+    (with a focus on applications for recommender systems). 
     List of algorithms for supervised learning:
     1) Elastic net regression via Follow The Proximally-Regularized leader algorithm
     2) Second order Factorization Machines via stochastic gradient descent with 
