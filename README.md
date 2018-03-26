@@ -1,6 +1,6 @@
 # rsparse
 
-`rsparse` is an R package which implements many algorithms for statistical learning on sparse data**sparse matrix factorizations**. Focus is on applications for **recommender systems**.
+`rsparse` is an R package for statistical learning on **sparse data**. Notably it implements many algorithms sparse **matrix factorizations** with a focus on applications for **recommender systems**.
 
 ## Algorithms
 
