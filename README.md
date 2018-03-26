@@ -1,6 +1,6 @@
-# reco
+# rsparse
 
-`reco` is an R package which implements many algorithms for **sparse matrix factorizations**. Focus is on applications for **recommender systems**.
+`rsparse` is an R package which implements many algorithms for statistical learning on sparse data**sparse matrix factorizations**. Focus is on applications for **recommender systems**.
 
 ## Algorithms
 
@@ -36,7 +36,7 @@ Package is reasonably fast and scales nicely to datasets with millions of rows a
 * built on top of `RcppArmadillo`
 * extensively uses **BLAS** and parallelized with **OpenMP**
 
-Here is example of `reco::WRMF` on [lastfm360k](https://www.upf.edu/web/mtg/lastfm360k) dataset in comparison with other good implementations:
+Here is example of `rsparse::WRMF` on [lastfm360k](https://www.upf.edu/web/mtg/lastfm360k) dataset in comparison with other good implementations:
 
 <img src="https://github.com/dselivanov/bench-wals/raw/master/img/wals-bench-cg.png" width="600">
 
@@ -63,4 +63,4 @@ We follow [mlapi](https://github.com/dselivanov/mlapi) conventions.
 
 If you use multithreaded BLAS (you generally should) such as OpenBLAS, Intel MKL, Apple Accelerate, it is recommended to disable its internal multithreading ability (since thread contention can be easily slow down 10x and more). Matrix factorization is already parallelized in package with OpenMP.
 
-At the moment `reco` tries to  mitigate this issue automatically with the help of [RhpcBLASctl](https://cran.r-project.org/web/packages/RhpcBLASctl/index.html). If you encounter any issues - please report to our [issue tracker]
+At the moment `rsparse` tries to  mitigate this issue automatically with the help of [RhpcBLASctl](https://cran.r-project.org/web/packages/RhpcBLASctl/index.html). If you encounter any issues - please report to our [issue tracker]

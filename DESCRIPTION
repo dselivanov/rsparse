@@ -1,18 +1,22 @@
-Package: reco
+Package: rsparse
 Type: Package
-Title: Matrix factorizations for recommender systems
-Version: 0.2.0.4
+Title: 
+Version: 0.2.0.5
 Author: Dmitriy Selivanov
 Maintainer: Dmitriy Selivanov <selivanov.dmitriy@gmail.com>
-Description: Implements many (sparse) matrix factorization algorithms. 
-    Focus is on applications for recommender systems. 
-    List of algorithms: 
+Description: Implements several algorithms for
+    supervised learning on sparse data and many
+    matrix factorizations
+    (sparse matrices with the focus on applications for recommender systems). 
+    List of algorithms for supervised learning:
+    1) Elastic net with Follow the proximally-regularized leader algorithm
+    List of algorithms for matrix factorization:
     1) Weighted Regularazied Matrix Factorization with Alternating Least Squares (ALS) 
       for implicit feedback (inculding approximate Conjugate Gradient solver).
       Optional non-negativity (NNMF, non-negative matrix factorization).
     2) Regularazied Matrix Factorization with ALS for explicit feedback
       Optional non-negativity (NNMF, non-negative matrix factorization).
-    3) Soft-SVD via fast ALS
+    3) Fast Trunceate SVD and Soft-SVD via ALS
     4) Soft-Impute via fast ALS and solution in SVD form
     5) LinearFlow method which learns item-item similarity matrix from the data
     All algorithms work on sparse matrices. Extensively use BLAS and LAPACK 

@@ -6,6 +6,6 @@
 #' @import Rcpp
 #' @import float
 #' @import futile.logger
-#' @useDynLib reco
+#' @useDynLib rsparse
 
 NULL

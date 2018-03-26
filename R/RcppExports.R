@@ -2,50 +2,50 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 get_ftrl_weights <- function(R_model) {
-    .Call('_reco_get_ftrl_weights', PACKAGE = 'reco', R_model)
+    .Call('_rsparse_get_ftrl_weights', PACKAGE = 'rsparse', R_model)
 }
 
 ftrl_partial_fit <- function(m, y, R_model, weights, do_update = 1L, n_threads = 1L) {
-    .Call('_reco_ftrl_partial_fit', PACKAGE = 'reco', m, y, R_model, weights, do_update, n_threads)
+    .Call('_rsparse_ftrl_partial_fit', PACKAGE = 'rsparse', m, y, R_model, weights, do_update, n_threads)
 }
 
 prod_csr_dense <- function(csr_r, dense_m_r) {
-    .Call('_reco_prod_csr_dense', PACKAGE = 'reco', csr_r, dense_m_r)
+    .Call('_rsparse_prod_csr_dense', PACKAGE = 'rsparse', csr_r, dense_m_r)
 }
 
 prod_dense_csr <- function(dense_m_r, csr_r) {
-    .Call('_reco_prod_dense_csr', PACKAGE = 'reco', dense_m_r, csr_r)
+    .Call('_rsparse_prod_dense_csr', PACKAGE = 'rsparse', dense_m_r, csr_r)
 }
 
 tcrossprod_dense_csr <- function(dense_m_r, csr_r) {
-    .Call('_reco_tcrossprod_dense_csr', PACKAGE = 'reco', dense_m_r, csr_r)
+    .Call('_rsparse_tcrossprod_dense_csr', PACKAGE = 'rsparse', dense_m_r, csr_r)
 }
 
 crossprod_csr_dense <- function(csr_r, dense_m_r) {
-    .Call('_reco_crossprod_csr_dense', PACKAGE = 'reco', csr_r, dense_m_r)
+    .Call('_rsparse_crossprod_csr_dense', PACKAGE = 'rsparse', csr_r, dense_m_r)
 }
 
 als_implicit_double <- function(Conf, X, Y, lambda, n_threads, solver, cg_steps = 3L) {
-    .Call('_reco_als_implicit_double', PACKAGE = 'reco', Conf, X, Y, lambda, n_threads, solver, cg_steps)
+    .Call('_rsparse_als_implicit_double', PACKAGE = 'rsparse', Conf, X, Y, lambda, n_threads, solver, cg_steps)
 }
 
 als_implicit_float <- function(Conf, XR, YR, lambda, n_threads, solver, cg_steps = 3L) {
-    .Call('_reco_als_implicit_float', PACKAGE = 'reco', Conf, XR, YR, lambda, n_threads, solver, cg_steps)
+    .Call('_rsparse_als_implicit_float', PACKAGE = 'rsparse', Conf, XR, YR, lambda, n_threads, solver, cg_steps)
 }
 
 als_loss_explicit <- function(mat, X, Y, lambda, n_threads) {
-    .Call('_reco_als_loss_explicit', PACKAGE = 'reco', mat, X, Y, lambda, n_threads)
+    .Call('_rsparse_als_loss_explicit', PACKAGE = 'rsparse', mat, X, Y, lambda, n_threads)
 }
 
 top_product <- function(x, y, k, n_threads, not_recommend_r) {
-    .Call('_reco_top_product', PACKAGE = 'reco', x, y, k, n_threads, not_recommend_r)
+    .Call('_rsparse_top_product', PACKAGE = 'rsparse', x, y, k, n_threads, not_recommend_r)
 }
 
 cpp_make_sparse_approximation <- function(mat_template, X, Y, sparse_matrix_type, n_threads) {
-    .Call('_reco_cpp_make_sparse_approximation', PACKAGE = 'reco', mat_template, X, Y, sparse_matrix_type, n_threads)
+    .Call('_rsparse_cpp_make_sparse_approximation', PACKAGE = 'rsparse', mat_template, X, Y, sparse_matrix_type, n_threads)
 }
 
 arma_svd_econ <- function(X) {
-    .Call('_reco_arma_svd_econ', PACKAGE = 'reco', X)
+    .Call('_rsparse_arma_svd_econ', PACKAGE = 'rsparse', X)
 }
 

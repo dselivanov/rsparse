@@ -9,7 +9,7 @@ using namespace Rcpp;
 
 // get_ftrl_weights
 NumericVector get_ftrl_weights(const List& R_model);
-RcppExport SEXP _reco_get_ftrl_weights(SEXP R_modelSEXP) {
+RcppExport SEXP _rsparse_get_ftrl_weights(SEXP R_modelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -20,7 +20,7 @@ END_RCPP
 }
 // ftrl_partial_fit
 NumericVector ftrl_partial_fit(const S4& m, const NumericVector& y, const List& R_model, const NumericVector& weights, int do_update, int n_threads);
-RcppExport SEXP _reco_ftrl_partial_fit(SEXP mSEXP, SEXP ySEXP, SEXP R_modelSEXP, SEXP weightsSEXP, SEXP do_updateSEXP, SEXP n_threadsSEXP) {
+RcppExport SEXP _rsparse_ftrl_partial_fit(SEXP mSEXP, SEXP ySEXP, SEXP R_modelSEXP, SEXP weightsSEXP, SEXP do_updateSEXP, SEXP n_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -36,7 +36,7 @@ END_RCPP
 }
 // prod_csr_dense
 NumericMatrix prod_csr_dense(const S4& csr_r, const SEXP& dense_m_r);
-RcppExport SEXP _reco_prod_csr_dense(SEXP csr_rSEXP, SEXP dense_m_rSEXP) {
+RcppExport SEXP _rsparse_prod_csr_dense(SEXP csr_rSEXP, SEXP dense_m_rSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -48,7 +48,7 @@ END_RCPP
 }
 // prod_dense_csr
 NumericMatrix prod_dense_csr(const SEXP& dense_m_r, const S4& csr_r);
-RcppExport SEXP _reco_prod_dense_csr(SEXP dense_m_rSEXP, SEXP csr_rSEXP) {
+RcppExport SEXP _rsparse_prod_dense_csr(SEXP dense_m_rSEXP, SEXP csr_rSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -60,7 +60,7 @@ END_RCPP
 }
 // tcrossprod_dense_csr
 NumericMatrix tcrossprod_dense_csr(const SEXP& dense_m_r, const S4& csr_r);
-RcppExport SEXP _reco_tcrossprod_dense_csr(SEXP dense_m_rSEXP, SEXP csr_rSEXP) {
+RcppExport SEXP _rsparse_tcrossprod_dense_csr(SEXP dense_m_rSEXP, SEXP csr_rSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -72,7 +72,7 @@ END_RCPP
 }
 // crossprod_csr_dense
 NumericMatrix crossprod_csr_dense(const S4& csr_r, const SEXP& dense_m_r);
-RcppExport SEXP _reco_crossprod_csr_dense(SEXP csr_rSEXP, SEXP dense_m_rSEXP) {
+RcppExport SEXP _rsparse_crossprod_csr_dense(SEXP csr_rSEXP, SEXP dense_m_rSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -84,7 +84,7 @@ END_RCPP
 }
 // als_implicit_double
 double als_implicit_double(const arma::sp_mat& Conf, arma::mat& X, arma::mat& Y, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps);
-RcppExport SEXP _reco_als_implicit_double(SEXP ConfSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP) {
+RcppExport SEXP _rsparse_als_implicit_double(SEXP ConfSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -101,7 +101,7 @@ END_RCPP
 }
 // als_implicit_float
 double als_implicit_float(const arma::sp_mat& Conf, S4& XR, S4& YR, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps);
-RcppExport SEXP _reco_als_implicit_float(SEXP ConfSEXP, SEXP XRSEXP, SEXP YRSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP) {
+RcppExport SEXP _rsparse_als_implicit_float(SEXP ConfSEXP, SEXP XRSEXP, SEXP YRSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -118,7 +118,7 @@ END_RCPP
 }
 // als_loss_explicit
 double als_loss_explicit(const arma::sp_mat& mat, arma::mat& X, arma::mat& Y, double lambda, unsigned n_threads);
-RcppExport SEXP _reco_als_loss_explicit(SEXP matSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP) {
+RcppExport SEXP _rsparse_als_loss_explicit(SEXP matSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -133,7 +133,7 @@ END_RCPP
 }
 // top_product
 IntegerMatrix top_product(const arma::mat& x, const arma::mat& y, unsigned k, unsigned n_threads, S4& not_recommend_r);
-RcppExport SEXP _reco_top_product(SEXP xSEXP, SEXP ySEXP, SEXP kSEXP, SEXP n_threadsSEXP, SEXP not_recommend_rSEXP) {
+RcppExport SEXP _rsparse_top_product(SEXP xSEXP, SEXP ySEXP, SEXP kSEXP, SEXP n_threadsSEXP, SEXP not_recommend_rSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -148,7 +148,7 @@ END_RCPP
 }
 // cpp_make_sparse_approximation
 NumericVector cpp_make_sparse_approximation(const S4& mat_template, arma::mat& X, arma::mat& Y, int sparse_matrix_type, unsigned n_threads);
-RcppExport SEXP _reco_cpp_make_sparse_approximation(SEXP mat_templateSEXP, SEXP XSEXP, SEXP YSEXP, SEXP sparse_matrix_typeSEXP, SEXP n_threadsSEXP) {
+RcppExport SEXP _rsparse_cpp_make_sparse_approximation(SEXP mat_templateSEXP, SEXP XSEXP, SEXP YSEXP, SEXP sparse_matrix_typeSEXP, SEXP n_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -163,7 +163,7 @@ END_RCPP
 }
 // arma_svd_econ
 List arma_svd_econ(const arma::mat& X);
-RcppExport SEXP _reco_arma_svd_econ(SEXP XSEXP) {
+RcppExport SEXP _rsparse_arma_svd_econ(SEXP XSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -174,22 +174,22 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_reco_get_ftrl_weights", (DL_FUNC) &_reco_get_ftrl_weights, 1},
-    {"_reco_ftrl_partial_fit", (DL_FUNC) &_reco_ftrl_partial_fit, 6},
-    {"_reco_prod_csr_dense", (DL_FUNC) &_reco_prod_csr_dense, 2},
-    {"_reco_prod_dense_csr", (DL_FUNC) &_reco_prod_dense_csr, 2},
-    {"_reco_tcrossprod_dense_csr", (DL_FUNC) &_reco_tcrossprod_dense_csr, 2},
-    {"_reco_crossprod_csr_dense", (DL_FUNC) &_reco_crossprod_csr_dense, 2},
-    {"_reco_als_implicit_double", (DL_FUNC) &_reco_als_implicit_double, 7},
-    {"_reco_als_implicit_float", (DL_FUNC) &_reco_als_implicit_float, 7},
-    {"_reco_als_loss_explicit", (DL_FUNC) &_reco_als_loss_explicit, 5},
-    {"_reco_top_product", (DL_FUNC) &_reco_top_product, 5},
-    {"_reco_cpp_make_sparse_approximation", (DL_FUNC) &_reco_cpp_make_sparse_approximation, 5},
-    {"_reco_arma_svd_econ", (DL_FUNC) &_reco_arma_svd_econ, 1},
+    {"_rsparse_get_ftrl_weights", (DL_FUNC) &_rsparse_get_ftrl_weights, 1},
+    {"_rsparse_ftrl_partial_fit", (DL_FUNC) &_rsparse_ftrl_partial_fit, 6},
+    {"_rsparse_prod_csr_dense", (DL_FUNC) &_rsparse_prod_csr_dense, 2},
+    {"_rsparse_prod_dense_csr", (DL_FUNC) &_rsparse_prod_dense_csr, 2},
+    {"_rsparse_tcrossprod_dense_csr", (DL_FUNC) &_rsparse_tcrossprod_dense_csr, 2},
+    {"_rsparse_crossprod_csr_dense", (DL_FUNC) &_rsparse_crossprod_csr_dense, 2},
+    {"_rsparse_als_implicit_double", (DL_FUNC) &_rsparse_als_implicit_double, 7},
+    {"_rsparse_als_implicit_float", (DL_FUNC) &_rsparse_als_implicit_float, 7},
+    {"_rsparse_als_loss_explicit", (DL_FUNC) &_rsparse_als_loss_explicit, 5},
+    {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 5},
+    {"_rsparse_cpp_make_sparse_approximation", (DL_FUNC) &_rsparse_cpp_make_sparse_approximation, 5},
+    {"_rsparse_arma_svd_econ", (DL_FUNC) &_rsparse_arma_svd_econ, 1},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_reco(DllInfo *dll) {
+RcppExport void R_init_rsparse(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }
