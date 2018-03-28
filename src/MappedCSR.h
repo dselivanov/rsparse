@@ -1,7 +1,6 @@
 #include <cstdint>
 #include <stddef.h>
 #include <RcppArmadillo.h>
-#include <RcppEigen.h>
 
 using namespace Rcpp;
 

@@ -2,38 +2,10 @@
 // Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #include <RcppArmadillo.h>
-#include <RcppEigen.h>
 #include <Rcpp.h>
 
 using namespace Rcpp;
 
-// get_ftrl_weights
-NumericVector get_ftrl_weights(const List& R_model);
-RcppExport SEXP _rsparse_get_ftrl_weights(SEXP R_modelSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const List& >::type R_model(R_modelSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_ftrl_weights(R_model));
-    return rcpp_result_gen;
-END_RCPP
-}
-// ftrl_partial_fit
-NumericVector ftrl_partial_fit(const S4& m, const NumericVector& y, const List& R_model, const NumericVector& weights, int do_update, int n_threads);
-RcppExport SEXP _rsparse_ftrl_partial_fit(SEXP mSEXP, SEXP ySEXP, SEXP R_modelSEXP, SEXP weightsSEXP, SEXP do_updateSEXP, SEXP n_threadsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const S4& >::type m(mSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const List& >::type R_model(R_modelSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type weights(weightsSEXP);
-    Rcpp::traits::input_parameter< int >::type do_update(do_updateSEXP);
-    Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(ftrl_partial_fit(m, y, R_model, weights, do_update, n_threads));
-    return rcpp_result_gen;
-END_RCPP
-}
 // fm_create_param
 SEXP fm_create_param(float learning_rate, int rank, float lambda_w, float lambda_v, IntegerVector& w0_R, IntegerVector& w_R, IntegerMatrix& v_R, IntegerVector& grad_w2_R, IntegerMatrix& grad_v2_R, const String task, int intercept);
 RcppExport SEXP _rsparse_fm_create_param(SEXP learning_rateSEXP, SEXP rankSEXP, SEXP lambda_wSEXP, SEXP lambda_vSEXP, SEXP w0_RSEXP, SEXP w_RSEXP, SEXP v_RSEXP, SEXP grad_w2_RSEXP, SEXP grad_v2_RSEXP, SEXP taskSEXP, SEXP interceptSEXP) {
@@ -137,51 +109,43 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// prod_csr_dense
-NumericMatrix prod_csr_dense(const S4& csr_r, const SEXP& dense_m_r);
-RcppExport SEXP _rsparse_prod_csr_dense(SEXP csr_rSEXP, SEXP dense_m_rSEXP) {
+// get_ftrl_weights
+NumericVector get_ftrl_weights(const List& R_model);
+RcppExport SEXP _rsparse_get_ftrl_weights(SEXP R_modelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const S4& >::type csr_r(csr_rSEXP);
-    Rcpp::traits::input_parameter< const SEXP& >::type dense_m_r(dense_m_rSEXP);
-    rcpp_result_gen = Rcpp::wrap(prod_csr_dense(csr_r, dense_m_r));
+    Rcpp::traits::input_parameter< const List& >::type R_model(R_modelSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_ftrl_weights(R_model));
     return rcpp_result_gen;
 END_RCPP
 }
-// prod_dense_csr
-NumericMatrix prod_dense_csr(const SEXP& dense_m_r, const S4& csr_r);
-RcppExport SEXP _rsparse_prod_dense_csr(SEXP dense_m_rSEXP, SEXP csr_rSEXP) {
+// ftrl_partial_fit
+NumericVector ftrl_partial_fit(const S4& m, const NumericVector& y, const List& R_model, const NumericVector& weights, int do_update, int n_threads);
+RcppExport SEXP _rsparse_ftrl_partial_fit(SEXP mSEXP, SEXP ySEXP, SEXP R_modelSEXP, SEXP weightsSEXP, SEXP do_updateSEXP, SEXP n_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const SEXP& >::type dense_m_r(dense_m_rSEXP);
-    Rcpp::traits::input_parameter< const S4& >::type csr_r(csr_rSEXP);
-    rcpp_result_gen = Rcpp::wrap(prod_dense_csr(dense_m_r, csr_r));
+    Rcpp::traits::input_parameter< const S4& >::type m(mSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const List& >::type R_model(R_modelSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type weights(weightsSEXP);
+    Rcpp::traits::input_parameter< int >::type do_update(do_updateSEXP);
+    Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(ftrl_partial_fit(m, y, R_model, weights, do_update, n_threads));
     return rcpp_result_gen;
 END_RCPP
 }
-// tcrossprod_dense_csr
-NumericMatrix tcrossprod_dense_csr(const SEXP& dense_m_r, const S4& csr_r);
-RcppExport SEXP _rsparse_tcrossprod_dense_csr(SEXP dense_m_rSEXP, SEXP csr_rSEXP) {
+// csr_dense_tcrossprod
+NumericMatrix csr_dense_tcrossprod(const S4& x_csr_r, const arma::Mat<double>& y_transposed, int num_threads);
+RcppExport SEXP _rsparse_csr_dense_tcrossprod(SEXP x_csr_rSEXP, SEXP y_transposedSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const SEXP& >::type dense_m_r(dense_m_rSEXP);
-    Rcpp::traits::input_parameter< const S4& >::type csr_r(csr_rSEXP);
-    rcpp_result_gen = Rcpp::wrap(tcrossprod_dense_csr(dense_m_r, csr_r));
-    return rcpp_result_gen;
-END_RCPP
-}
-// crossprod_csr_dense
-NumericMatrix crossprod_csr_dense(const S4& csr_r, const SEXP& dense_m_r);
-RcppExport SEXP _rsparse_crossprod_csr_dense(SEXP csr_rSEXP, SEXP dense_m_rSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const S4& >::type csr_r(csr_rSEXP);
-    Rcpp::traits::input_parameter< const SEXP& >::type dense_m_r(dense_m_rSEXP);
-    rcpp_result_gen = Rcpp::wrap(crossprod_csr_dense(csr_r, dense_m_r));
+    Rcpp::traits::input_parameter< const S4& >::type x_csr_r(x_csr_rSEXP);
+    Rcpp::traits::input_parameter< const arma::Mat<double>& >::type y_transposed(y_transposedSEXP);
+    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(csr_dense_tcrossprod(x_csr_r, y_transposed, num_threads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -277,8 +241,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_rsparse_get_ftrl_weights", (DL_FUNC) &_rsparse_get_ftrl_weights, 1},
-    {"_rsparse_ftrl_partial_fit", (DL_FUNC) &_rsparse_ftrl_partial_fit, 6},
     {"_rsparse_fm_create_param", (DL_FUNC) &_rsparse_fm_create_param, 11},
     {"_rsparse_fm_create_model", (DL_FUNC) &_rsparse_fm_create_model, 1},
     {"_rsparse_fill_float_matrix_randn", (DL_FUNC) &_rsparse_fill_float_matrix_randn, 2},
@@ -287,10 +249,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_fill_float_vector", (DL_FUNC) &_rsparse_fill_float_vector, 2},
     {"_rsparse_fm_partial_fit", (DL_FUNC) &_rsparse_fm_partial_fit, 6},
     {"_rsparse_is_invalid_ptr", (DL_FUNC) &_rsparse_is_invalid_ptr, 1},
-    {"_rsparse_prod_csr_dense", (DL_FUNC) &_rsparse_prod_csr_dense, 2},
-    {"_rsparse_prod_dense_csr", (DL_FUNC) &_rsparse_prod_dense_csr, 2},
-    {"_rsparse_tcrossprod_dense_csr", (DL_FUNC) &_rsparse_tcrossprod_dense_csr, 2},
-    {"_rsparse_crossprod_csr_dense", (DL_FUNC) &_rsparse_crossprod_csr_dense, 2},
+    {"_rsparse_get_ftrl_weights", (DL_FUNC) &_rsparse_get_ftrl_weights, 1},
+    {"_rsparse_ftrl_partial_fit", (DL_FUNC) &_rsparse_ftrl_partial_fit, 6},
+    {"_rsparse_csr_dense_tcrossprod", (DL_FUNC) &_rsparse_csr_dense_tcrossprod, 3},
     {"_rsparse_als_implicit_double", (DL_FUNC) &_rsparse_als_implicit_double, 7},
     {"_rsparse_als_implicit_float", (DL_FUNC) &_rsparse_als_implicit_float, 7},
     {"_rsparse_als_loss_explicit", (DL_FUNC) &_rsparse_als_loss_explicit, 5},

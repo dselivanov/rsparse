@@ -37,7 +37,6 @@ Imports:
     Matrix, 
     Rcpp, 
     RcppArmadillo, 
-    RcppEigen (>= 0.3.3.3.0),
     mlapi (>= 0.1.0), 
     float (>= 0.1-2),
     data.table (>= 1.10.0), 
@@ -48,7 +47,6 @@ Suggests:
 LinkingTo:
     Rcpp, 
     RcppArmadillo, 
-    RcppEigen (>= 0.3.3.3.0),
     float (>= 0.1-2)
 Remotes:
     dselivanov/float
