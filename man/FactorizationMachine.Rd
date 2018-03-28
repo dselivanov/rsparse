@@ -16,8 +16,8 @@ Creates second order Factorization Machines model
 For usage details see \bold{Methods, Arguments and Examples} sections.
 \preformatted{
 fm = FM$new(learning_rate = 0.2, rank = 8, lambda_w = 0, lambda_v = 0, task = "classification")
-fm$partial_fit(x, y, n_threads  = 0, ...)
-fm$predict(x, n_threads  = 0, ...)
+fm$partial_fit(x, y, ...)
+fm$predict(x, ...)
 }
 }
 
@@ -26,9 +26,9 @@ fm$predict(x, n_threads  = 0, ...)
 \describe{
   \item{\code{FM$new(learning_rate = 0.2, rank = 8, lambda_w = 1e-6, lambda_v = 1e-6, task = "classification")}}{Constructor
   for FactorizationMachines model. For description of arguments see \bold{Arguments} section.}
-  \item{\code{$partial_fit(x, y, n_threads  = 0, ...)}}{fits/updates model given input matrix \code{x} and target vector \code{y}.
+  \item{\code{$partial_fit(x, y, ...)}}{fits/updates model given input matrix \code{x} and target vector \code{y}.
   \code{x} shape = (n_samples, n_features)}
-  \item{\code{$predict(x, n_threads  = 0, ...)}}{predicts output \code{x}}
+  \item{\code{$predict(x, ...)}}{predicts output \code{x}}
 }
 }
 

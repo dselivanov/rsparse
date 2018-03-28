@@ -2,7 +2,6 @@ BaseRecommender = R6::R6Class(
   inherit = mlapi::mlapiDecomposition,
   classname = "BaseRecommender",
   public = list(
-    n_threads = NULL,
     predict = function(x, k, not_recommend = x, items_exclude = NULL, ...) {
       items_exclude = unique(items_exclude)
 
@@ -49,15 +48,13 @@ BaseRecommender = R6::R6Class(
   private = list(
     predict_low_level = function(user_embeddings, item_embeddings, k, not_recommend, items_exclude = NULL, ...) {
 
-      if(isTRUE(self$n_threads > 1)) {
-        flog.debug("BaseRecommender$predict(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
-        RhpcBLASctl::blas_set_num_threads(1)
-        on.exit({
-          n_physical_cores = RhpcBLASctl::get_num_cores()
-          flog.debug("BaseRecommender$predict(): on exit `RhpcBLASctl::blas_set_num_threads(%d)` (=number of physical cores)", n_physical_cores)
-          RhpcBLASctl::blas_set_num_threads(n_physical_cores)
-        })
-      }
+      flog.debug("BaseRecommender$predict(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
+      RhpcBLASctl::blas_set_num_threads(1)
+      on.exit({
+        n_physical_cores = RhpcBLASctl::get_num_cores()
+        flog.debug("BaseRecommender$predict(): on exit `RhpcBLASctl::blas_set_num_threads(%d)` (=number of physical cores)", n_physical_cores)
+        RhpcBLASctl::blas_set_num_threads(n_physical_cores)
+      })
 
       if(is.character(items_exclude)) {
         if(is.null(private$item_ids))
@@ -80,7 +77,7 @@ BaseRecommender = R6::R6Class(
         not_recommend = as(not_recommend, "RsparseMatrix")
 
       uids = rownames(user_embeddings)
-      indices = find_top_product(user_embeddings, item_embeddings, k, self$n_threads, not_recommend)
+      indices = find_top_product(user_embeddings, item_embeddings, k, not_recommend)
       # convert back to original indices because we filtered out items_exclude and now indices are shifted
       # 1 2 3 4 5 6 7 8 9 10 - indices
       # * - - - - * - - - -- filter mask

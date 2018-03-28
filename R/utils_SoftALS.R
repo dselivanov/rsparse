@@ -1,19 +1,19 @@
-make_sparse_approximation = function(x, A, B, n_threads = parallel::detectCores()) {
+make_sparse_approximation = function(x, A, B) {
   stopifnot(nrow(x) == ncol(A))
   stopifnot(ncol(x) == ncol(B))
   UseMethod("make_sparse_approximation")
 }
 
-make_sparse_approximation.CsparseMatrix = function(x, A, B, n_threads = parallel::detectCores()) {
+make_sparse_approximation.CsparseMatrix = function(x, A, B) {
   CSC = 1L
   CSR = 2L
-  cpp_make_sparse_approximation(x, A, B, CSC, n_threads)
+  cpp_make_sparse_approximation(x, A, B, CSC, getOption("rsparse_omp_threads"))
 }
 
-make_sparse_approximation.RsparseMatrix = function(x, A, B, n_threads = parallel::detectCores()) {
+make_sparse_approximation.RsparseMatrix = function(x, A, B) {
   CSC = 1L
   CSR = 2L
-  cpp_make_sparse_approximation(x, A, B, CSR, n_threads)
+  cpp_make_sparse_approximation(x, A, B, CSR, getOption("rsparse_omp_threads"))
 }
 
 calc_frobenius_norm_delta = function(svd_old, svd_new) {

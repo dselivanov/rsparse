@@ -22,8 +22,8 @@ Creates 'Follow the Regularized Leader' model. Only logistic regression implemen
 For usage details see \bold{Methods, Arguments and Examples} sections.
 \preformatted{
 ftrl = FTRL$new(learning_rate = 0.1, learning_rate_decay = 0.5, lambda = 0, l1_ratio = 1, dropout = 0, family = "binomial")
-ftrl$partial_fit(x, y, n_threads  = 0, ...)
-ftrl$predict(x, n_threads  = 0, ...)
+ftrl$partial_fit(x, y, ...)
+ftrl$predict(x, ...)
 ftrl$coef()
 }
 }
@@ -33,9 +33,9 @@ ftrl$coef()
 \describe{
   \item{\code{FTRL$new(learning_rate = 0.1, learning_rate_decay = 0.5, lambda = 0, l1_ratio = 1, dropout = 0, family = "binomial")}}{Constructor
   for FTRL model. For description of arguments see \bold{Arguments} section.}
-  \item{\code{$partial_fit(x, y, n_threads  = 0, ...)}}{fits/updates model given input matrix \code{x} and target vector \code{y}.
+  \item{\code{$partial_fit(x, y, ...)}}{fits/updates model given input matrix \code{x} and target vector \code{y}.
   \code{x} shape = (n_samples, n_features)}
-  \item{\code{$predict(x, n_threads  = 0, ...)}}{predicts output \code{x}}
+  \item{\code{$predict(x, ...)}}{predicts output \code{x}}
   \item{\code{$coef()}}{ return coefficients of the regression model}
   \item{\code{$dump()}}{create dump of the model (actually \code{list} with current model parameters)}
   \item{\code{$load(x)}}{load/initialize model from dump)}
@@ -73,7 +73,7 @@ m = sparseMatrix(i = i, j = j, x = x, dims = c(1000, 1000), giveCsparse = FALSE)
 x = as(m, "RsparseMatrix")
 
 ftrl = FTRL$new(learning_rate = 0.01, learning_rate_decay = 0.1, lambda = 10, l1_ratio = 1, dropout = 0)
-ftrl$partial_fit(x, y, n_threads = 8)
+ftrl$partial_fit(x, y)
 
 w = ftrl$coef()
 head(w)

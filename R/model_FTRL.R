@@ -5,8 +5,8 @@
 #' For usage details see \bold{Methods, Arguments and Examples} sections.
 #' \preformatted{
 #' ftrl = FTRL$new(learning_rate = 0.1, learning_rate_decay = 0.5, lambda = 0, l1_ratio = 1, dropout = 0, family = "binomial")
-#' ftrl$partial_fit(x, y, n_threads  = 0, ...)
-#' ftrl$predict(x, n_threads  = 0, ...)
+#' ftrl$partial_fit(x, y, ...)
+#' ftrl$predict(x, ...)
 #' ftrl$coef()
 #' }
 #' @format \code{\link{R6Class}} object.
@@ -14,9 +14,9 @@
 #' \describe{
 #'   \item{\code{FTRL$new(learning_rate = 0.1, learning_rate_decay = 0.5, lambda = 0, l1_ratio = 1, dropout = 0, family = "binomial")}}{Constructor
 #'   for FTRL model. For description of arguments see \bold{Arguments} section.}
-#'   \item{\code{$partial_fit(x, y, n_threads  = 0, ...)}}{fits/updates model given input matrix \code{x} and target vector \code{y}.
+#'   \item{\code{$partial_fit(x, y, ...)}}{fits/updates model given input matrix \code{x} and target vector \code{y}.
 #'   \code{x} shape = (n_samples, n_features)}
-#'   \item{\code{$predict(x, n_threads  = 0, ...)}}{predicts output \code{x}}
+#'   \item{\code{$predict(x, ...)}}{predicts output \code{x}}
 #'   \item{\code{$coef()}}{ return coefficients of the regression model}
 #'   \item{\code{$dump()}}{create dump of the model (actually \code{list} with current model parameters)}
 #'   \item{\code{$load(x)}}{load/initialize model from dump)}
@@ -51,7 +51,7 @@
 #' x = as(m, "RsparseMatrix")
 #'
 #' ftrl = FTRL$new(learning_rate = 0.01, learning_rate_decay = 0.1, lambda = 10, l1_ratio = 1, dropout = 0)
-#' ftrl$partial_fit(x, y, n_threads = 8)
+#' ftrl$partial_fit(x, y)
 #'
 #' w = ftrl$coef()
 #' head(w)
@@ -80,7 +80,7 @@ FTRL = R6::R6Class(
                                dropout = dropout, family = family)
     },
     #-----------------------------------------------------------------
-    partial_fit = function(x, y, n_threads = 0, weights = rep(1, nrow(x)), ...) {
+    partial_fit = function(x, y, weights = rep(1, nrow(x)), ...) {
       # we can enforce to work only with sparse matrices:
       # stopifnot(inherits(x, "sparseMatrix"))
       if(!inherits(class(x), private$internal_matrix_format)) {
@@ -105,17 +105,17 @@ FTRL = R6::R6Class(
 
       # NOTE THAT private$z and private$n will be updated in place during the call !!!
       p = ftrl_partial_fit(m = x, y = y, R_model = private$model, weights = weights,
-                           do_update = TRUE, n_threads = n_threads)
+                           do_update = TRUE, n_threads = getOption("rsparse_omp_threads"))
       invisible(p)
     },
-    fit = function(x, y, n_threads = 0, weights = rep(1, nrow(x)), n_iter = 1L, ...) {
+    fit = function(x, y, weights = rep(1, nrow(x)), n_iter = 1L, ...) {
       for(i in seq_len(n_iter)) {
         futile.logger::flog.debug("FTRL iter %03d", i)
-        self$partial_fit(x, y, n_threads, weights, ...)
+        self$partial_fit(x, y, getOption("rsparse_omp_threads"), weights, ...)
       }
     },
     #-----------------------------------------------------------------
-    predict = function(x, n_threads = 0, ...) {
+    predict = function(x, ...) {
       stopifnot(private$is_initialized)
       # stopifnot(inherits(x, "sparseMatrix"))
       if(!inherits(class(x), private$internal_matrix_format)) {
@@ -129,7 +129,8 @@ FTRL = R6::R6Class(
 
       p = ftrl_partial_fit(m = x, y = numeric(0), R_model = private$model,
                            weights = rep(1, nrow(x)),
-                           do_update = FALSE, n_threads = n_threads)
+                           do_update = FALSE,
+                           n_threads = getOption("rsparse_omp_threads"))
       return(p);
     },
     #-----------------------------------------------------------------

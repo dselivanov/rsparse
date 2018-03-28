@@ -5,17 +5,17 @@
 #' For usage details see \bold{Methods, Arguments and Examples} sections.
 #' \preformatted{
 #' fm = FM$new(learning_rate = 0.2, rank = 8, lambda_w = 0, lambda_v = 0, task = "classification")
-#' fm$partial_fit(x, y, n_threads  = 0, ...)
-#' fm$predict(x, n_threads  = 0, ...)
+#' fm$partial_fit(x, y, ...)
+#' fm$predict(x, ...)
 #' }
 #' @format \code{\link{R6Class}} object.
 #' @section Methods:
 #' \describe{
 #'   \item{\code{FM$new(learning_rate = 0.2, rank = 8, lambda_w = 1e-6, lambda_v = 1e-6, task = "classification")}}{Constructor
 #'   for FactorizationMachines model. For description of arguments see \bold{Arguments} section.}
-#'   \item{\code{$partial_fit(x, y, n_threads  = 0, ...)}}{fits/updates model given input matrix \code{x} and target vector \code{y}.
+#'   \item{\code{$partial_fit(x, y, ...)}}{fits/updates model given input matrix \code{x} and target vector \code{y}.
 #'   \code{x} shape = (n_samples, n_features)}
-#'   \item{\code{$predict(x, n_threads  = 0, ...)}}{predicts output \code{x}}
+#'   \item{\code{$predict(x, ...)}}{predicts output \code{x}}
 #'}
 #' @section Arguments:
 #' \describe{
@@ -51,7 +51,7 @@ FactorizationMachine = R6::R6Class(
       private$task = task
       private$intercept = intercept
     },
-    partial_fit = function(x, y, n_threads = parallel::detectCores(), weights = rep(1.0, length(y)), ...) {
+    partial_fit = function(x, y, weights = rep(1.0, length(y)), ...) {
       if(!inherits(class(x), private$internal_matrix_format)) {
         x = as(x, private$internal_matrix_format)
       }
@@ -98,16 +98,16 @@ FactorizationMachine = R6::R6Class(
       if(anyNA(x@x))
         stop("NA's in input matrix are not allowed")
 
-      p = fm_partial_fit(private$ptr_model, x, y, weights, do_update = TRUE, n_threads = n_threads)
+      p = fm_partial_fit(private$ptr_model, x, y, weights, do_update = TRUE, n_threads = getOption("rsparse_omp_threads"))
       invisible(p)
     },
-    fit = function(x, y, n_threads = parallel::detectCores(), weights, n_iter = 1L, ...) {
+    fit = function(x, y, weights, n_iter = 1L, ...) {
       for(i in seq_len(n_iter)) {
         futile.logger::flog.debug("FactorizationMachine iter %03d", i)
-        self$partial_fit(x, y, n_threads, weights, ...)
+        self$partial_fit(x, y, weights, ...)
       }
     },
-    predict =  function(x, n_threads = 0, ...) {
+    predict =  function(x, ...) {
       if(is.null(private$ptr_param) || is_invalid_ptr(private$ptr_param)) {
         print("is.null(private$ptr_param) || is_invalid_ptr(private$ptr_param)")
         if(private$is_initialized) {
@@ -130,7 +130,7 @@ FactorizationMachine = R6::R6Class(
       if(any(is.na(x)))
         stop("NA's in input matrix are not allowed")
       # dummy numeric(0) - don't have y and don't need weights
-      p = fm_partial_fit(private$ptr_model, x, numeric(0), numeric(0), do_update = FALSE, n_threads = n_threads)
+      p = fm_partial_fit(private$ptr_model, x, numeric(0), numeric(0), do_update = FALSE, n_threads = getOption("rsparse_omp_threads"))
       return(p);
     }
   ),

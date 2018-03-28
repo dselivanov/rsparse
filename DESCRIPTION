@@ -1,7 +1,7 @@
 Package: rsparse
 Type: Package
 Title: 
-Version: 0.3.0.0
+Version: 0.3.0.1
 Author: Dmitriy Selivanov
 Maintainer: Dmitriy Selivanov <selivanov.dmitriy@gmail.com>
 Description: Implements several algorithms for

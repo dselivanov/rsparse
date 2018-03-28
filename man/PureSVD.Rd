@@ -19,7 +19,6 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 \preformatted{
   model = PureSVD$new(rank = 10L,
                       lambda = 0,
-                      n_threads = parallel::detectCores(),
                       init = NULL,
                       preprocess = identity,
                       ...)
@@ -33,7 +32,6 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 
 \describe{
   \item{\code{$new(rank = 10L, lambda = 0,
-                   n_threads = parallel::detectCores(),
                    init = NULL,
                    preprocess = identity,
                    ...
@@ -49,8 +47,6 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
     of confidence values (implicit feedback) or ratings (explicit feedback).
     Column names (=item ids) should be in the same order as in the \code{fit_transform()}.}
   \item{\code{$components}}{item factors matrix of size \code{rank * n_items}}
-  \item{n_threads}{\code{numeric} default number of threads to use during training and prediction
-  (if OpenMP is available).}
 }
 }
 
@@ -64,8 +60,6 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
  \item{preprocess}{\code{function} = \code{identity()} by default. User spectified function which will be applied to user-item interaction matrix
     before running matrix factorization (also applied in inference time before making predictions). For example we may
     want to normalize each row of user-item matrix to have 1 norm. Or apply \code{log1p()} to discount large counts.}
- \item{n_threads}{\code{numeric} default number of threads to use during training and prediction
- (if OpenMP is available).}
  \item{not_recommend}{\code{sparse matrix} or \code{NULL} - points which items should be excluided from recommendations for a user.
    By default it excludes previously seen/consumed items.}
  \item{convergence_tol}{\code{numeric = -Inf} defines early stopping strategy. We stop fitting

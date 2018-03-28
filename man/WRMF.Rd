@@ -21,7 +21,6 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
   model = WRMF$new(rank = 10L, lambda = 0,
                   feedback = c("implicit", "explicit"),
                   init_stdv = 0.01,
-                  n_threads = parallel::detectCores(),
                   non_negative = FALSE,
                   solver = c("conjugate_gradient", "cholesky"),
                   cg_steps = 3L,
@@ -38,7 +37,7 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 
 \describe{
   \item{\code{$new(rank = 10L, lambda = 0, feedback = c("implicit", "explicit"),
-                   init_stdv = 0.01, n_threads = parallel::detectCores(), non_negative = FALSE,
+                   init_stdv = 0.01, non_negative = FALSE,
                    solver = c("conjugate_gradient", "cholesky"), cg_steps = 3L,
                    components = NULL) }}{ creates matrix
     factorization model model with \code{rank} latent factors. If \code{components} is provided then initialize
@@ -62,8 +61,6 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
     \bold{"loss"}, \bold{"map@k"}, \bold{"ndcg@k"}, where \bold{k} is some integer. For example \code{map@10}.}
   \item{\code{$remove_scorer(name)}}{remove a metric from watchlist}
   \item{\code{$components}}{item factors matrix of size \code{rank * n_items}}
-  \item{n_threads}{\code{numeric} default number of threads to use during training and prediction
-  (if OpenMP is available).}
 }
 }
 
@@ -95,8 +92,6 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
     before running matrix factorization (also applied in inference time before making predictions). For example we may
     want to normalize each row of user-item matrix to have 1 norm. Or apply \code{log1p()} to discount large counts.
     This essentially corresponds to the "confidence" function from (Hu, Koren, Volinsky)'2008 paper \url{http://yifanhu.net/PUB/cf.pdf}}
- \item{n_threads}{\code{numeric} default number of threads to use during training and prediction
- (if OpenMP is available).}
  \item{precision}{one of \code{c("double", "float")}. Should embeeding matrices be usual numeric or
  float (from \code{float} package). The latter is usually 2x faster and consumes less RAM. BUT \code{float} matrices
  are not "base" objects. Use carefully.}

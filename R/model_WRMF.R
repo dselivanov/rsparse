@@ -22,7 +22,6 @@
 #'   model = WRMF$new(rank = 10L, lambda = 0,
 #'                   feedback = c("implicit", "explicit"),
 #'                   init_stdv = 0.01,
-#'                   n_threads = parallel::detectCores(),
 #'                   non_negative = FALSE,
 #'                   solver = c("conjugate_gradient", "cholesky"),
 #'                   cg_steps = 3L,
@@ -36,7 +35,7 @@
 #' @section Methods:
 #' \describe{
 #'   \item{\code{$new(rank = 10L, lambda = 0, feedback = c("implicit", "explicit"),
-#'                    init_stdv = 0.01, n_threads = parallel::detectCores(), non_negative = FALSE,
+#'                    init_stdv = 0.01, non_negative = FALSE,
 #'                    solver = c("conjugate_gradient", "cholesky"), cg_steps = 3L,
 #'                    components = NULL) }}{ creates matrix
 #'     factorization model model with \code{rank} latent factors. If \code{components} is provided then initialize
@@ -60,8 +59,6 @@
 #'     \bold{"loss"}, \bold{"map@@k"}, \bold{"ndcg@@k"}, where \bold{k} is some integer. For example \code{map@@10}.}
 #'   \item{\code{$remove_scorer(name)}}{remove a metric from watchlist}
 #'   \item{\code{$components}}{item factors matrix of size \code{rank * n_items}}
-#'   \item{n_threads}{\code{numeric} default number of threads to use during training and prediction
-#'   (if OpenMP is available).}
 #'}
 #' @section Arguments:
 #' \describe{
@@ -90,8 +87,6 @@
 #'     before running matrix factorization (also applied in inference time before making predictions). For example we may
 #'     want to normalize each row of user-item matrix to have 1 norm. Or apply \code{log1p()} to discount large counts.
 #'     This essentially corresponds to the "confidence" function from (Hu, Koren, Volinsky)'2008 paper \url{http://yifanhu.net/PUB/cf.pdf}}
-#'  \item{n_threads}{\code{numeric} default number of threads to use during training and prediction
-#'  (if OpenMP is available).}
 #'  \item{precision}{one of \code{c("double", "float")}. Should embeeding matrices be usual numeric or
 #'  float (from \code{float} package). The latter is usually 2x faster and consumes less RAM. BUT \code{float} matrices
 #'  are not "base" objects. Use carefully.}
@@ -113,7 +108,6 @@ WRMF = R6::R6Class(
     initialize = function(rank = 10L,
                           lambda = 0,
                           feedback = c("implicit", "explicit"),
-                          n_threads = parallel::detectCores(),
                           init_stdv = 0.01,
                           non_negative = FALSE,
                           solver = c("conjugate_gradient", "cholesky"),
@@ -149,12 +143,11 @@ WRMF = R6::R6Class(
       private$preprocess = preprocess
 
       private$scorers = new.env(hash = TRUE, parent = emptyenv())
-      self$n_threads = n_threads
       private$non_negative = non_negative
     },
     fit_transform = function(x, n_iter = 10L, convergence_tol = 0.005, ...) {
 
-      if(self$n_threads > 1 && private$feedback == "implicit" ) {
+      if(private$feedback == "implicit" ) {
         flog.debug("WRMF$fit_transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
         RhpcBLASctl::blas_set_num_threads(1)
         on.exit({
@@ -198,7 +191,7 @@ WRMF = R6::R6Class(
 
       trace_values = vector("numeric", n_iter)
 
-      flog.info("starting factorization with %d threads", self$n_threads)
+      flog.info("starting factorization with %d threads", getOption("rsparse_omp_threads"))
       trace_lst = vector("list", n_iter)
       loss_prev_iter = Inf
       # iterate
@@ -209,10 +202,10 @@ WRMF = R6::R6Class(
         if (private$feedback == "implicit") {
           # private$U will be modified in place
           if(private$precision == "double") {
-            loss = als_implicit_double(c_iu, private$components_, private$U, n_threads = self$n_threads,
+            loss = als_implicit_double(c_iu, private$components_, private$U, n_threads = getOption("rsparse_omp_threads"),
                                        lambda = private$lambda, solver = private$solver_code, cg_steps = private$cg_steps)
           } else {
-            loss = als_implicit_float(c_iu, private$components_, private$U, n_threads = self$n_threads,
+            loss = als_implicit_float(c_iu, private$components_, private$U, n_threads = getOption("rsparse_omp_threads"),
                                        lambda = private$lambda, solver = private$solver_code, cg_steps = private$cg_steps)
           }
 
@@ -228,10 +221,10 @@ WRMF = R6::R6Class(
         if (private$feedback == "implicit") {
           # private$components_ will be modified in place
           if(private$precision == "double") {
-          loss = als_implicit_double(c_ui, private$U, private$components_, n_threads = self$n_threads,
+          loss = als_implicit_double(c_ui, private$U, private$components_, n_threads = getOption("rsparse_omp_threads"),
                               lambda = private$lambda, private$solver_code, private$cg_steps)
           } else {
-            loss = als_implicit_float(c_ui, private$U, private$components_, n_threads = self$n_threads,
+            loss = als_implicit_float(c_ui, private$U, private$components_, n_threads = getOption("rsparse_omp_threads"),
                                        lambda = private$lambda, private$solver_code, private$cg_steps)
 
           }
@@ -246,7 +239,7 @@ WRMF = R6::R6Class(
         # calculate some metrics if needed in order to diagnose convergence
         #------------------------------------------------------------------------
         if (private$feedback == "explicit")
-          loss = als_loss_explicit(c_ui, private$U, private$components_, private$lambda, self$n_threads);
+          loss = als_loss_explicit(c_ui, private$U, private$components_, private$lambda, getOption("rsparse_omp_threads"));
 
         j = 1L
         trace_scors_string = ""
@@ -294,7 +287,7 @@ WRMF = R6::R6Class(
     # project new users into latent user space - just make ALS step given fixed items matrix
     transform = function(x, ...) {
       stopifnot(ncol(x) == ncol(private$components_))
-      if(self$n_threads > 1 && private$feedback == "implicit" ) {
+      if(private$feedback == "implicit" ) {
         flog.debug("WRMF$transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
         RhpcBLASctl::blas_set_num_threads(1)
         on.exit({
@@ -309,7 +302,7 @@ WRMF = R6::R6Class(
       if(private$feedback == "implicit") {
         res = matrix(0, nrow = private$rank, ncol = nrow(x))
 
-        als_implicit_double(t(x), private$components_, res, n_threads = self$n_threads,
+        als_implicit_double(t(x), private$components_, res, n_threads = getOption("rsparse_omp_threads"),
                      lambda = private$lambda,
                      private$solver_code, private$cg_steps)
 

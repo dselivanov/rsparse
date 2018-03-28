@@ -133,7 +133,6 @@ public:
   }
 
   NumericVector fit_predict(const S4 &m, const NumericVector &y_R, const NumericVector &w_R, int n_threads = 1, int do_update = 1) {
-    int nth = omp_thread_count();
     const double *y = y_R.begin();
     const double *w = w_R.begin();
 
@@ -146,7 +145,7 @@ public:
     #ifdef _OPENMP
     #pragma omp parallel for num_threads(n_threads) schedule(guided, 1000)
     #endif
-    for(int i = 0; i < x.n_rows; i++) {
+    for(uint32_t i = 0; i < x.n_rows; i++) {
       uint32_t p1 = x.p[i];
       uint32_t p2 = x.p[i + 1];
       float y_hat_raw = this->fm_predict_internal(x.j, x.x, p1, p2);

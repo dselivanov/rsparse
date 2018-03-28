@@ -22,7 +22,6 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
   model = LinearFlow$new( rank = 8L,
                           lambda = 0,
                           solve_right_singular_vectors = c("soft_impute", "svd"),
-                          n_threads = parallel::detectCores(),
                           v = NULL,
                           preprocess = identity,
                           ...)
@@ -43,7 +42,6 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 \describe{
   \item{\code{$new(rank = 8L, lambda = 0,
               solve_right_singular_vectors = c("svd", "soft_impute"),
-              n_threads = parallel::detectCores(),
               v = NULL, preprocess = identity, ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
     If \code{v} (right singular vectors of the user-item interactions matrix)
     is provided then model initialized with its values.}
@@ -81,10 +79,6 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
  \item{x}{An input sparse user-item matrix (inherits from \code{sparseMatrix})}
  \item{rank}{\code{integer} - number of latent factors}
  \item{lambda}{\code{numeric} - regularization parameter or sequence of regularization values for \code{cross_validate_lambda} method.}
- \item{n_threads}{\code{numeric} default number of threads to use during prediction (if OpenMP is available).
- At the training most expensive stage is truncated SVD calculation. \code{svd} method on \code{dgCMatrix} relies on system BLAS,
- so it also can benefit from multithreded BLAS. But this is not controlled by \code{n_threads} parameter.
- For changing number of BLAS threads at runtime please check \href{https://cran.r-project.org/package=RhpcBLASctl}{RhpcBLASctl package}.}
  \item{not_recommend}{\code{sparse matrix} or \code{NULL} - points which items should be excluided from recommendations for a user.
    By default it excludes previously seen/consumed items.}
  \item{metric}{metric to use in evaluation of top-k recommendations.
