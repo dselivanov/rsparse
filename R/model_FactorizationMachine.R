@@ -4,14 +4,16 @@
 #' @section Usage:
 #' For usage details see \bold{Methods, Arguments and Examples} sections.
 #' \preformatted{
-#' fm = FM$new(learning_rate = 0.2, rank = 8, lambda_w = 0, lambda_v = 0, task = "classification")
+#' fm = FM$new(learning_rate_w = 0.2, rank = 8, lambda_w = 0, lambda_v = 0, task = c("classification", "regression")
+#'   intercept = TRUE, learning_rate_v = learning_rate_w)
 #' fm$partial_fit(x, y, ...)
 #' fm$predict(x, ...)
 #' }
 #' @format \code{\link{R6Class}} object.
 #' @section Methods:
 #' \describe{
-#'   \item{\code{FM$new(learning_rate = 0.2, rank = 8, lambda_w = 1e-6, lambda_v = 1e-6, task = "classification")}}{Constructor
+#'   \item{\code{FM$new(learning_rate_w = 0.2, rank = 8, lambda_w = 1e-6, lambda_v = 1e-6,
+#'   task = c("classification", "regression"), intercept = TRUE, learning_rate_v = learning_rate_w)}}{Constructor
 #'   for FactorizationMachines model. For description of arguments see \bold{Arguments} section.}
 #'   \item{\code{$partial_fit(x, y, ...)}}{fits/updates model given input matrix \code{x} and target vector \code{y}.
 #'   \code{x} shape = (n_samples, n_features)}
@@ -23,7 +25,8 @@
 #'  \item{x}{Input sparse matrix - native format is \code{Matrix::RsparseMatrix}.
 #'  If \code{x} is in different format, model will try to convert it to \code{RsparseMatrix}
 #'  with \code{as(x, "RsparseMatrix")} call}
-#'  \item{learning_rate}{learning rate for AdaGrad SGD}
+#'  \item{learning_rate_w}{learning rate for linear weights in AdaGrad SGD}
+#'  \item{learning_rate_v}{learning rate for interactions in AdaGrad SGD}
 #'  \item{rank}{rank of the latent dimension in factorization}
 #'  \item{lambda_w}{regularization parameter for linear terms}
 #'  \item{lambda_v}{regularization parameter for interactions terms}
@@ -36,15 +39,17 @@ FactorizationMachine = R6::R6Class(
   inherit = mlapi::mlapiEstimationOnline,
   public = list(
     #-----------------------------------------------------------------
-    initialize = function(learning_rate = 0.2,
+    initialize = function(learning_rate_w = 0.2,
                           rank = 4,
                           lambda_w = 0,
                           lambda_v = 0,
                           task = c("classification", "regression"),
-                          intercept = TRUE) {
-      stopifnot(lambda_w >= 0 && lambda_v >= 0 && learning_rate > 0 && rank >= 1)
+                          intercept = TRUE,
+                          learning_rate_v = learning_rate_w) {
+      stopifnot(lambda_w >= 0 && lambda_v >= 0 && learning_rate_w > 0 && rank >= 1 && learning_rate_v > 0)
       task = match.arg(task);
-      private$learning_rate = learning_rate
+      private$learning_rate_w = learning_rate_w
+      private$learning_rate_v = learning_rate_v
       private$rank = rank
       private$lambda_w = lambda_w
       private$lambda_v = lambda_v
@@ -75,7 +80,8 @@ FactorizationMachine = R6::R6Class(
         private$grad_v2 = matrix(0L, nrow = private$rank, ncol = private$n_features)
         fill_float_matrix(private$grad_v2, 1.0)
         #---------------------------------------------
-        private$ptr_param = fm_create_param(private$learning_rate, private$rank, private$lambda_w, private$lambda_v,
+        private$ptr_param = fm_create_param(private$learning_rate_w, private$learning_rate_v,
+                                            private$rank, private$lambda_w, private$lambda_v,
                                             private$w0,
                                             private$w, private$v,
                                             private$grad_w2, private$grad_v2,
@@ -112,7 +118,8 @@ FactorizationMachine = R6::R6Class(
         print("is.null(private$ptr_param) || is_invalid_ptr(private$ptr_param)")
         if(private$is_initialized) {
           print("init private$ptr_param")
-          private$ptr_param = fm_create_param(private$learning_rate, private$rank, private$lambda_w, private$lambda_v,
+          private$ptr_param = fm_create_param(private$learning_rate_w, private$learning_rate_v,
+                                              private$rank, private$lambda_w, private$lambda_v,
                                               private$w0,
                                               private$w, private$v,
                                               private$grad_w2, private$grad_v2,
@@ -143,7 +150,8 @@ FactorizationMachine = R6::R6Class(
     ptr_model = NULL,
     #--------------------------------------------------------------
     n_features = NULL,
-    learning_rate = NULL,
+    learning_rate_w = NULL,
+    learning_rate_v = NULL,
     rank = NULL,
     lambda_w = NULL,
     lambda_v = NULL,

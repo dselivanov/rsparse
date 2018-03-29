@@ -30,12 +30,14 @@ inline float clip(float x) {
 class FMParam {
 public:
   FMParam();
-  FMParam(float learning_rate,
+  FMParam(float learning_rate_w,
+          float learning_rate_v,
           int rank,
           float lambda_w, float lambda_v,
           std::string task_name,
           int intercept):
-    learning_rate(learning_rate),
+    learning_rate_w(learning_rate_w),
+    learning_rate_v(learning_rate_v),
     rank(rank),
     lambda_w(lambda_w),
     lambda_v(lambda_v),
@@ -47,7 +49,8 @@ public:
     else throw(Rcpp::exception("can't match task code - not in (1=CLASSIFICATION, 2=REGRESSION)"));
   }
   int task = 0;
-  float learning_rate;
+  float learning_rate_w;
+  float learning_rate_v;
 
   int n_features;
   int rank;
@@ -167,14 +170,14 @@ public:
         //------------------------------------------------------------------
         // update w0
         if(this->params->intercept)
-          this->params->w0 -= this->params->learning_rate * dL;
+          this->params->w0 -= this->params->learning_rate_w * dL;
         for( uint32_t p = p1; p < p2; p++) {
           uint32_t feature_index  = x.j[p];
           float feature_value = x.x[p];
 
           float grad_w = clip(feature_value * dL + 2 * this->params->lambda_w);
 
-          this->params->w[feature_index] -= this->params->learning_rate * grad_w / sqrt(this->params->grad_w2[feature_index]);
+          this->params->w[feature_index] -= this->params->learning_rate_w * grad_w / sqrt(this->params->grad_w2[feature_index]);
           // update sum gradient squre
           this->params->grad_w2[feature_index] += grad_w * grad_w;
 
@@ -202,7 +205,7 @@ public:
           #endif
           for(uword i = 0; i < grad_v.size(); i++) grad_v[i] = clip(grad_v[i]);
 
-          this->params->v.col(feature_index) -= this->params->learning_rate * grad_v / sqrt(this->params->grad_v2.col(feature_index));
+          this->params->v.col(feature_index) -= this->params->learning_rate_v * grad_v / sqrt(this->params->grad_v2.col(feature_index));
           this->params->grad_v2.col(feature_index) += grad_v % grad_v;
         }
       }
@@ -212,7 +215,8 @@ public:
 };
 
 // [[Rcpp::export]]
-SEXP fm_create_param(float learning_rate,
+SEXP fm_create_param(float learning_rate_w,
+                     float learning_rate_v,
                      int rank,
                      float lambda_w,
                      float lambda_v,
@@ -223,7 +227,7 @@ SEXP fm_create_param(float learning_rate,
                      IntegerMatrix &grad_v2_R,
                      const String task,
                      int intercept) {
-  FMParam * param = new FMParam(learning_rate, rank, lambda_w, lambda_v, task, intercept);
+  FMParam * param = new FMParam(learning_rate_w, learning_rate_v, rank, lambda_w, lambda_v, task, intercept);
   param->init_weights(w0_R,  w_R, v_R, grad_w2_R, grad_v2_R);
   XPtr< FMParam> ptr(param, true);
   return ptr;

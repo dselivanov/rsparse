@@ -15,7 +15,8 @@ Creates second order Factorization Machines model
 
 For usage details see \bold{Methods, Arguments and Examples} sections.
 \preformatted{
-fm = FM$new(learning_rate = 0.2, rank = 8, lambda_w = 0, lambda_v = 0, task = "classification")
+fm = FM$new(learning_rate_w = 0.2, rank = 8, lambda_w = 0, lambda_v = 0, task = c("classification", "regression")
+  intercept = TRUE, learning_rate_v = learning_rate_w)
 fm$partial_fit(x, y, ...)
 fm$predict(x, ...)
 }
@@ -24,7 +25,8 @@ fm$predict(x, ...)
 \section{Methods}{
 
 \describe{
-  \item{\code{FM$new(learning_rate = 0.2, rank = 8, lambda_w = 1e-6, lambda_v = 1e-6, task = "classification")}}{Constructor
+  \item{\code{FM$new(learning_rate_w = 0.2, rank = 8, lambda_w = 1e-6, lambda_v = 1e-6,
+  task = c("classification", "regression"), intercept = TRUE, learning_rate_v = learning_rate_w)}}{Constructor
   for FactorizationMachines model. For description of arguments see \bold{Arguments} section.}
   \item{\code{$partial_fit(x, y, ...)}}{fits/updates model given input matrix \code{x} and target vector \code{y}.
   \code{x} shape = (n_samples, n_features)}
@@ -39,7 +41,8 @@ fm$predict(x, ...)
  \item{x}{Input sparse matrix - native format is \code{Matrix::RsparseMatrix}.
  If \code{x} is in different format, model will try to convert it to \code{RsparseMatrix}
  with \code{as(x, "RsparseMatrix")} call}
- \item{learning_rate}{learning rate for AdaGrad SGD}
+ \item{learning_rate_w}{learning rate for linear weights in AdaGrad SGD}
+ \item{learning_rate_v}{learning rate for interactions in AdaGrad SGD}
  \item{rank}{rank of the latent dimension in factorization}
  \item{lambda_w}{regularization parameter for linear terms}
  \item{lambda_v}{regularization parameter for interactions terms}
