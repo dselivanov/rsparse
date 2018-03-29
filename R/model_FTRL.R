@@ -80,7 +80,7 @@ FTRL = R6::R6Class(
                                dropout = dropout, family = family)
     },
     #-----------------------------------------------------------------
-    partial_fit = function(x, y, weights = rep(1, nrow(x)), ...) {
+    partial_fit = function(x, y, weights = rep(1.0, length(y)), ...) {
       # we can enforce to work only with sparse matrices:
       # stopifnot(inherits(x, "sparseMatrix"))
       if(!inherits(class(x), private$internal_matrix_format)) {
@@ -108,10 +108,10 @@ FTRL = R6::R6Class(
                            do_update = TRUE, n_threads = getOption("rsparse_omp_threads"))
       invisible(p)
     },
-    fit = function(x, y, weights = rep(1, nrow(x)), n_iter = 1L, ...) {
+    fit = function(x, y, weights = rep(1.0, length(y)), n_iter = 1L, ...) {
       for(i in seq_len(n_iter)) {
         futile.logger::flog.debug("FTRL iter %03d", i)
-        self$partial_fit(x, y, getOption("rsparse_omp_threads"), weights, ...)
+        self$partial_fit(x, y, weights, ...)
       }
     },
     #-----------------------------------------------------------------

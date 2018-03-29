@@ -101,7 +101,7 @@ FactorizationMachine = R6::R6Class(
       p = fm_partial_fit(private$ptr_model, x, y, weights, do_update = TRUE, n_threads = getOption("rsparse_omp_threads"))
       invisible(p)
     },
-    fit = function(x, y, weights, n_iter = 1L, ...) {
+    fit = function(x, y, weights = rep(1.0, length(y)), n_iter = 1L, ...) {
       for(i in seq_len(n_iter)) {
         futile.logger::flog.debug("FactorizationMachine iter %03d", i)
         self$partial_fit(x, y, weights, ...)

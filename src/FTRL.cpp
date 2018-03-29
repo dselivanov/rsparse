@@ -109,7 +109,7 @@ std::vector<double> w_ftprl(const std::vector<int> &nnz_index, const FTRLModel &
     k++;
   }
   return(retval);
-};
+}
 
 double predict_one(const std::vector<int> &index, const std::vector<double> &x, const FTRLModel &model) {
   std::vector<double> weights = w_ftprl(index, model);
