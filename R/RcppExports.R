@@ -61,6 +61,10 @@ top_product <- function(x, y, k, n_threads, not_recommend_r) {
     .Call('_rsparse_top_product', PACKAGE = 'rsparse', x, y, k, n_threads, not_recommend_r)
 }
 
+omp_thread_count <- function() {
+    .Call('_rsparse_omp_thread_count', PACKAGE = 'rsparse')
+}
+
 cpp_make_sparse_approximation <- function(mat_template, X, Y, sparse_matrix_type, n_threads) {
     .Call('_rsparse_cpp_make_sparse_approximation', PACKAGE = 'rsparse', mat_template, X, Y, sparse_matrix_type, n_threads)
 }

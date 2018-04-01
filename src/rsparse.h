@@ -19,4 +19,5 @@
 
 dMappedCSR extract_mapped_csr(Rcpp::S4 input);
 dMappedCSC extract_mapped_csc(Rcpp::S4 input);
+// [[Rcpp::export]]
 uint32_t omp_thread_count();

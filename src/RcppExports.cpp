@@ -214,6 +214,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// omp_thread_count
+uint32_t omp_thread_count();
+RcppExport SEXP _rsparse_omp_thread_count() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(omp_thread_count());
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_make_sparse_approximation
 Rcpp::NumericVector cpp_make_sparse_approximation(const Rcpp::S4& mat_template, arma::mat& X, arma::mat& Y, int sparse_matrix_type, unsigned n_threads);
 RcppExport SEXP _rsparse_cpp_make_sparse_approximation(SEXP mat_templateSEXP, SEXP XSEXP, SEXP YSEXP, SEXP sparse_matrix_typeSEXP, SEXP n_threadsSEXP) {
@@ -257,6 +267,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_als_implicit_float", (DL_FUNC) &_rsparse_als_implicit_float, 7},
     {"_rsparse_als_loss_explicit", (DL_FUNC) &_rsparse_als_loss_explicit, 5},
     {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 5},
+    {"_rsparse_omp_thread_count", (DL_FUNC) &_rsparse_omp_thread_count, 0},
     {"_rsparse_cpp_make_sparse_approximation", (DL_FUNC) &_rsparse_cpp_make_sparse_approximation, 5},
     {"_rsparse_arma_svd_econ", (DL_FUNC) &_rsparse_arma_svd_econ, 1},
     {NULL, NULL, 0}
