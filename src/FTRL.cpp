@@ -1,12 +1,7 @@
-#include <cmath>
-#include <stdexcept>
 #include <random>
-#include "MappedCSR.h"
-using namespace Rcpp;
+#include "rsparse.h"
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+using namespace Rcpp;
 
 int intRand(const int & min, const int & max) {
   static thread_local std::mt19937 generator;
@@ -151,8 +146,8 @@ NumericVector ftrl_partial_fit(const S4 &m, const NumericVector &y, const List &
   #pragma omp parallel for num_threads(n_threads) schedule(guided, 1000)
   #endif
   for(size_t i = 0; i < x.n_rows; i++) {
-    size_t p1 = x.p[i];
-    size_t p2 = x.p[i + 1];
+    size_t p1 = x.row_ptrs[i];
+    size_t p2 = x.row_ptrs[i + 1];
     int len = p2 - p1;
     std::vector<int> example_index;
     example_index.reserve(len);
@@ -161,12 +156,12 @@ NumericVector ftrl_partial_fit(const S4 &m, const NumericVector &y, const List &
     for(size_t pp = p1; pp < p2; pp++) {
       if(do_update) {
         if(((double) intRand(0, RAND_MAX) / (RAND_MAX)) > model.dropout) {
-          example_index.push_back(x.j[pp]);
-          example_value.push_back(x.x[pp] / (1.0 - model.dropout));
+          example_index.push_back(x.col_indices[pp]);
+          example_value.push_back(x.values[pp] / (1.0 - model.dropout));
         }
       } else {
-        example_index.push_back(x.j[pp]);
-        example_value.push_back(x.x[pp]);
+        example_index.push_back(x.col_indices[pp]);
+        example_value.push_back(x.values[pp]);
       }
     }
     y_hat[i] = predict_one(example_index, example_value, model);

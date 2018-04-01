@@ -34,7 +34,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // fm_create_param
-SEXP fm_create_param(float learning_rate_w, float learning_rate_v, int rank, float lambda_w, float lambda_v, IntegerVector& w0_R, IntegerVector& w_R, IntegerMatrix& v_R, IntegerVector& grad_w2_R, IntegerMatrix& grad_v2_R, const String task, int intercept);
+SEXP fm_create_param(float learning_rate_w, float learning_rate_v, int rank, float lambda_w, float lambda_v, Rcpp::IntegerVector& w0_R, Rcpp::IntegerVector& w_R, Rcpp::IntegerMatrix& v_R, Rcpp::IntegerVector& grad_w2_R, Rcpp::IntegerMatrix& grad_v2_R, const Rcpp::String task, int intercept);
 RcppExport SEXP _rsparse_fm_create_param(SEXP learning_rate_wSEXP, SEXP learning_rate_vSEXP, SEXP rankSEXP, SEXP lambda_wSEXP, SEXP lambda_vSEXP, SEXP w0_RSEXP, SEXP w_RSEXP, SEXP v_RSEXP, SEXP grad_w2_RSEXP, SEXP grad_v2_RSEXP, SEXP taskSEXP, SEXP interceptSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -44,12 +44,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type rank(rankSEXP);
     Rcpp::traits::input_parameter< float >::type lambda_w(lambda_wSEXP);
     Rcpp::traits::input_parameter< float >::type lambda_v(lambda_vSEXP);
-    Rcpp::traits::input_parameter< IntegerVector& >::type w0_R(w0_RSEXP);
-    Rcpp::traits::input_parameter< IntegerVector& >::type w_R(w_RSEXP);
-    Rcpp::traits::input_parameter< IntegerMatrix& >::type v_R(v_RSEXP);
-    Rcpp::traits::input_parameter< IntegerVector& >::type grad_w2_R(grad_w2_RSEXP);
-    Rcpp::traits::input_parameter< IntegerMatrix& >::type grad_v2_R(grad_v2_RSEXP);
-    Rcpp::traits::input_parameter< const String >::type task(taskSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type w0_R(w0_RSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type w_R(w_RSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerMatrix& >::type v_R(v_RSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type grad_w2_R(grad_w2_RSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerMatrix& >::type grad_v2_R(grad_v2_RSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::String >::type task(taskSEXP);
     Rcpp::traits::input_parameter< int >::type intercept(interceptSEXP);
     rcpp_result_gen = Rcpp::wrap(fm_create_param(learning_rate_w, learning_rate_v, rank, lambda_w, lambda_v, w0_R, w_R, v_R, grad_w2_R, grad_v2_R, task, intercept));
     return rcpp_result_gen;
@@ -67,59 +67,59 @@ BEGIN_RCPP
 END_RCPP
 }
 // fill_float_matrix_randn
-void fill_float_matrix_randn(IntegerMatrix& x, double stdev);
+void fill_float_matrix_randn(Rcpp::IntegerMatrix& x, double stdev);
 RcppExport SEXP _rsparse_fill_float_matrix_randn(SEXP xSEXP, SEXP stdevSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerMatrix& >::type x(xSEXP);
     Rcpp::traits::input_parameter< double >::type stdev(stdevSEXP);
     fill_float_matrix_randn(x, stdev);
     return R_NilValue;
 END_RCPP
 }
 // fill_float_matrix
-void fill_float_matrix(IntegerMatrix& x, double val);
+void fill_float_matrix(Rcpp::IntegerMatrix& x, double val);
 RcppExport SEXP _rsparse_fill_float_matrix(SEXP xSEXP, SEXP valSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerMatrix& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerMatrix& >::type x(xSEXP);
     Rcpp::traits::input_parameter< double >::type val(valSEXP);
     fill_float_matrix(x, val);
     return R_NilValue;
 END_RCPP
 }
 // fill_float_vector_randn
-void fill_float_vector_randn(IntegerVector& x, double stdev);
+void fill_float_vector_randn(Rcpp::IntegerVector& x, double stdev);
 RcppExport SEXP _rsparse_fill_float_vector_randn(SEXP xSEXP, SEXP stdevSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type x(xSEXP);
     Rcpp::traits::input_parameter< double >::type stdev(stdevSEXP);
     fill_float_vector_randn(x, stdev);
     return R_NilValue;
 END_RCPP
 }
 // fill_float_vector
-void fill_float_vector(IntegerVector& x, double val);
+void fill_float_vector(Rcpp::IntegerVector& x, double val);
 RcppExport SEXP _rsparse_fill_float_vector(SEXP xSEXP, SEXP valSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerVector& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector& >::type x(xSEXP);
     Rcpp::traits::input_parameter< double >::type val(valSEXP);
     fill_float_vector(x, val);
     return R_NilValue;
 END_RCPP
 }
 // fm_partial_fit
-NumericVector fm_partial_fit(SEXP ptr, const S4& X, const NumericVector& y, const NumericVector& w, int n_threads, int do_update);
+Rcpp::NumericVector fm_partial_fit(SEXP ptr, const Rcpp::S4& X, const Rcpp::NumericVector& y, const Rcpp::NumericVector& w, int n_threads, int do_update);
 RcppExport SEXP _rsparse_fm_partial_fit(SEXP ptrSEXP, SEXP XSEXP, SEXP ySEXP, SEXP wSEXP, SEXP n_threadsSEXP, SEXP do_updateSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type ptr(ptrSEXP);
-    Rcpp::traits::input_parameter< const S4& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type w(wSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type w(wSEXP);
     Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
     Rcpp::traits::input_parameter< int >::type do_update(do_updateSEXP);
     rcpp_result_gen = Rcpp::wrap(fm_partial_fit(ptr, X, y, w, n_threads, do_update));
@@ -138,12 +138,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // csr_dense_tcrossprod
-NumericMatrix csr_dense_tcrossprod(const S4& x_csr_r, const arma::Mat<double>& y_transposed, int num_threads);
+Rcpp::NumericMatrix csr_dense_tcrossprod(const Rcpp::S4& x_csr_r, const arma::Mat<double>& y_transposed, int num_threads);
 RcppExport SEXP _rsparse_csr_dense_tcrossprod(SEXP x_csr_rSEXP, SEXP y_transposedSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const S4& >::type x_csr_r(x_csr_rSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type x_csr_r(x_csr_rSEXP);
     Rcpp::traits::input_parameter< const arma::Mat<double>& >::type y_transposed(y_transposedSEXP);
     Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
     rcpp_result_gen = Rcpp::wrap(csr_dense_tcrossprod(x_csr_r, y_transposed, num_threads));
@@ -168,14 +168,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // als_implicit_float
-double als_implicit_float(const arma::sp_mat& Conf, S4& XR, S4& YR, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps);
+double als_implicit_float(const arma::sp_mat& Conf, Rcpp::S4& XR, Rcpp::S4& YR, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps);
 RcppExport SEXP _rsparse_als_implicit_float(SEXP ConfSEXP, SEXP XRSEXP, SEXP YRSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::sp_mat& >::type Conf(ConfSEXP);
-    Rcpp::traits::input_parameter< S4& >::type XR(XRSEXP);
-    Rcpp::traits::input_parameter< S4& >::type YR(YRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4& >::type XR(XRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4& >::type YR(YRSEXP);
     Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
     Rcpp::traits::input_parameter< unsigned >::type n_threads(n_threadsSEXP);
     Rcpp::traits::input_parameter< unsigned >::type solver(solverSEXP);
@@ -200,7 +200,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // top_product
-IntegerMatrix top_product(const arma::mat& x, const arma::mat& y, unsigned k, unsigned n_threads, S4& not_recommend_r);
+Rcpp::IntegerMatrix top_product(const arma::mat& x, const arma::mat& y, unsigned k, unsigned n_threads, Rcpp::S4& not_recommend_r);
 RcppExport SEXP _rsparse_top_product(SEXP xSEXP, SEXP ySEXP, SEXP kSEXP, SEXP n_threadsSEXP, SEXP not_recommend_rSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -209,18 +209,18 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::mat& >::type y(ySEXP);
     Rcpp::traits::input_parameter< unsigned >::type k(kSEXP);
     Rcpp::traits::input_parameter< unsigned >::type n_threads(n_threadsSEXP);
-    Rcpp::traits::input_parameter< S4& >::type not_recommend_r(not_recommend_rSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4& >::type not_recommend_r(not_recommend_rSEXP);
     rcpp_result_gen = Rcpp::wrap(top_product(x, y, k, n_threads, not_recommend_r));
     return rcpp_result_gen;
 END_RCPP
 }
 // cpp_make_sparse_approximation
-NumericVector cpp_make_sparse_approximation(const S4& mat_template, arma::mat& X, arma::mat& Y, int sparse_matrix_type, unsigned n_threads);
+Rcpp::NumericVector cpp_make_sparse_approximation(const Rcpp::S4& mat_template, arma::mat& X, arma::mat& Y, int sparse_matrix_type, unsigned n_threads);
 RcppExport SEXP _rsparse_cpp_make_sparse_approximation(SEXP mat_templateSEXP, SEXP XSEXP, SEXP YSEXP, SEXP sparse_matrix_typeSEXP, SEXP n_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const S4& >::type mat_template(mat_templateSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type mat_template(mat_templateSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type Y(YSEXP);
     Rcpp::traits::input_parameter< int >::type sparse_matrix_type(sparse_matrix_typeSEXP);
@@ -230,7 +230,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // arma_svd_econ
-List arma_svd_econ(const arma::mat& X);
+Rcpp::List arma_svd_econ(const arma::mat& X);
 RcppExport SEXP _rsparse_arma_svd_econ(SEXP XSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;

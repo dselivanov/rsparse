@@ -1,17 +1,4 @@
-#define CHOLESKY 0
-#define CONJUGATE_GRADIENT 1
-#define TOL 1e-10
-
-#include <RcppArmadillo.h>
-#include <cmath>
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
-#define GRAIN_SIZE 1
-using namespace Rcpp;
-using namespace RcppArmadillo;
-using namespace arma;
+#include "rsparse.h"
 
 template <class T>
 arma::Col<T> chol_solver(const arma::Mat<T> &XtX,
@@ -19,7 +6,7 @@ arma::Col<T> chol_solver(const arma::Mat<T> &XtX,
                       const arma::Col<T> &confidence) {
   arma::Mat<T> inv = XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
   arma::Mat<T> rhs = X_nnz * confidence;
-  return solve(inv, rhs, solve_opts::fast );
+  return solve(inv, rhs, arma::solve_opts::fast );
 }
 
 template <class T>
@@ -57,7 +44,6 @@ T als_implicit_cpp(const arma::sp_mat& Conf,
                     double lambda,
                     unsigned n_threads,
                     unsigned solver, unsigned cg_steps = 3) {
-
   arma::Mat<T> XtX = X * X.t();
   if(lambda > 0) {
     arma::Col<T> lambda_vec(X.n_rows);
@@ -75,15 +61,15 @@ T als_implicit_cpp(const arma::sp_mat& Conf,
     uint32_t p2 = Conf.col_ptrs[i + 1];
     // catch situation when some columns in matrix are empty, so p1 becomes equal to p2 or greater than number of columns
     if(p1 < p2) {
-      arma::uvec idx = uvec(&Conf.row_indices[p1], p2 - p1);
-      vec conf_temp = vec(&Conf.values[p1], p2 - p1);
-      arma::Col<T> confidence = conv_to< Col<T> >::from(conf_temp);
+      arma::uvec idx = arma::uvec(&Conf.row_indices[p1], p2 - p1);
+      arma::vec conf_temp = arma::vec(&Conf.values[p1], p2 - p1);
+      arma::Col<T> confidence = arma::conv_to< arma::Col<T> >::from(conf_temp);
       arma::Mat<T> X_nnz = X.cols(idx);
       if(solver == CHOLESKY)
         Y.col(i) = chol_solver<T>(XtX, X_nnz, confidence);
       else if(solver == CONJUGATE_GRADIENT)
         Y.col(i) = cg_solver<T>(XtX, X_nnz, confidence, Y.col(i), cg_steps);
-      else stop("Unknown solver code %d", solver);
+      else Rcpp::stop("Unknown solver code %d", solver);
       if(lambda >= 0)
         loss += accu(square( 1 - (Y.col(i).t() * X_nnz) ) * confidence);
     }
@@ -107,15 +93,15 @@ double als_implicit_double(const arma::sp_mat& Conf,
 
 // [[Rcpp::export]]
 double als_implicit_float(const arma::sp_mat& Conf,
-                    S4 &XR,
-                    S4 & YR,
+                    Rcpp::S4 &XR,
+                    Rcpp::S4 & YR,
                     double lambda,
                     unsigned n_threads,
                     unsigned solver, unsigned cg_steps = 3) {
-  IntegerMatrix XRM = XR.slot("Data");
-  IntegerMatrix YRM = YR.slot("Data");
-  arma::fmat X = fmat((float *)XRM.begin(), XRM.nrow(), XRM.ncol(), false, true);
-  arma::fmat Y = fmat((float *)YRM.begin(), YRM.nrow(), YRM.ncol(), false, true);
+  Rcpp::IntegerMatrix XRM = XR.slot("Data");
+  Rcpp::IntegerMatrix YRM = YR.slot("Data");
+  arma::fmat X = arma::fmat((float *)XRM.begin(), XRM.nrow(), XRM.ncol(), false, true);
+  arma::fmat Y = arma::fmat((float *)YRM.begin(), YRM.nrow(), YRM.ncol(), false, true);
   return (double)als_implicit_cpp<float>(Conf, X, Y, lambda, n_threads, solver, cg_steps);
 }
 
