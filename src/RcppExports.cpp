@@ -150,6 +150,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// dense_csc_prod
+Rcpp::NumericMatrix dense_csc_prod(const Rcpp::NumericMatrix& x_r, const Rcpp::S4& y_csc_r, int num_threads);
+RcppExport SEXP _rsparse_dense_csc_prod(SEXP x_rSEXP, SEXP y_csc_rSEXP, SEXP num_threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type x_r(x_rSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type y_csc_r(y_csc_rSEXP);
+    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(dense_csc_prod(x_r, y_csc_r, num_threads));
+    return rcpp_result_gen;
+END_RCPP
+}
 // als_implicit_double
 double als_implicit_double(const arma::sp_mat& Conf, arma::mat& X, arma::mat& Y, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps);
 RcppExport SEXP _rsparse_als_implicit_double(SEXP ConfSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP) {
@@ -263,6 +276,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_fm_partial_fit", (DL_FUNC) &_rsparse_fm_partial_fit, 6},
     {"_rsparse_is_invalid_ptr", (DL_FUNC) &_rsparse_is_invalid_ptr, 1},
     {"_rsparse_csr_dense_tcrossprod", (DL_FUNC) &_rsparse_csr_dense_tcrossprod, 3},
+    {"_rsparse_dense_csc_prod", (DL_FUNC) &_rsparse_dense_csc_prod, 3},
     {"_rsparse_als_implicit_double", (DL_FUNC) &_rsparse_als_implicit_double, 7},
     {"_rsparse_als_implicit_float", (DL_FUNC) &_rsparse_als_implicit_float, 7},
     {"_rsparse_als_loss_explicit", (DL_FUNC) &_rsparse_als_loss_explicit, 5},

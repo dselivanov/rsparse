@@ -11,7 +11,7 @@
 Rcpp::NumericMatrix csr_dense_tcrossprod(const Rcpp::S4 &x_csr_r, const arma::Mat<double>& y_transposed, int num_threads = 1) {
   const dMappedCSR x_csr = extract_mapped_csr(x_csr_r);
   Rcpp::NumericMatrix res(x_csr.n_rows, y_transposed.n_rows); //y_transposed.n_rows = y_dense.n_cols
-  arma::dmat res_arma_map = arma::dmat(res.begin(), res.nrow(), res.ncol(), false, true);
+  arma::dmat res_arma_map = arma::dmat(res.begin(), res.nrow(), res.ncol(), false, false);
   #ifdef _OPENMP
   #pragma omp parallel for num_threads(num_threads)  schedule(dynamic, GRAIN_SIZE)
   #endif
@@ -24,6 +24,28 @@ Rcpp::NumericMatrix csr_dense_tcrossprod(const Rcpp::S4 &x_csr_r, const arma::Ma
     const arma::uvec idx = arma::conv_to<arma::uvec>::from(idx_temp);
     const arma::colvec x_csr_row = arma::colvec(&x_csr.values[p1], p2 - p1, false, false);
     res_arma_map.row(i) = (y_transposed.cols(idx) * x_csr_row).t();
+  }
+  return res;
+}
+
+// [[Rcpp::export]]
+Rcpp::NumericMatrix dense_csc_prod(const Rcpp::NumericMatrix &x_r, const Rcpp::S4 &y_csc_r, int num_threads = 1) {
+  const arma::dmat x = arma::dmat((double *)&x_r[0], x_r.nrow(), x_r.ncol(), false, false);
+  const dMappedCSC y_csc = extract_mapped_csc(y_csc_r);
+  Rcpp::NumericMatrix res(x.n_rows, y_csc.n_cols);
+  arma::dmat res_arma_map = arma::dmat(res.begin(), res.nrow(), res.ncol(), false, false);
+  #ifdef _OPENMP
+  #pragma omp parallel for num_threads(num_threads)  schedule(dynamic, GRAIN_SIZE)
+  #endif
+  for (uint32_t i = 0; i < y_csc.n_cols; i++) {
+    const uint32_t p1 = y_csc.col_ptrs[i];
+    const uint32_t p2 = y_csc.col_ptrs[i + 1];
+    // mapped indices are uint32_t, but arma only allows indices be uvec = vec<uword> = vec<size_t>
+    // so we need to construct these indices by copying from uint32_t to uword
+    const arma::Col<uint32_t> idx_temp = arma::Col<uint32_t>(&y_csc.row_indices[p1], p2 - p1);
+    const arma::uvec idx = arma::conv_to<arma::uvec>::from(idx_temp);
+    const arma::colvec y_csc_col = arma::colvec(&y_csc.values[p1], p2 - p1, false, false);
+    res_arma_map.col(i) = x.cols(idx) * y_csc_col;
   }
   return res;
 }

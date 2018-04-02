@@ -45,6 +45,10 @@ csr_dense_tcrossprod <- function(x_csr_r, y_transposed, num_threads = 1L) {
     .Call('_rsparse_csr_dense_tcrossprod', PACKAGE = 'rsparse', x_csr_r, y_transposed, num_threads)
 }
 
+dense_csc_prod <- function(x_r, y_csc_r, num_threads = 1L) {
+    .Call('_rsparse_dense_csc_prod', PACKAGE = 'rsparse', x_r, y_csc_r, num_threads)
+}
+
 als_implicit_double <- function(Conf, X, Y, lambda, n_threads, solver, cg_steps = 3L) {
     .Call('_rsparse_als_implicit_double', PACKAGE = 'rsparse', Conf, X, Y, lambda, n_threads, solver, cg_steps)
 }
