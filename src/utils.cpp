@@ -14,7 +14,7 @@ Rcpp::NumericVector cpp_make_sparse_approximation(const Rcpp::S4 &mat_template,
   } else if(sparse_matrix_type == CSC) {
     rj = mat_template.slot("i");
   } else
-    ::Rf_error("make_sparse_approximation_csr doesn't know sparse matrix type. Should be CSC=1 or CSR=2");
+    Rcpp::stop("make_sparse_approximation_csr doesn't know sparse matrix type. Should be CSC=1 or CSR=2");
 
   uint32_t* j = (uint32_t *)rj.begin();
   Rcpp::IntegerVector dim = mat_template.slot("Dim");
@@ -63,8 +63,7 @@ Rcpp::List  arma_svd_econ(const arma::mat& X) {
   arma::mat V(VR.begin(), VR.nrow(), VR.ncol(),  false, true);
   arma::vec d(dR.begin(), dR.size(),  false, true);
   int status = svd_econ(U, d, V, X);
-  if(!status)
-    ::Rf_error("arma::svd_econ failed");
+  if(!status) Rcpp::stop("arma::svd_econ failed");
   return(Rcpp::List::create(Rcpp::_["d"] = dR, Rcpp::_["u"] = UR, Rcpp::_["v"] = VR));
 }
 

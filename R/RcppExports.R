@@ -49,20 +49,24 @@ dense_csc_prod <- function(x_r, y_csc_r, num_threads = 1L) {
     .Call('_rsparse_dense_csc_prod', PACKAGE = 'rsparse', x_r, y_csc_r, num_threads)
 }
 
-als_implicit_double <- function(Conf, X, Y, lambda, n_threads, solver, cg_steps = 3L) {
-    .Call('_rsparse_als_implicit_double', PACKAGE = 'rsparse', Conf, X, Y, lambda, n_threads, solver, cg_steps)
+als_implicit_double <- function(m_csc_r, X, Y, lambda, n_threads, solver, cg_steps = 3L) {
+    .Call('_rsparse_als_implicit_double', PACKAGE = 'rsparse', m_csc_r, X, Y, lambda, n_threads, solver, cg_steps)
 }
 
-als_implicit_float <- function(Conf, XR, YR, lambda, n_threads, solver, cg_steps = 3L) {
-    .Call('_rsparse_als_implicit_float', PACKAGE = 'rsparse', Conf, XR, YR, lambda, n_threads, solver, cg_steps)
+als_implicit_float <- function(m_csc_r, XR, YR, lambda, n_threads, solver, cg_steps = 3L) {
+    .Call('_rsparse_als_implicit_float', PACKAGE = 'rsparse', m_csc_r, XR, YR, lambda, n_threads, solver, cg_steps)
 }
 
-als_loss_explicit <- function(mat, X, Y, lambda, n_threads) {
-    .Call('_rsparse_als_loss_explicit', PACKAGE = 'rsparse', mat, X, Y, lambda, n_threads)
+als_loss_explicit <- function(m_csc_r, X, Y, lambda, n_threads) {
+    .Call('_rsparse_als_loss_explicit', PACKAGE = 'rsparse', m_csc_r, X, Y, lambda, n_threads)
 }
 
 top_product <- function(x, y, k, n_threads, not_recommend_r) {
     .Call('_rsparse_top_product', PACKAGE = 'rsparse', x, y, k, n_threads, not_recommend_r)
+}
+
+arma_kmeans <- function(x, k, seed_mode, n_iter, verbose, result) {
+    .Call('_rsparse_arma_kmeans', PACKAGE = 'rsparse', x, k, seed_mode, n_iter, verbose, result)
 }
 
 omp_thread_count <- function() {

@@ -38,12 +38,16 @@ arma::Col<T> cg_solver(const arma::Mat<T> &XtX,
 }
 
 template <class T>
-T als_implicit_cpp(const arma::sp_mat& Conf,
+T als_implicit_cpp(const dMappedCSC& Conf,
                     arma::Mat<T>& X,
                     arma::Mat<T>& Y,
                     double lambda,
                     unsigned n_threads,
                     unsigned solver, unsigned cg_steps = 3) {
+
+  if(solver != CHOLESKY && solver != CONJUGATE_GRADIENT)
+    Rcpp::stop("Unknown solver code %d", solver);
+
   arma::Mat<T> XtX = X * X.t();
   if(lambda > 0) {
     arma::Col<T> lambda_vec(X.n_rows);
@@ -61,7 +65,8 @@ T als_implicit_cpp(const arma::sp_mat& Conf,
     uint32_t p2 = Conf.col_ptrs[i + 1];
     // catch situation when some columns in matrix are empty, so p1 becomes equal to p2 or greater than number of columns
     if(p1 < p2) {
-      arma::uvec idx = arma::uvec(&Conf.row_indices[p1], p2 - p1);
+      arma::Col<uint32_t> idx_temp = arma::Col<uint32_t>(&Conf.row_indices[p1], p2 - p1);
+      const arma::uvec idx = arma::conv_to<arma::uvec>::from(idx_temp);
       arma::vec conf_temp = arma::vec(&Conf.values[p1], p2 - p1);
       arma::Col<T> confidence = arma::conv_to< arma::Col<T> >::from(conf_temp);
       arma::Mat<T> X_nnz = X.cols(idx);
@@ -69,7 +74,6 @@ T als_implicit_cpp(const arma::sp_mat& Conf,
         Y.col(i) = chol_solver<T>(XtX, X_nnz, confidence);
       else if(solver == CONJUGATE_GRADIENT)
         Y.col(i) = cg_solver<T>(XtX, X_nnz, confidence, Y.col(i), cg_steps);
-      else Rcpp::stop("Unknown solver code %d", solver);
       if(lambda >= 0)
         loss += accu(square( 1 - (Y.col(i).t() * X_nnz) ) * confidence);
     }
@@ -77,27 +81,29 @@ T als_implicit_cpp(const arma::sp_mat& Conf,
 
   if(lambda > 0)
     loss += lambda * (accu(square(X)) + accu(square(Y)));
-  return (loss / accu(Conf));
+  return (loss / accu(arma::vec(Conf.values, Conf.nnz, false, false)));
 }
 
 
 // [[Rcpp::export]]
-double als_implicit_double(const arma::sp_mat& Conf,
+double als_implicit_double(const Rcpp::S4 &m_csc_r,
                     arma::mat& X,
                     arma::mat& Y,
                     double lambda,
                     unsigned n_threads,
                     unsigned solver, unsigned cg_steps = 3) {
+  const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
   return (double)als_implicit_cpp<double>(Conf, X, Y, lambda, n_threads, solver, cg_steps);
 }
 
 // [[Rcpp::export]]
-double als_implicit_float(const arma::sp_mat& Conf,
+double als_implicit_float(const Rcpp::S4 &m_csc_r,
                     Rcpp::S4 &XR,
                     Rcpp::S4 & YR,
                     double lambda,
                     unsigned n_threads,
                     unsigned solver, unsigned cg_steps = 3) {
+  const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
   Rcpp::IntegerMatrix XRM = XR.slot("Data");
   Rcpp::IntegerMatrix YRM = YR.slot("Data");
   arma::fmat X = arma::fmat((float *)XRM.begin(), XRM.nrow(), XRM.ncol(), false, true);
@@ -106,7 +112,8 @@ double als_implicit_float(const arma::sp_mat& Conf,
 }
 
 // [[Rcpp::export]]
-double als_loss_explicit(const arma::sp_mat& mat, arma::mat& X, arma::mat& Y, double lambda, unsigned n_threads) {
+double als_loss_explicit(const Rcpp::S4 &m_csc_r, arma::mat& X, arma::mat& Y, double lambda, unsigned n_threads) {
+  dMappedCSC mat = extract_mapped_csc(m_csc_r);
   size_t nc = mat.n_cols;
   double loss = 0;
   #ifdef _OPENMP
@@ -123,5 +130,5 @@ double als_loss_explicit(const arma::sp_mat& mat, arma::mat& X, arma::mat& Y, do
   }
   if(lambda > 0)
     loss += lambda * (accu(square(X)) + accu(square(Y)));
-  return loss / mat.n_nonzero;
+  return loss / mat.nnz;
 }

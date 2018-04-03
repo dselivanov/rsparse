@@ -13,5 +13,11 @@ setMethod("tcrossprod", signature(x="dgRMatrix", y="matrix"), function(x, y) {
 #' @export
 setMethod("%*%", signature(x="matrix", y="dgCMatrix"), function(x, y) {
   if(ncol(x) != nrow(y)) stop("non-conformable arguments")
-  csc_dense_prod(x, y, getOption("rsparse_omp_threads", parallel::detectCores()))
+  dense_csc_prod(x, y, getOption("rsparse_omp_threads", parallel::detectCores()))
+})
+
+#' @export
+setMethod("crossprod", signature(x="matrix", y="dgCMatrix"), function(x, y) {
+  if(nrow(x) != nrow(y)) stop("non-conformable arguments")
+  dense_csc_prod(t(x), y, getOption("rsparse_omp_threads", parallel::detectCores()))
 })

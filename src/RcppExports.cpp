@@ -164,51 +164,51 @@ BEGIN_RCPP
 END_RCPP
 }
 // als_implicit_double
-double als_implicit_double(const arma::sp_mat& Conf, arma::mat& X, arma::mat& Y, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps);
-RcppExport SEXP _rsparse_als_implicit_double(SEXP ConfSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP) {
+double als_implicit_double(const Rcpp::S4& m_csc_r, arma::mat& X, arma::mat& Y, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps);
+RcppExport SEXP _rsparse_als_implicit_double(SEXP m_csc_rSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type Conf(ConfSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csc_r(m_csc_rSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type Y(YSEXP);
     Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
     Rcpp::traits::input_parameter< unsigned >::type n_threads(n_threadsSEXP);
     Rcpp::traits::input_parameter< unsigned >::type solver(solverSEXP);
     Rcpp::traits::input_parameter< unsigned >::type cg_steps(cg_stepsSEXP);
-    rcpp_result_gen = Rcpp::wrap(als_implicit_double(Conf, X, Y, lambda, n_threads, solver, cg_steps));
+    rcpp_result_gen = Rcpp::wrap(als_implicit_double(m_csc_r, X, Y, lambda, n_threads, solver, cg_steps));
     return rcpp_result_gen;
 END_RCPP
 }
 // als_implicit_float
-double als_implicit_float(const arma::sp_mat& Conf, Rcpp::S4& XR, Rcpp::S4& YR, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps);
-RcppExport SEXP _rsparse_als_implicit_float(SEXP ConfSEXP, SEXP XRSEXP, SEXP YRSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP) {
+double als_implicit_float(const Rcpp::S4& m_csc_r, Rcpp::S4& XR, Rcpp::S4& YR, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps);
+RcppExport SEXP _rsparse_als_implicit_float(SEXP m_csc_rSEXP, SEXP XRSEXP, SEXP YRSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type Conf(ConfSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csc_r(m_csc_rSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4& >::type XR(XRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4& >::type YR(YRSEXP);
     Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
     Rcpp::traits::input_parameter< unsigned >::type n_threads(n_threadsSEXP);
     Rcpp::traits::input_parameter< unsigned >::type solver(solverSEXP);
     Rcpp::traits::input_parameter< unsigned >::type cg_steps(cg_stepsSEXP);
-    rcpp_result_gen = Rcpp::wrap(als_implicit_float(Conf, XR, YR, lambda, n_threads, solver, cg_steps));
+    rcpp_result_gen = Rcpp::wrap(als_implicit_float(m_csc_r, XR, YR, lambda, n_threads, solver, cg_steps));
     return rcpp_result_gen;
 END_RCPP
 }
 // als_loss_explicit
-double als_loss_explicit(const arma::sp_mat& mat, arma::mat& X, arma::mat& Y, double lambda, unsigned n_threads);
-RcppExport SEXP _rsparse_als_loss_explicit(SEXP matSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP) {
+double als_loss_explicit(const Rcpp::S4& m_csc_r, arma::mat& X, arma::mat& Y, double lambda, unsigned n_threads);
+RcppExport SEXP _rsparse_als_loss_explicit(SEXP m_csc_rSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type mat(matSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csc_r(m_csc_rSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type Y(YSEXP);
     Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
     Rcpp::traits::input_parameter< unsigned >::type n_threads(n_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(als_loss_explicit(mat, X, Y, lambda, n_threads));
+    rcpp_result_gen = Rcpp::wrap(als_loss_explicit(m_csc_r, X, Y, lambda, n_threads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -224,6 +224,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< unsigned >::type n_threads(n_threadsSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4& >::type not_recommend_r(not_recommend_rSEXP);
     rcpp_result_gen = Rcpp::wrap(top_product(x, y, k, n_threads, not_recommend_r));
+    return rcpp_result_gen;
+END_RCPP
+}
+// arma_kmeans
+int arma_kmeans(const arma::dmat& x, const int k, const int seed_mode, const int n_iter, bool verbose, Rcpp::NumericMatrix& result);
+RcppExport SEXP _rsparse_arma_kmeans(SEXP xSEXP, SEXP kSEXP, SEXP seed_modeSEXP, SEXP n_iterSEXP, SEXP verboseSEXP, SEXP resultSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::dmat& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const int >::type seed_mode(seed_modeSEXP);
+    Rcpp::traits::input_parameter< const int >::type n_iter(n_iterSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix& >::type result(resultSEXP);
+    rcpp_result_gen = Rcpp::wrap(arma_kmeans(x, k, seed_mode, n_iter, verbose, result));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -281,6 +297,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_als_implicit_float", (DL_FUNC) &_rsparse_als_implicit_float, 7},
     {"_rsparse_als_loss_explicit", (DL_FUNC) &_rsparse_als_loss_explicit, 5},
     {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 5},
+    {"_rsparse_arma_kmeans", (DL_FUNC) &_rsparse_arma_kmeans, 6},
     {"_rsparse_omp_thread_count", (DL_FUNC) &_rsparse_omp_thread_count, 0},
     {"_rsparse_cpp_make_sparse_approximation", (DL_FUNC) &_rsparse_cpp_make_sparse_approximation, 5},
     {"_rsparse_arma_svd_econ", (DL_FUNC) &_rsparse_arma_svd_econ, 1},
