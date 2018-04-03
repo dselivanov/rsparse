@@ -1,13 +1,17 @@
 Package: rsparse
 Type: Package
 Title: 
-Version: 0.3.0.2
+Version: 0.3.0.3
 Author: Dmitriy Selivanov
 Maintainer: Dmitriy Selivanov <selivanov.dmitriy@gmail.com>
 Description: Implements several algorithms for
     supervised learning on sparse data and many
     matrix factorizations of sparse matrices
     (with a focus on applications for recommender systems). 
+    All algorithms work on sparse matrices. Also they extensively 
+    use BLAS and LAPACK  and parallelized with OpenMP.
+    Implementations are reasonably fast and nicely work with large 
+    datasets (millions of rows and millions of columns).
     List of algorithms for supervised learning:
     1) Elastic net regression via Follow The Proximally-Regularized leader algorithm
     2) Second order Factorization Machines via stochastic gradient descent with 
@@ -22,10 +26,12 @@ Description: Implements several algorithms for
     3) Fast Trunceate SVD and Soft-SVD via ALS
     4) Soft-Impute via fast ALS and solution in SVD form
     5) LinearFlow method which learns item-item similarity matrix from the data
-    All algorithms work on sparse matrices. Extensively use BLAS and LAPACK 
-    and parallelized with OpenMP where applicable. 
-    Implementations are reasonably fast and nicely work with large 
-    datasets (millions of rows and millions of columns).
+    Clustering:
+    1) kmeans from Armadillo library which provides smart (similar to kmeans++) 
+      cluster initializations.
+    Misc utils/methods:
+    1) multithreaded `%*%` and `tcrossprod()` for `<dgRMatrix, matrix>`
+    2) multithreaded `%*%` and `crossprod()` for `<matrix, dgCMatrix>`
 License: GPL (>= 2) | file LICENSE
 Encoding: UTF-8
 LazyData: true

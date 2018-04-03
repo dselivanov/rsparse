@@ -1,5 +1,4 @@
 #include "rsparse.h"
-#define ARMA_USE_OPENMP
 // seed modes:
 // keep_existing 1
 // static_subset 2
