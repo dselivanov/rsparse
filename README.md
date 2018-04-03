@@ -2,6 +2,23 @@
 
 `rsparse` is an R package for statistical learning on **sparse data**. Notably it implements many algorithms sparse **matrix factorizations** with a focus on applications for **recommender systems**.
 
+**All of the algorithms benefit from OpenMP and most of them use BLAS**. Package scales nicely to datasets with millions of rows and millions of columns.
+
+In order to get maximum of performance it is recommended to:
+
+1. Use high-performance BLAS (such as OpenBLAS, MKL, Apple Accelerate).
+1. Add proper compiler optimizations in your `~/.R/Makevars`. For example on recent processors (with AVX support) and complier with OpenMP support following lines could be a good option:
+    ```txt
+    CXX11FLAGS += -O3 -march=native -mavx -fopenmp -ffast-math
+    CXXFLAGS   += -O3 -march=native -mavx -fopenmp -ffast-math
+    ```
+    If you are on **Mac** follow instructions [here](https://github.com/coatless/r-macos-rtools). After installation of `clang4` additionally put `PKG_CXXFLAGS += -DARMA_USE_OPENMP` line to your `~/.R/Makevars`. After that install `rsparse` in the usual way.
+
+## Misc utils/methods
+
+1. multithreaded `%*%` and `tcrossprod()` for `<dgRMatrix, matrix>`
+1. multithreaded `%*%` and `crossprod()` for `<matrix, dgCMatrix>`
+
 ## Algorithms
 
 ### Classification/Regression
@@ -32,11 +49,6 @@ See details in [Applications of the Conjugate Gradient Method for Implicit Feedb
 
 ## Efficiency
 
-Package is reasonably fast and scales nicely to datasets with millions of rows and millions of columns:
-
-* built on top of `RcppArmadillo`
-* extensively uses **BLAS** and parallelized with **OpenMP**
-
 Here is example of `rsparse::WRMF` on [lastfm360k](https://www.upf.edu/web/mtg/lastfm360k) dataset in comparison with other good implementations:
 
 <img src="https://github.com/dselivanov/bench-wals/raw/master/img/wals-bench-cg.png" width="600">
@@ -59,9 +71,3 @@ Here is example of `rsparse::WRMF` on [lastfm360k](https://www.upf.edu/web/mtg/l
 # API
 
 We follow [mlapi](https://github.com/dselivanov/mlapi) conventions.
-
-### Notes on multithreading and BLAS
-
-If you use multithreaded BLAS (you generally should) such as OpenBLAS, Intel MKL, Apple Accelerate, it is recommended to disable its internal multithreading ability (since thread contention can be easily slow down 10x and more). Matrix factorization is already parallelized in package with OpenMP.
-
-At the moment `rsparse` tries to  mitigate this issue automatically with the help of [RhpcBLASctl](https://cran.r-project.org/web/packages/RhpcBLASctl/index.html). If you encounter any issues - please report to our [issue tracker]
