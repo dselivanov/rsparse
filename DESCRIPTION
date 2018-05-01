@@ -1,8 +1,12 @@
 Package: rsparse
 Type: Package
-Title: 
-Version: 0.3.0.3
-Author: Dmitriy Selivanov
+Title: Statistical Learning on Sparse Matrices
+Version: 0.3.0.4
+Authors@R: c(
+    person("Dmitriy", "Selivanov", role=c("aut", "cre", "cph"), email="selivanov.dmitriy@gmail.com"),
+    person("Drew", "Schmidt", role="ctb", comment="configure script for BLAS, LAPACK detection"), 
+    person("Han", "Zhang", role="ctb", comment="configure script for OpenMP detection")
+    )
 Maintainer: Dmitriy Selivanov <selivanov.dmitriy@gmail.com>
 Description: Implements several algorithms for
     supervised learning on sparse data and many
@@ -40,20 +44,16 @@ Depends:
     R (>= 3.1.0),
     methods
 Imports:
-    Matrix, 
+    Matrix,
     Rcpp, 
-    RcppArmadillo, 
     mlapi (>= 0.1.0), 
-    float (>= 0.1-2),
     data.table (>= 1.10.0), 
     futile.logger,
     RhpcBLASctl
-Suggests:
-    testthat
 LinkingTo:
     Rcpp, 
-    RcppArmadillo, 
-    float (>= 0.1-2)
-Remotes:
-    dselivanov/float
+    RcppArmadillo
+Suggests:
+    testthat,
+    float
 RoxygenNote: 6.0.1

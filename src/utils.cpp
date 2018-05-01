@@ -88,8 +88,12 @@ dMappedCSC extract_mapped_csc(Rcpp::S4 input) {
   return dMappedCSC(nrows, ncols, values.length(), (uint32_t *)row_indices.begin(), (uint32_t *)col_ptrs.begin(), values.begin());
 }
 
-uint32_t omp_thread_count() {
-  uint32_t n = 0;
+// returns number of available threads
+// omp_get_num_threads() for some reason doesn't work on all systems
+// check following link
+// http://stackoverflow.com/questions/11071116/i-got-omp-get-num-threads-always-return-1-in-gcc-works-in-icc
+int omp_thread_count() {
+  int n = 0;
   #ifdef _OPENMP
   #pragma omp parallel reduction(+:n)
   #endif

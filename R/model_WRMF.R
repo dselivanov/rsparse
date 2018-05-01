@@ -122,6 +122,10 @@ WRMF = R6::R6Class(
       private$precision = match.arg(precision)
       private$feedback = match.arg(feedback)
 
+      if(private$precision == "float" && solver == "cholesky")
+        if(!SINGE_PRECISION_LAPACK_AVAILABLE)
+          stop("single precision lapack not available - can't solve for precison='float'")
+
       if(private$feedback == "explicit" && private$precision == "float")
         stop("Explicit solver doesn't support single precision at the moment (but in principle can support).")
 
@@ -176,15 +180,15 @@ WRMF = R6::R6Class(
       if(private$precision == "double")
         private$U = matrix(0.0, ncol = n_user, nrow = private$rank)
       else
-        private$U = flrunif(private$rank, n_user, 0, 0)
+        private$U = float::flrunif(private$rank, n_user, 0, 0)
 
       if(is.null(private$components_)) {
         if(private$precision == "double")
           private$components_ = matrix(rnorm(n_item * private$rank, 0, private$init_stdv), ncol = n_item, nrow = private$rank)
         else
-          private$components_ = flrnorm(private$rank, n_item)
+          private$components_ = float::flrnorm(private$rank, n_item)
       } else {
-        stopifnot(is.matrix(private$components_) || is.float(private$components_))
+        stopifnot(is.matrix(private$components_) || float::is.float(private$components_))
         stopifnot(ncol(private$components_) == n_item)
         stopifnot(nrow(private$components_) == private$rank)
       }

@@ -4,7 +4,7 @@
 \name{FTRL}
 \alias{FTRL}
 \title{Creates FTRL proximal model.}
-\format{\code{\link{R6Class}} object.}
+\format{\code{R6Class} object.}
 \usage{
 FTRL
 }
@@ -61,7 +61,7 @@ ftrl$coef()
 }
 
 \examples{
-library(FTRL)
+library(rsparse)
 library(Matrix)
 i = sample(1000, 1000 * 100, TRUE)
 j = sample(1000, 1000 * 100, TRUE)

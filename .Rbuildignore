@@ -1,2 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+demo/
+data/lastfm.rds
+docs/papers/
+autom4te.cache

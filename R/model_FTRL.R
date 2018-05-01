@@ -9,7 +9,7 @@
 #' ftrl$predict(x, ...)
 #' ftrl$coef()
 #' }
-#' @format \code{\link{R6Class}} object.
+#' @format \code{R6Class} object.
 #' @section Methods:
 #' \describe{
 #'   \item{\code{FTRL$new(learning_rate = 0.1, learning_rate_decay = 0.5, lambda = 0, l1_ratio = 1, dropout = 0, family = "binomial")}}{Constructor
@@ -39,7 +39,7 @@
 #' }
 #' @export
 #' @examples
-#' library(FTRL)
+#' library(rsparse)
 #' library(Matrix)
 #' i = sample(1000, 1000 * 100, TRUE)
 #' j = sample(1000, 1000 * 100, TRUE)

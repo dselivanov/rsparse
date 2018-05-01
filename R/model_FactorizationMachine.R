@@ -9,7 +9,7 @@
 #' fm$partial_fit(x, y, ...)
 #' fm$predict(x, ...)
 #' }
-#' @format \code{\link{R6Class}} object.
+#' @format \code{R6Class} object.
 #' @section Methods:
 #' \describe{
 #'   \item{\code{FM$new(learning_rate_w = 0.2, rank = 8, lambda_w = 1e-6, lambda_v = 1e-6,

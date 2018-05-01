@@ -4,7 +4,7 @@
 \name{FactorizationMachine}
 \alias{FactorizationMachine}
 \title{Creates FactorizationMachine model.}
-\format{\code{\link{R6Class}} object.}
+\format{\code{R6Class} object.}
 \usage{
 FactorizationMachine
 }

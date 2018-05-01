@@ -9,20 +9,6 @@ int intRand(const int & min, const int & max) {
   return distribution(generator);
 }
 
-// returns number of available threads
-// omp_get_num_threads() for some reason doesn't work on all systems
-// on my mac it always returns 1!!!
-// check following link
-// http://stackoverflow.com/questions/11071116/i-got-omp-get-num-threads-always-return-1-in-gcc-works-in-icc
-// int omp_thread_count() {
-//   int n = 0;
-// #ifdef _OPENMP
-// #pragma omp parallel reduction(+:n)
-// #endif
-//   n += 1;
-//   return n;
-// }
-
 inline double sign(double x) {
   if (x > 0) return 1.0;
   if (x < 0) return -1.0;

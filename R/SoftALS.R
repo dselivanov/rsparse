@@ -211,7 +211,7 @@ soft_als = function(x,
     m_svd = svd_econ(m)
     final_singular_values = pmax(m_svd$d - lambda, 0)
     # FIXME cast back to float because there is no pmax/pmin in float at the moment
-    if(is_input_float) final_singular_values = fl(final_singular_values)
+    if(is_input_float) final_singular_values = float::fl(final_singular_values)
 
     n_nonzero_singular_values = sum(final_singular_values > 0)
 
