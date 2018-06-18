@@ -64,33 +64,15 @@ BaseRecommender = R6::R6Class(
       }
       if(is.integer(items_exclude) && length(items_exclude) > 0) {
         if(max(items_exclude) > ncol(item_embeddings))
-          stop("some of items_exclude indices larger than mumber of items")
+          stop("some of items_exclude indices are bigger than number of items")
         flog.debug("found %d items to exclude for all recommendations", length(items_exclude))
-        # filter out items which we can'r recommend
-        item_embeddings = item_embeddings[, -items_exclude, drop = FALSE]
-        # filter out from not_recommend user-specific matrix if it was provided
-        if(!is.null(not_recommend))
-          not_recommend = not_recommend[, -items_exclude, drop = FALSE]
       }
 
       if(!is.null(not_recommend))
         not_recommend = as(not_recommend, "RsparseMatrix")
 
       uids = rownames(user_embeddings)
-      indices = find_top_product(user_embeddings, item_embeddings, k, not_recommend)
-      # convert back to original indices because we filtered out items_exclude and now indices are shifted
-      # 1 2 3 4 5 6 7 8 9 10 - indices
-      # * - - - - * - - - -- filter mask
-      # - 1 2 3 4 - 5 6 7 8  new index
-      # - + - - + - + - - -- "true" expected items 2-5-7 on original scale
-      # so returned will be 1-4-5 but "true" actual should be 2-5-7
-      if(is.integer(items_exclude) && length(items_exclude) > 0) {
-        # FIXME - check how to calculate more efficiently with cumsum
-        for(ie in items_exclude) {
-          j = indices >= ie
-          indices[j] = indices[j] + 1L
-        }
-      }
+      indices = find_top_product(user_embeddings, item_embeddings, k, not_recommend, items_exclude)
 
       data.table::setattr(indices, "dimnames", list(uids, NULL))
       data.table::setattr(indices, "ids", NULL)
