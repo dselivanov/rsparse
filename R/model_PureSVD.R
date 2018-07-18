@@ -10,7 +10,6 @@
 #' \preformatted{
 #'   model = PureSVD$new(rank = 10L,
 #'                       lambda = 0,
-#'                       n_threads = parallel::detectCores(),
 #'                       init = NULL,
 #'                       preprocess = identity,
 #'                       ...)
@@ -21,7 +20,6 @@
 #' @section Methods:
 #' \describe{
 #'   \item{\code{$new(rank = 10L, lambda = 0,
-#'                    n_threads = parallel::detectCores(),
 #'                    init = NULL,
 #'                    preprocess = identity,
 #'                    ...
@@ -37,8 +35,6 @@
 #'     of confidence values (implicit feedback) or ratings (explicit feedback).
 #'     Column names (=item ids) should be in the same order as in the \code{fit_transform()}.}
 #'   \item{\code{$components}}{item factors matrix of size \code{rank * n_items}}
-#'   \item{n_threads}{\code{numeric} default number of threads to use during training and prediction
-#'   (if OpenMP is available).}
 #'}
 #' @section Arguments:
 #' \describe{
@@ -49,8 +45,6 @@
 #'  \item{preprocess}{\code{function} = \code{identity()} by default. User spectified function which will be applied to user-item interaction matrix
 #'     before running matrix factorization (also applied in inference time before making predictions). For example we may
 #'     want to normalize each row of user-item matrix to have 1 norm. Or apply \code{log1p()} to discount large counts.}
-#'  \item{n_threads}{\code{numeric} default number of threads to use during training and prediction
-#'  (if OpenMP is available).}
 #'  \item{not_recommend}{\code{sparse matrix} or \code{NULL} - points which items should be excluided from recommendations for a user.
 #'    By default it excludes previously seen/consumed items.}
 #'  \item{convergence_tol}{\code{numeric = -Inf} defines early stopping strategy. We stop fitting
@@ -66,19 +60,17 @@ PureSVD = R6::R6Class(
   public = list(
     initialize = function(rank = 10L,
                           lambda = 0,
-                          n_threads = parallel::detectCores(),
                           init = NULL,
                           preprocess = identity,
                           ...) {
       private$rank = rank
       private$lambda = lambda
       private$init = init
-      self$n_threads = n_threads
       private$set_internal_matrix_formats(sparse = "sparseMatrix", dense = NULL)
       stopifnot(is.function(preprocess))
       private$preprocess = preprocess
     },
-    fit_transform = function(x, n_iter = 10, convergence_tol = 1e-3, ...) {
+    fit_transform = function(x, n_iter = 10L, convergence_tol = 1e-3, ...) {
       x = private$check_convert_input(x)
       x = private$preprocess(x)
       private$item_ids = colnames(x)
@@ -90,15 +82,16 @@ PureSVD = R6::R6Class(
                      convergence_tol = convergence_tol,
                      init = private$init,
                      ...)
-      private$components_ = t(private$svd$v * sqrt(private$svd$d))
-      res = private$svd$u * sqrt(private$svd$d)
+      res = private$svd$u %*% diag(x = private$svd$d)
+      private$components_ = t(private$svd$v %*%  diag(x = private$svd$d))
       invisible(res)
     },
     transform = function(x, ...) {
       x = private$check_convert_input(x)
       x = private$preprocess(x)
-      res = solve_iter_als_svd(x = x, svd_current = private$svd, lambda = private$lambda, singular_vectors = "v")
-      invisible(as.matrix(res))
+      res = x %*% private$svd$v
+      rownames(res) = rownames(x)
+      as.matrix(res)
     }
   ),
   private = list(

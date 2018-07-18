@@ -27,8 +27,12 @@ train_test_split = function(x, test_proportion = 0.5) {
 }
 
 
-find_top_product = function(x, y, k, n_threads = parallel::detectCores(), not_recommend = NULL) {
-  stopifnot(is.null(not_recommend) || inherits(not_recommend, "sparseMatrix"))
+find_top_product = function(x, y, k, not_recommend = NULL, exclude = integer(0), n_threads = getOption("rsparse_omp_threads", 1L)) {
+  if(!inherits(exclude, "integer"))
+    stop("'exclude' should be integer vector")
+  if(!(is.null(not_recommend) || inherits(not_recommend, "sparseMatrix")))
+    stop("'not_recommend' should be NULL or 'sparseMatrix'")
+
   stopifnot(ncol(x) == nrow(y))
 
   if(is.null(not_recommend))
@@ -38,5 +42,5 @@ find_top_product = function(x, y, k, n_threads = parallel::detectCores(), not_re
     stopifnot(ncol(y) == ncol(not_recommend))
     not_recommend = as(not_recommend, "RsparseMatrix")
   }
-  top_product(x, y, k, n_threads, not_recommend)
+  top_product(x, y, k, n_threads, not_recommend, exclude)
 }

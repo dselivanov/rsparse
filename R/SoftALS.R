@@ -62,6 +62,7 @@ solve_iter_als_softimpute = function(x, svd_current, lambda, singular_vectors = 
   x_delta = x
   # make_sparse_approximation calculates values of sparse matrix X_new = X - A %*% B
   # for only non-zero values of X
+  futile.logger::flog.debug("running 'make_sparse_approximation' for soft-impute")
   x_delta@x = x@x - make_sparse_approximation(x, A, B)
   loss = (as.numeric(crossprod(x_delta@x)) + lambda * sum(svd_current$d)) / length(x_delta@x)
 
@@ -128,10 +129,14 @@ soft_als = function(x,
     # Alternating algorithm
     # 1. calculate for items
     if(target == "soft_impute") {
+      futile.logger::flog.debug("running 'solve_iter_als_softimpute'")
       B_hat = solve_iter_als_softimpute(tx, svd_new, lambda, "u")
+      futile.logger::flog.debug("running 'svd_econ'")
       Bsvd = svd_econ(B_hat %*% diag(sqrt(svd_new$d)))
     } else if(target == "svd") {
+      futile.logger::flog.debug("running 'solve_iter_als_svd'")
       B_hat = solve_iter_als_svd(tx, svd_new, lambda, "u")
+      futile.logger::flog.debug("running 'svd_econ'")
       Bsvd = svd_econ(B_hat)
     }
     rm(B_hat)
@@ -142,10 +147,14 @@ soft_als = function(x,
 
     # 2. calculate for users
     if(target == "soft_impute") {
+      futile.logger::flog.debug("running 'solve_iter_als_softimpute'")
       A_hat = solve_iter_als_softimpute(x, svd_new, lambda, "v")
+      futile.logger::flog.debug("running 'svd_econ'")
       Asvd = svd_econ(A_hat %*% diag(sqrt(svd_new$d)))
     } else if(target == "svd") {
+      futile.logger::flog.debug("running 'solve_iter_als_svd'")
       A_hat = solve_iter_als_svd(x, svd_new, lambda, "v")
+      futile.logger::flog.debug("running 'svd_econ'")
       Asvd = svd_econ(A_hat)
     } else {
       stop(sprintf("unknown target = %s", target))
@@ -159,24 +168,24 @@ soft_als = function(x,
     svd_new$v = svd_new$v %*% Asvd$v
     rm(Asvd, Bsvd)
     #log values of loss and change in frobenious norm
+    futile.logger::flog.debug("running 'calc_frobenius_norm_delta'")
     frob_delta = calc_frobenius_norm_delta(svd_old, svd_new)
     trace_iter[[k]] = list(iter = i, scorer = "frob_delta", value = frob_delta)
     k = k + 1L
     if(!is.null(loss)) {
       trace_iter[[k]] = list(iter = i, scorer = "loss", value = loss)
       k = k + 1L
-      futile.logger::flog.debug("soft_impute: iter %03d, loss %.3f frobenious norm change %.3f",
+      futile.logger::flog.info("soft_als: iter %03d, loss %.3f frobenious norm change %.3f",
                                 i, loss, frob_delta)
     } else {
-      futile.logger::flog.debug("soft_impute: iter %03d, frobenious norm change %.3f",
+      futile.logger::flog.info("soft_als: iter %03d, frobenious norm change %.3f",
                                 i, frob_delta)
     }
-
 
     svd_old = svd_new
     # check convergence and
     if(frob_delta < convergence_tol) {
-      futile.logger::flog.debug("soft_impute: converged with tol %f after %d iter", convergence_tol, i)
+      futile.logger::flog.info("soft_impute: converged with tol %f after %d iter", convergence_tol, i)
       CONVERGED = TRUE
       break
     }
@@ -186,6 +195,7 @@ soft_als = function(x,
     futile.logger::flog.warn("soft_impute: didn't converged with tol %f after %d iterations - returning latest solution",
                              convergence_tol, i)
   if(final_svd) {
+    futile.logger::flog.info("running final svd")
     if(target == "soft_impute") {
       A = t(svd_new$u) * sqrt(svd_new$d)
       B = t(svd_new$v) * sqrt(svd_new$d)
@@ -201,7 +211,7 @@ soft_als = function(x,
     m_svd = svd_econ(m)
     final_singular_values = pmax(m_svd$d - lambda, 0)
     # FIXME cast back to float because there is no pmax/pmin in float at the moment
-    if(is_input_float) final_singular_values = fl(final_singular_values)
+    if(is_input_float) final_singular_values = float::fl(final_singular_values)
 
     n_nonzero_singular_values = sum(final_singular_values > 0)
 

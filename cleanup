@@ -1,0 +1,5 @@
+#! /bin/sh
+
+rm -rf src/Makevars
+
+rm -rf R/configure.R

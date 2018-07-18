@@ -1,24 +1,41 @@
-Package: reco
+Package: rsparse
 Type: Package
-Title: Matrix factorizations for recommender systems
-Version: 0.2.0.4
-Author: Dmitriy Selivanov
+Title: Statistical Learning on Sparse Matrices
+Version: 0.3.0.4
+Authors@R: c(
+    person("Dmitriy", "Selivanov", role=c("aut", "cre", "cph"), email="selivanov.dmitriy@gmail.com"),
+    person("Drew", "Schmidt", role="ctb", comment="configure script for BLAS, LAPACK detection"), 
+    person("Han", "Zhang", role="ctb", comment="configure script for OpenMP detection")
+    )
 Maintainer: Dmitriy Selivanov <selivanov.dmitriy@gmail.com>
-Description: Implements many (sparse) matrix factorization algorithms. 
-    Focus is on applications for recommender systems. 
-    List of algorithms: 
+Description: Implements several algorithms for
+    supervised learning on sparse data and many
+    matrix factorizations of sparse matrices
+    (with a focus on applications for recommender systems). 
+    All algorithms work on sparse matrices. Also they extensively 
+    use BLAS and LAPACK  and parallelized with OpenMP.
+    Implementations are reasonably fast and nicely work with large 
+    datasets (millions of rows and millions of columns).
+    List of algorithms for supervised learning:
+    1) Elastic net regression via Follow The Proximally-Regularized leader algorithm
+    2) Second order Factorization Machines via stochastic gradient descent with 
+       adaptive learning rates. Allows to learn model parameters out-of-core. 
+       Fast - asynchronous parallel, SIMD accelerated.
+    List of algorithms for matrix factorization:
     1) Weighted Regularazied Matrix Factorization with Alternating Least Squares (ALS) 
       for implicit feedback (inculding approximate Conjugate Gradient solver).
       Optional non-negativity (NNMF, non-negative matrix factorization).
     2) Regularazied Matrix Factorization with ALS for explicit feedback
       Optional non-negativity (NNMF, non-negative matrix factorization).
-    3) Soft-SVD via fast ALS
+    3) Fast Trunceate SVD and Soft-SVD via ALS
     4) Soft-Impute via fast ALS and solution in SVD form
     5) LinearFlow method which learns item-item similarity matrix from the data
-    All algorithms work on sparse matrices. Extensively use BLAS and LAPACK 
-    and parallelized with OpenMP where applicable. 
-    Implementations are reasonably fast and nicely work with large 
-    datasets (millions of rows and millions of columns).
+    Clustering:
+    1) kmeans from Armadillo library which provides smart (similar to kmeans++) 
+      cluster initializations.
+    Misc utils/methods:
+    1) multithreaded `%*%` and `tcrossprod()` for `<dgRMatrix, matrix>`
+    2) multithreaded `%*%` and `crossprod()` for `<matrix, dgCMatrix>`
 License: GPL (>= 2) | file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -27,22 +44,16 @@ Depends:
     R (>= 3.1.0),
     methods
 Imports:
-    mlapi (>= 0.1.0), 
-    float (>= 0.1-2),
-    Matrix, 
-    futile.logger,
-    data.table (>= 1.10.0), 
+    Matrix,
     Rcpp, 
-    RcppArmadillo, 
+    mlapi (>= 0.1.0), 
+    data.table (>= 1.10.0), 
+    futile.logger,
     RhpcBLASctl
-Suggests:
-    MatrixCSR,
-    testthat
 LinkingTo:
     Rcpp, 
-    RcppArmadillo, 
-    float (>= 0.1-2)
-Remotes:
-    dselivanov/MatrixCSR, 
-    dselivanov/float
+    RcppArmadillo
+Suggests:
+    testthat,
+    float
 RoxygenNote: 6.0.1

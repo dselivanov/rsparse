@@ -2,7 +2,6 @@ BaseRecommender = R6::R6Class(
   inherit = mlapi::mlapiDecomposition,
   classname = "BaseRecommender",
   public = list(
-    n_threads = NULL,
     predict = function(x, k, not_recommend = x, items_exclude = NULL, ...) {
       items_exclude = unique(items_exclude)
 
@@ -22,7 +21,7 @@ BaseRecommender = R6::R6Class(
         stop("can't run 'get_similar_items()' - model doesn't have item ids (item_ids = NULL)")
       }
       if(is.null(private$components_l2)) {
-        private$init_components_l2(...)
+        private$components_l2 = private$init_components_l2(...)
       }
       i = which(colnames(private$components_l2) == item_id)
       if(length(i) == 0) {
@@ -49,15 +48,13 @@ BaseRecommender = R6::R6Class(
   private = list(
     predict_low_level = function(user_embeddings, item_embeddings, k, not_recommend, items_exclude = NULL, ...) {
 
-      if(isTRUE(self$n_threads > 1)) {
-        flog.debug("BaseRecommender$predict(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
-        RhpcBLASctl::blas_set_num_threads(1)
-        on.exit({
-          n_physical_cores = RhpcBLASctl::get_num_cores()
-          flog.debug("BaseRecommender$predict(): on exit `RhpcBLASctl::blas_set_num_threads(%d)` (=number of physical cores)", n_physical_cores)
-          RhpcBLASctl::blas_set_num_threads(n_physical_cores)
-        })
-      }
+      flog.debug("BaseRecommender$predict(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
+      RhpcBLASctl::blas_set_num_threads(1)
+      on.exit({
+        n_physical_cores = RhpcBLASctl::get_num_cores()
+        flog.debug("BaseRecommender$predict(): on exit `RhpcBLASctl::blas_set_num_threads(%d)` (=number of physical cores)", n_physical_cores)
+        RhpcBLASctl::blas_set_num_threads(n_physical_cores)
+      })
 
       if(is.character(items_exclude)) {
         if(is.null(private$item_ids))
@@ -67,33 +64,15 @@ BaseRecommender = R6::R6Class(
       }
       if(is.integer(items_exclude) && length(items_exclude) > 0) {
         if(max(items_exclude) > ncol(item_embeddings))
-          stop("some of items_exclude indices larger than mumber of items")
+          stop("some of items_exclude indices are bigger than number of items")
         flog.debug("found %d items to exclude for all recommendations", length(items_exclude))
-        # filter out items which we can'r recommend
-        item_embeddings = item_embeddings[, -items_exclude, drop = FALSE]
-        # filter out from not_recommend user-specific matrix if it was provided
-        if(!is.null(not_recommend))
-          not_recommend = not_recommend[, -items_exclude, drop = FALSE]
       }
 
       if(!is.null(not_recommend))
         not_recommend = as(not_recommend, "RsparseMatrix")
 
       uids = rownames(user_embeddings)
-      indices = find_top_product(user_embeddings, item_embeddings, k, self$n_threads, not_recommend)
-      # convert back to original indices because we filtered out items_exclude and now indices are shifted
-      # 1 2 3 4 5 6 7 8 9 10 - indices
-      # * - - - - * - - - -- filter mask
-      # - 1 2 3 4 - 5 6 7 8  new index
-      # - + - - + - + - - -- "true" expected items 2-5-7 on original scale
-      # so returned will be 1-4-5 but "true" actual should be 2-5-7
-      if(is.integer(items_exclude) && length(items_exclude) > 0) {
-        # FIXME - check how to calculate more efficiently with cumsum
-        for(ie in items_exclude) {
-          j = indices >= ie
-          indices[j] = indices[j] + 1L
-        }
-      }
+      indices = find_top_product(user_embeddings, item_embeddings, k, not_recommend, items_exclude)
 
       data.table::setattr(indices, "dimnames", list(uids, NULL))
       data.table::setattr(indices, "ids", NULL)
@@ -112,7 +91,7 @@ BaseRecommender = R6::R6Class(
     init_components_l2 = function(force_init = FALSE) {
       if(is.null(private$components_l2) || force_init) {
         flog.debug("calculating components_l2")
-        private$components_l2 = t(t(private$components_) / sqrt(colSums(private$components_ ^ 2)))
+        t(t(private$components_) / sqrt(colSums(private$components_ ^ 2)))
       }
     },
     # L2 normalized components

@@ -6,3 +6,14 @@ src/*.o
 src/*.so
 src/*.dll
 .DS_Store
+demo/
+data/lastfm.rds
+docs/papers/
+R/draft/
+
+*.status
+config.log
+autom4te.cache
+
+src/Makevars
+R/configure.R

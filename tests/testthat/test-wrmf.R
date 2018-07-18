@@ -1,3 +1,5 @@
+context("WRMF")
+
 futile.logger::flog.threshold(futile.logger::WARN)
 train = movielens100k[1:900, , drop = F]
 cv = movielens100k[901:nrow(movielens100k), , drop = F]
@@ -47,25 +49,26 @@ test_that("test WRMF core", {
   }
 })
 
-test_that("test WRMF FLOAT", {
-  params = expand.grid(solver = c("conjugate_gradient", "cholesky"),
-                       feedback = c("implicit"),
-                       lambda = c(0, 1000),
-                       stringsAsFactors = FALSE)
-  for(i in 1:nrow(params)) {
-    rank = 8
-    solver = params$solver[[i]]
-    feedback = params$feedback[[i]]
-    lambda = params$lambda[[i]]
-    message(sprintf("testing WRMF FLOAT with parameters: solver = '%s' feedback = '%s' lambda = %.3f, rank = %d",
-                    solver, feedback, lambda, rank))
-    model = WRMF$new(rank = rank,  lambda = lambda, feedback = feedback, solver = solver, precision = "float")
-    user_emb = model$fit_transform(train, n_iter = 5, convergence_tol = -1)
-    expect_true(inherits(user_emb, "float32"))
-    expect_true(inherits(model$components, "float32"))
-  }
-  }
-)
+if(SINGE_PRECISION_LAPACK_AVAILABLE)
+  test_that("test WRMF FLOAT", {
+    params = expand.grid(solver = c("conjugate_gradient", "cholesky"),
+                         feedback = c("implicit"),
+                         lambda = c(0, 1000),
+                         stringsAsFactors = FALSE)
+    for(i in 1:nrow(params)) {
+      rank = 8
+      solver = params$solver[[i]]
+      feedback = params$feedback[[i]]
+      lambda = params$lambda[[i]]
+      message(sprintf("testing WRMF FLOAT with parameters: solver = '%s' feedback = '%s' lambda = %.3f, rank = %d",
+                      solver, feedback, lambda, rank))
+      model = WRMF$new(rank = rank,  lambda = lambda, feedback = feedback, solver = solver, precision = "float")
+      user_emb = model$fit_transform(train, n_iter = 5, convergence_tol = -1)
+      expect_true(inherits(user_emb, "float32"))
+      expect_true(inherits(model$components, "float32"))
+    }
+    }
+  )
 
 test_that("test WRMF extra", {
   lambda = 0.1
