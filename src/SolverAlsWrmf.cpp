@@ -96,6 +96,7 @@ double als_implicit_double(const Rcpp::S4 &m_csc_r,
   return (double)als_implicit_cpp<double>(Conf, X, Y, lambda, n_threads, solver, cg_steps);
 }
 
+#ifdef SINGLE_PRECISION_LAPACK_AVAILABLE
 // [[Rcpp::export]]
 double als_implicit_float(const Rcpp::S4 &m_csc_r,
                     Rcpp::S4 &XR,
@@ -110,6 +111,7 @@ double als_implicit_float(const Rcpp::S4 &m_csc_r,
   arma::fmat Y = arma::fmat((float *)YRM.begin(), YRM.nrow(), YRM.ncol(), false, true);
   return (double)als_implicit_cpp<float>(Conf, X, Y, lambda, n_threads, solver, cg_steps);
 }
+#endif
 
 // [[Rcpp::export]]
 double als_loss_explicit(const Rcpp::S4 &m_csc_r, arma::mat& X, arma::mat& Y, double lambda, unsigned n_threads) {
