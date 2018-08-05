@@ -16,4 +16,3 @@ config.log
 autom4te.cache
 
 src/Makevars
-R/configure.R

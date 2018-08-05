@@ -123,7 +123,7 @@ WRMF = R6::R6Class(
       private$feedback = match.arg(feedback)
 
       if(private$precision == "float" && solver == "cholesky")
-        if(!SINGE_PRECISION_LAPACK_AVAILABLE)
+        if(!rsparse:::SINGLE_PRECISION_LAPACK_AVAILABLE)
           stop("single precision lapack not available - can't solve for precison='float'")
 
       if(private$feedback == "explicit" && private$precision == "float")

@@ -2,11 +2,11 @@ BaseRecommender = R6::R6Class(
   inherit = mlapi::mlapiDecomposition,
   classname = "BaseRecommender",
   public = list(
-    predict = function(x, k, not_recommend = x, items_exclude = NULL, ...) {
+    predict = function(x, k, not_recommend = x, items_exclude = integer(0), ...) {
       items_exclude = unique(items_exclude)
 
-      if(!(is.null(items_exclude) || is.character(items_exclude) || is.integer(items_exclude)))
-        stop("items_exclude should be one of NULL/character/integer")
+      if(!(is.character(items_exclude) || is.integer(items_exclude)))
+        stop("items_exclude should be one of character/integer")
 
       stopifnot(private$item_ids == colnames(x))
       stopifnot(is.null(not_recommend) || inherits(not_recommend, "sparseMatrix"))
@@ -46,7 +46,7 @@ BaseRecommender = R6::R6Class(
     }
   ),
   private = list(
-    predict_low_level = function(user_embeddings, item_embeddings, k, not_recommend, items_exclude = NULL, ...) {
+    predict_low_level = function(user_embeddings, item_embeddings, k, not_recommend, items_exclude = integer(0), ...) {
 
       flog.debug("BaseRecommender$predict(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
       RhpcBLASctl::blas_set_num_threads(1)

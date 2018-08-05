@@ -49,7 +49,7 @@ test_that("test WRMF core", {
   }
 })
 
-if(SINGE_PRECISION_LAPACK_AVAILABLE)
+if(rsparse:::SINGLE_PRECISION_LAPACK_AVAILABLE)
   test_that("test WRMF FLOAT", {
     params = expand.grid(solver = c("conjugate_gradient", "cholesky"),
                          feedback = c("implicit"),

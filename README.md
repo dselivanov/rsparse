@@ -71,3 +71,11 @@ Here is example of `rsparse::WRMF` on [lastfm360k](https://www.upf.edu/web/mtg/l
 # API
 
 We follow [mlapi](https://github.com/dselivanov/mlapi) conventions.
+
+# Configure
+
+Generate configure:
+
+```sh
+autoconf configure.ac > configure && chmod +x configure
+```
