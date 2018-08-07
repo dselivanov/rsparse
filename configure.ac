@@ -12,6 +12,7 @@ fi
 R_SCMD="${R_HOME}/bin/R CMD config"
 BLAS_LIBS=`${R_SCMD} BLAS_LIBS`
 LAPACK_LIBS=`${R_SCMD} LAPACK_LIBS`
+FLOAT_LIBS=`${R_HOME}/bin/Rscript -e "float:::ldflags()"`
 
 # Check tools.
 AC_CHECK_PROG([echo_ok], [echo], [yes], [no], ,)
@@ -26,20 +27,25 @@ AC_CHECK_PROG([grep_ok], [grep], [yes], [no], ,)
 ### ship LAPACK symbols in the blas.[so|dylib|dll] file.
 
 # Check Rblas.
-if test "X${echo_ok}" = "Xyes" -a "X${grep_ok}" = "Xyes"; then
-  useRblas=`echo ${BLAS_LIBS} | grep "\-lRblas"`
-  if test "X${useRblas}" = "X"; then
-    AC_CHECK_LIB(blas, [sgemm_], [HAVESBLAS=yes], [HAVESBLAS=no])
-    AC_CHECK_LIB(blas, [sgetrf_], [HAVESLAPACK=yes], [HAVESLAPACK=no])
-  else
-    LDFLAGS_OLD="${LDFLAGS}"
-    LDFLAGS="${LDFLAGS} ${BLAS_LIBS}"
-    AC_CHECK_LIB(Rblas, [sgemm_], [HAVESBLAS=yes], [HAVESBLAS=no])
-    AC_CHECK_LIB(Rblas, [sgetrf_], [HAVESLAPACK=yes], [HAVESLAPACK=no])
-    LDFLAGS="${LDFLAGS_OLD}"
-  fi
+if test -f "${FLOAT_LIBS}" ; then
+  HAVESBLAS="yes"
+  HAVESLAPACK="yes"
 else
-  HAVESBLAS="no"
+  if test "X${echo_ok}" = "Xyes" -a "X${grep_ok}" = "Xyes"; then
+    useRblas=`echo ${BLAS_LIBS} | grep "\-lRblas"`
+    if test "X${useRblas}" = "X"; then
+      AC_CHECK_LIB(blas, [sgemm_], [HAVESBLAS=yes], [HAVESBLAS=no])
+      AC_CHECK_LIB(blas, [sgetrf_], [HAVESLAPACK=yes], [HAVESLAPACK=no])
+    else
+      LDFLAGS_OLD="${LDFLAGS}"
+      LDFLAGS="${LDFLAGS} ${BLAS_LIBS}"
+      AC_CHECK_LIB(Rblas, [sgemm_], [HAVESBLAS=yes], [HAVESBLAS=no])
+      AC_CHECK_LIB(Rblas, [sgetrf_], [HAVESLAPACK=yes], [HAVESLAPACK=no])
+      LDFLAGS="${LDFLAGS_OLD}"  # WCC: do you need a "if-else-fi" to check?
+    fi
+  else
+    HAVESBLAS="no"
+  fi
 fi
 
 
@@ -130,6 +136,7 @@ dnl this the meat of R's m4/openmp.m4
 AC_SUBST(OPENMP_CXXFLAGS)
 AC_SUBST(ARMA_BLAS)
 AC_SUBST(DSINGLE_PRECISION_LAPACK_AVAILABLE)
+AC_SUBST(FLOAT_LIBS)
 AC_OUTPUT(src/Makevars)
 
 AC_SUBST(SINGLE_PRECISION_LAPACK_AVAILABLE)
