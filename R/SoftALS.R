@@ -103,6 +103,10 @@ soft_als = function(x,
     if(is_input_float) U = float::fl(U)
 
     U = qr.Q(qr(U, LAPACK = TRUE))
+
+    # FIXME - to be addressed after fix in upstream https://github.com/wrathematics/float/issues/27
+    if(is_input_float) U = float::fl(U)
+
     # init with dummy values
     D  = rep(1, rank)
     if(is_input_float) D = float::fl(D)
