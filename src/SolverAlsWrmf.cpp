@@ -107,8 +107,10 @@ double als_implicit_float(const Rcpp::S4 &m_csc_r,
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
   Rcpp::IntegerMatrix XRM = XR.slot("Data");
   Rcpp::IntegerMatrix YRM = YR.slot("Data");
-  arma::fmat X = arma::fmat((float *)XRM.begin(), XRM.nrow(), XRM.ncol(), false, true);
-  arma::fmat Y = arma::fmat((float *)YRM.begin(), YRM.nrow(), YRM.ncol(), false, true);
+  float * x_ptr = reinterpret_cast<float *>(&XRM[0]);
+  float * y_ptr = reinterpret_cast<float *>(&YRM[0]);
+  arma::fmat X = arma::fmat(x_ptr, XRM.nrow(), XRM.ncol(), false, true);
+  arma::fmat Y = arma::fmat(y_ptr, YRM.nrow(), YRM.ncol(), false, true);
   return (double)als_implicit_cpp<float>(Conf, X, Y, lambda, n_threads, solver, cg_steps);
   #else
   return -1.0;
