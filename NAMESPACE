@@ -2,6 +2,7 @@
 
 export(FTRL)
 export(FactorizationMachine)
+export(GloVe)
 export(LinearFlow)
 export(PureSVD)
 export(WRMF)
