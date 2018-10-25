@@ -1,11 +1,12 @@
 Package: rsparse
 Type: Package
 Title: Statistical Learning on Sparse Matrices
-Version: 0.3.1
+Version: 0.3.2
 Authors@R: c(
     person("Dmitriy", "Selivanov", role=c("aut", "cre", "cph"), email="selivanov.dmitriy@gmail.com"),
     person("Drew", "Schmidt", role="ctb", comment="configure script for BLAS, LAPACK detection"), 
-    person("Han", "Zhang", role="ctb", comment="configure script for OpenMP detection")
+    person("Han", "Zhang", role="ctb", comment="configure script for OpenMP detection"), 
+    person("Wei-Chen", "Chen", role="ctb", comment="configure script and work on linking to float package")
     )
 Maintainer: Dmitriy Selivanov <selivanov.dmitriy@gmail.com>
 Description: Implements several algorithms for
@@ -42,7 +43,7 @@ LazyData: true
 ByteCompile: true
 Depends: R (>= 3.1.0), methods
 Imports: Matrix, Rcpp, mlapi (>= 0.1.0), data.table (>= 1.10.0),
-        futile.logger, RhpcBLASctl, float (>= 0.1-2)
+        futile.logger, RhpcBLASctl, float (>= 0.2-0)
 LinkingTo: Rcpp, RcppArmadillo
 Suggests: testthat
 RoxygenNote: 6.0.1
