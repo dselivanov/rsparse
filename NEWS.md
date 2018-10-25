@@ -1,0 +1,3 @@
+- 2018-10-25
+    - add GloVe matrix factorization (adapted from `text2vec`)
+    - link to `float` package - credits to @snoweye and @wrathematics

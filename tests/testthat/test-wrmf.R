@@ -49,7 +49,7 @@ test_that("test WRMF core", {
   }
 })
 
-if(rsparse:::SINGLE_PRECISION_LAPACK_AVAILABLE)
+if(rsparse:::SINGLE_PRECISION_LAPACK_AVAILABLE) {
   test_that("test WRMF FLOAT", {
     params = expand.grid(solver = c("conjugate_gradient", "cholesky"),
                          feedback = c("implicit"),
@@ -67,8 +67,9 @@ if(rsparse:::SINGLE_PRECISION_LAPACK_AVAILABLE)
       expect_true(inherits(user_emb, "float32"))
       expect_true(inherits(model$components, "float32"))
     }
-    }
+  }
   )
+}
 
 test_that("test WRMF extra", {
   lambda = 0.1

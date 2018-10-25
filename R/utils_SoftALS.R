@@ -25,18 +25,6 @@ calc_frobenius_norm_delta = function(svd_old, svd_new) {
   num / max(denom, 1e-09)
 }
 
-svd_econ = function(x) {
-  if(inherits(x, "float32")) {
-    float::svd(x)
-  }
-  else {
-    if(inherits(x, "denseMatrix")) x = as.matrix(x)
-    stopifnot(is.matrix(x))
-    stopifnot(is.numeric(x))
-    arma_svd_econ(x)
-  }
-}
-
 pad_svd = function(x, rank) {
   stopifnot(length(x$d) <= rank)
   nr = nrow(x$u)
