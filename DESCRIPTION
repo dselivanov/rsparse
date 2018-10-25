@@ -40,20 +40,10 @@ License: GPL (>= 2) | file LICENSE
 Encoding: UTF-8
 LazyData: true
 ByteCompile: true
-Depends:
-    R (>= 3.1.0),
-    methods
-Imports:
-    Matrix,
-    Rcpp, 
-    mlapi (>= 0.1.0), 
-    data.table (>= 1.10.0), 
-    futile.logger,
-    RhpcBLASctl
-LinkingTo:
-    Rcpp, 
-    RcppArmadillo
-Suggests:
-    testthat,
-    float
+Depends: R (>= 3.1.0), methods
+Imports: Matrix, Rcpp, mlapi (>= 0.1.0), data.table (>= 1.10.0),
+        futile.logger, RhpcBLASctl, float (>= 0.1-2)
+LinkingTo: Rcpp, RcppArmadillo
+Suggests: testthat
 RoxygenNote: 6.0.1
+NeedsCompilation: yes
