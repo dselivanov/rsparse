@@ -62,13 +62,16 @@ solve_iter_als_softimpute = function(x, svd_current, lambda, singular_vectors = 
   x_delta = x
   # make_sparse_approximation calculates values of sparse matrix X_new = X - A %*% B
   # for only non-zero values of X
-  futile.logger::flog.debug("running 'make_sparse_approximation' for soft-impute")
+  futile.logger::flog.debug("soft-impute: 'make_sparse_approximation'")
   x_delta@x = x@x - make_sparse_approximation(x, A, B)
+  futile.logger::flog.debug("soft-impute: calculating loss")
   loss = (as.numeric(crossprod(x_delta@x)) + lambda * sum(svd_current$d)) / length(x_delta@x)
 
+  futile.logger::flog.debug("soft-impute: calculating first part of result")
   first = (x_delta %*% svd_current[[singular_vectors]]) %*% diag( sqrt(svd_current$d) / (svd_current$d + lambda))
   rm(x_delta)
 
+  futile.logger::flog.debug("soft-impute: calculating second part of result")
   second = t(A * (svd_current$d / (svd_current$d + lambda)))
   res = first + second
   data.table::setattr(res, "loss", loss)
