@@ -2,8 +2,8 @@
 
 // [[Rcpp::export]]
 Rcpp::NumericVector cpp_make_sparse_approximation(const Rcpp::S4 &mat_template,
-                                            arma::mat& X,
-                                            arma::mat& Y,
+                                            const arma::mat& X,
+                                            const arma::mat& Y,
                                             int sparse_matrix_type,
                                             unsigned n_threads) {
   Rcpp::IntegerVector rp = mat_template.slot("p");
@@ -41,6 +41,7 @@ Rcpp::NumericVector cpp_make_sparse_approximation(const Rcpp::S4 &mat_template,
       xc = X.col(i).t();
     else
       xc = Y.col(i).t();
+
     for(int pp = p1; pp < p2; pp++) {
       uint64_t ind = (size_t)j[pp];
       if(sparse_matrix_type == CSR)
