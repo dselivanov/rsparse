@@ -31,6 +31,7 @@ Description: Implements several algorithms for
     3) Fast Trunceate SVD and Soft-SVD via ALS
     4) Soft-Impute via fast ALS and solution in SVD form
     5) LinearFlow method which learns item-item similarity matrix from the data
+    6) GloVe - GlobalVectors embeddings
     Clustering:
     1) kmeans from Armadillo library which provides smart (similar to kmeans++) 
       cluster initializations.

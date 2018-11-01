@@ -304,12 +304,13 @@ WRMF = R6::R6Class(
       x = private$preprocess(x)
 
       if(private$feedback == "implicit") {
-        res = matrix(0, nrow = private$rank, ncol = nrow(x))
         if(private$precision == "double") {
+          res = matrix(0, nrow = private$rank, ncol = nrow(x))
           als_implicit_double(t(x), private$components_, res, n_threads = getOption("rsparse_omp_threads"),
                               lambda = private$lambda,
                               private$solver_code, private$cg_steps)
         } else {
+          res = float(0, nrow = private$rank, ncol = nrow(x))
           als_implicit_float(t(x), private$components_, res, n_threads = getOption("rsparse_omp_threads"),
                               lambda = private$lambda,
                               private$solver_code, private$cg_steps)

@@ -9,7 +9,8 @@
 FTRL
 }
 \description{
-Creates 'Follow the Regularized Leader' model. Only logistic regression implemented at the moment.
+Creates 'Follow the Regularized Leader' model.
+Only logistic regression implemented at the moment.
 }
 \section{Fields}{
 
@@ -21,7 +22,8 @@ Creates 'Follow the Regularized Leader' model. Only logistic regression implemen
 
 For usage details see \bold{Methods, Arguments and Examples} sections.
 \preformatted{
-ftrl = FTRL$new(learning_rate = 0.1, learning_rate_decay = 0.5, lambda = 0, l1_ratio = 1, dropout = 0, family = "binomial")
+ftrl = FTRL$new(learning_rate = 0.1, learning_rate_decay = 0.5,
+lambda = 0, l1_ratio = 1, dropout = 0, family = "binomial")
 ftrl$partial_fit(x, y, ...)
 ftrl$predict(x, ...)
 ftrl$coef()
@@ -31,9 +33,11 @@ ftrl$coef()
 \section{Methods}{
 
 \describe{
-  \item{\code{FTRL$new(learning_rate = 0.1, learning_rate_decay = 0.5, lambda = 0, l1_ratio = 1, dropout = 0, family = "binomial")}}{Constructor
+  \item{\code{FTRL$new(learning_rate = 0.1, learning_rate_decay = 0.5, lambda = 0,
+  l1_ratio = 1, dropout = 0, family = "binomial")}}{Constructor
   for FTRL model. For description of arguments see \bold{Arguments} section.}
-  \item{\code{$partial_fit(x, y, ...)}}{fits/updates model given input matrix \code{x} and target vector \code{y}.
+  \item{\code{$partial_fit(x, y, ...)}}{fits/updates model
+  given input matrix \code{x} and target vector \code{y}.
   \code{x} shape = (n_samples, n_features)}
   \item{\code{$predict(x, ...)}}{predicts output \code{x}}
   \item{\code{$coef()}}{ return coefficients of the regression model}
@@ -53,10 +57,13 @@ ftrl$coef()
  \item{learning_rate_decay}{learning rate which controls decay. Please refer to FTRL paper for details.
  Usually convergense does not heavily depend on this parameter, so default value 0.5 is safe.}
  \item{lambda}{regularization parameter}
- \item{l1_ratio}{controls L1 vs L2 penalty mixing. 1 = Lasso regression, 0 = Ridge regression. Elastic net is in between.}
- \item{dropout}{dropout - percentage of random features to exclude from each sample. Kind of regularization.}
+ \item{l1_ratio}{controls L1 vs L2 penalty mixing.
+ 1 = Lasso regression, 0 = Ridge regression. Elastic net is in between.}
+ \item{dropout}{dropout - percentage of random features to
+ exclude from each sample. Kind of regularization.}
  \item{n_features}{number of features in model (number of columns in expected model matrix) }
- \item{family}{family of generalized linear model to solve. Only \code{binomial} (or logistic regression) supported at the moment.}
+ \item{family}{family of generalized linear model to solve. Only
+ \code{binomial} (or logistic regression) supported at the moment.}
 }
 }
 
@@ -72,7 +79,8 @@ x[i \%in\% which(y == 1) & j \%in\% odd] = 1
 m = sparseMatrix(i = i, j = j, x = x, dims = c(1000, 1000), giveCsparse = FALSE)
 x = as(m, "RsparseMatrix")
 
-ftrl = FTRL$new(learning_rate = 0.01, learning_rate_decay = 0.1, lambda = 10, l1_ratio = 1, dropout = 0)
+ftrl = FTRL$new(learning_rate = 0.01, learning_rate_decay = 0.1,
+lambda = 10, l1_ratio = 1, dropout = 0)
 ftrl$partial_fit(x, y)
 
 w = ftrl$coef()
