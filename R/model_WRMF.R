@@ -120,11 +120,10 @@ WRMF = R6::R6Class(
       private$components_ = components
       solver = match.arg(solver)
       private$precision = match.arg(precision)
-      private$feedback = match.arg(feedback)
 
-      if(private$precision == "float" && solver == "cholesky")
-        if(!rsparse:::SINGLE_PRECISION_LAPACK_AVAILABLE)
-          stop("single precision lapack not available - can't solve for precison='float'")
+      private$als_implicit_fun = if(private$precision == "float") als_implicit_float else als_implicit_double
+
+      private$feedback = match.arg(feedback)
 
       if(private$feedback == "explicit" && private$precision == "float")
         stop("Explicit solver doesn't support single precision at the moment (but in principle can support).")
@@ -150,7 +149,6 @@ WRMF = R6::R6Class(
       private$non_negative = non_negative
     },
     fit_transform = function(x, n_iter = 10L, convergence_tol = 0.005, ...) {
-
       if(private$feedback == "implicit" ) {
         flog.debug("WRMF$fit_transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
         RhpcBLASctl::blas_set_num_threads(1)
@@ -193,6 +191,11 @@ WRMF = R6::R6Class(
         stopifnot(nrow(private$components_) == private$rank)
       }
 
+
+      private$XtX = tcrossprod(private$components_) +
+        # make float diagonal matrix - if first component is double - result will be automatically casted to double
+        fl(diag(x = private$lambda, nrow = private$rank, ncol = private$rank))
+
       trace_values = vector("numeric", n_iter)
 
       flog.info("starting factorization with %d threads", getOption("rsparse_omp_threads"))
@@ -205,45 +208,41 @@ WRMF = R6::R6Class(
         stopifnot(ncol(private$U) == ncol(c_iu))
         if (private$feedback == "implicit") {
           # private$U will be modified in place
-          if(private$precision == "double") {
-            loss = als_implicit_double(c_iu, private$components_, private$U, n_threads = getOption("rsparse_omp_threads"),
-                                       lambda = private$lambda, solver = private$solver_code, cg_steps = private$cg_steps)
-          } else {
-            loss = als_implicit_float(c_iu, private$components_, private$U, n_threads = getOption("rsparse_omp_threads"),
-                                       lambda = private$lambda, solver = private$solver_code, cg_steps = private$cg_steps)
-          }
-
+          loss = private$als_implicit_fun(c_iu, private$components_, private$U, private$XtX, n_threads = getOption("rsparse_omp_threads"),
+                                          lambda = private$lambda, solver = private$solver_code, cg_steps = private$cg_steps)
         } else if (private$feedback == "explicit") {
           private$U = private$solver_explicit_feedback(c_iu, private$components_)
         }
         # if need non-negative matrix factorization - just set all negative values to zero
-        if(private$non_negative)
-          private$U[private$U < 0] = 0
+        if(private$non_negative) private$U[private$U < 0] = 0
 
         flog.debug("iter %d by user", i)
         stopifnot(ncol(private$components_) == ncol(c_ui))
+
+        YtY = tcrossprod(private$U) +
+          # make float diagonal matrix - if first component is double - result will be automatically casted to double
+          fl(diag(x = private$lambda, nrow = private$rank, ncol = private$rank))
+
         if (private$feedback == "implicit") {
           # private$components_ will be modified in place
-          if(private$precision == "double") {
-          loss = als_implicit_double(c_ui, private$U, private$components_, n_threads = getOption("rsparse_omp_threads"),
-                              lambda = private$lambda, private$solver_code, private$cg_steps)
-          } else {
-            loss = als_implicit_float(c_ui, private$U, private$components_, n_threads = getOption("rsparse_omp_threads"),
-                                       lambda = private$lambda, private$solver_code, private$cg_steps)
-
-          }
+          loss = private$als_implicit_fun(c_ui, private$U, private$components_, YtY, n_threads = getOption("rsparse_omp_threads"),
+                                          lambda = private$lambda, private$solver_code, private$cg_steps)
         } else if (private$feedback == "explicit") {
           private$components_ = private$solver_explicit_feedback(c_ui, private$U)
         }
         # if need non-negative matrix factorization - just set all negative values to zero
-        if(private$non_negative)
-          private$components_[private$components_ < 0] = 0
+        if(private$non_negative) private$components_[private$components_ < 0] = 0
 
         #------------------------------------------------------------------------
         # calculate some metrics if needed in order to diagnose convergence
         #------------------------------------------------------------------------
         if (private$feedback == "explicit")
           loss = als_loss_explicit(c_ui, private$U, private$components_, private$lambda, getOption("rsparse_omp_threads"));
+
+        #update XtX
+        private$XtX = tcrossprod(private$components_) +
+          # make float diagonal matrix - if first component is double - result will be automatically casted to double
+          fl(diag(x = private$lambda, nrow = private$rank, ncol = private$rank))
 
         j = 1L
         trace_scors_string = ""
@@ -306,15 +305,12 @@ WRMF = R6::R6Class(
       if(private$feedback == "implicit") {
         if(private$precision == "double") {
           res = matrix(0, nrow = private$rank, ncol = nrow(x))
-          als_implicit_double(t(x), private$components_, res, n_threads = getOption("rsparse_omp_threads"),
-                              lambda = private$lambda,
-                              private$solver_code, private$cg_steps)
         } else {
           res = float(0, nrow = private$rank, ncol = nrow(x))
-          als_implicit_float(t(x), private$components_, res, n_threads = getOption("rsparse_omp_threads"),
-                              lambda = private$lambda,
-                              private$solver_code, private$cg_steps)
         }
+        private$als_implicit_fun(t(x), private$components_, res, private$XtX, n_threads = getOption("rsparse_omp_threads"),
+                                 lambda = private$lambda,
+                                 private$solver_code, private$cg_steps)
       } else if(private$feedback == "explicit")
         res = private$solver_explicit_feedback(t(x), private$components_)
       else
@@ -322,8 +318,13 @@ WRMF = R6::R6Class(
       if(private$non_negative)
         res[res < 0] = 0
       res = t(res)
-      data.table::setattr(res, "dimnames", list(rownames(x), NULL))
+
+      if(private$precision == "double")
+        setattr(res, "dimnames", list(rownames(x), NULL))
+      else
+        setattr(res@Data, "dimnames", list(rownames(x), NULL))
       res
+
     },
     add_scorers = function(x_train, x_cv, specs = list("map10" = "map@10"), ...) {
       stopifnot(data.table::uniqueN(names(specs)) == length(specs))
@@ -385,8 +386,11 @@ WRMF = R6::R6Class(
     cv_data = NULL,
     scorers_ellipsis = NULL,
     precision = NULL,
+    XtX = NULL,
+    als_implicit_fun = NULL,
     #------------------------------------------------------------
     solver_explicit_feedback = function(R, X) {
+      # FIXME - consider to use private XtX
       XtX = tcrossprod(X) + diag(x = private$lambda, nrow = private$rank, ncol = private$rank)
       solve(XtX, as(X %*% R, "matrix"))
     }
