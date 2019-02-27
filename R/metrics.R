@@ -1,6 +1,5 @@
+#' @name metrics
 #' @title Ranking Metrics for Top-K Items
-#' @description \code{ap_k} calculates \bold{Average Precision at K (\code{ap@@k})}.
-#'   Please refer to \href{Information retrieval wikipedia article}{https://en.wikipedia.org/wiki/Information_retrieval#Average_precision}
 #' @param predictions matrix of predictions. Predctions can be defined 2 ways:
 #' \enumerate{
 #'   \item \code{predictions} = \code{integer} matrix with item indices (correspond to column numbers in \code{actual})
@@ -11,6 +10,12 @@
 #'   Value of the each non-zero entry considered as relevance for calculation of \code{ndcg@@k}.
 #'   It should inherit from \code{Matrix::sparseMatrix}. Internally \code{Matrix::RsparseMatrix} is used.
 #' @param ... other arguments (not used at the moment)
+#' @rdname metrics
+NULL
+
+#' @description \code{ap_k} calculates \bold{Average Precision at K (\code{ap@@k})}.
+#' Please refer to \href{Information retrieval wikipedia article}{https://en.wikipedia.org/wiki/Information_retrieval#Average_precision}
+#' @rdname metrics
 #' @export
 ap_k = function(predictions, actual, ...) {
   stopifnot(is.matrix(predictions))
@@ -40,7 +45,7 @@ ap_k = function(predictions, actual, ...) {
 
 #' @description \code{ndcg_k()} calculates \bold{Normalized Discounted Cumulative Gain at K (\code{ndcg@@k})}.
 #' Please refer to \href{Discounted cumulative gain}{https://en.wikipedia.org/wiki/Discounted_cumulative_gain#Normalized_DCG}
-#' @rdname ap_k
+#' @rdname metrics
 #' @export
 ndcg_k = function(predictions, actual, ...) {
   stopifnot(is.matrix(predictions))

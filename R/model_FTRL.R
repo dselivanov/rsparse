@@ -1,5 +1,5 @@
 #' @name FTRL
-#' @title Creates FTRL proximal model.
+#' @title Creates FTRL proximal logistic regression  model.
 #' @description Creates 'Follow the Regularized Leader' model.
 #' Only logistic regression implemented at the moment.
 #' @section Usage:

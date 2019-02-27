@@ -1,6 +1,6 @@
 #' @name LinearFlow
 #'
-#' @title Linear-FLow method for one-class collaborative filtering
+#' @title Creates Linear-FLow model for one-class collaborative filtering
 #' @description Creates \bold{Linear-FLow} model described in
 #' \href{http://www.bkveton.com/docs/ijcai2016.pdf}{Practical Linear Models for Large-Scale One-Class Collaborative Filtering}.
 #' The goal is to find item-item (or user-user) similarity matrix which is \bold{low-rank and has small Frobenius norm}. Such

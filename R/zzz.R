@@ -5,6 +5,8 @@
 #' @import Rcpp
 #' @import float
 #' @import futile.logger
+#' @importFrom RhpcBLASctl get_num_cores
+#' @importFrom mlapi mlapiDecomposition
 #' @useDynLib rsparse
 
 .onAttach = function(libname, pkgname) {

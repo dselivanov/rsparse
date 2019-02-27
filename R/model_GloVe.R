@@ -1,4 +1,4 @@
-#' @name GlobalVectors
+#' @name GloVe
 #' @title Creates Global Vectors word-embeddings model.
 #' @description Class for GloVe word-embeddings model.
 #' It can be trained via fully can asynchronous and parallel
@@ -7,7 +7,7 @@
 #' @section Usage:
 #' For usage details see \bold{Methods, Arguments and Examples} sections.
 #' \preformatted{
-#' glove = GlobalVectors$new(word_vectors_size, x_max, learning_rate = 0.15,
+#' glove = GloVe$new(word_vectors_size, x_max, learning_rate = 0.15,
 #'                           alpha = 0.75, lambda = 0.0, shuffle = FALSE)
 #' glove$fit_transform(x, n_iter = 10L, convergence_tol = -1,
 #'               n_threads = getOption("rsparse_omp_threads", 1L), ...)
@@ -43,6 +43,8 @@
 #'   x_max; else (x/x_max)^alpha}}
 #' }
 #' @seealso \url{http://nlp.stanford.edu/projects/glove/}
+#' @rdname GloVe
+#' @export
 #' @examples
 #' \dontrun{
 #' temp = tempfile()
@@ -59,8 +61,8 @@
 #' word_vectors_context = glove_model$components
 #' word_vectors = word_vectors_main + t(word_vectors_context)
 #' }
-GlobalVectors = R6::R6Class(
-  classname = c("GlobalVectors"),
+GloVe = R6::R6Class(
+  classname = c("GloVe"),
   inherit = mlapi::mlapiDecomposition,
   public = list(
     n_dump_every = 0L,
@@ -197,7 +199,3 @@ GlobalVectors = R6::R6Class(
     fitted = FALSE
   )
 )
-
-#' @rdname GlobalVectors
-#' @export
-GloVe = GlobalVectors

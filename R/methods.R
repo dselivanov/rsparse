@@ -1,15 +1,16 @@
-#' matmult
-#'
 #' Multithreaded Sparse-Dense Matrix Multiplication
 #'
-#' @details
+#' @description Multithreaded \code{\%*\%}, \code{crossprod}, \code{tcrossprod}
+#' for sparse-dense matrix multiplication
 #'
-#' Accelerates sparse-dense matrix multiplications using openmp. Applicable to
+#' @details
+#' Accelerates sparse-dense matrix multiplications using openmp. Applicable to the following pairs:
 #' (\code{dgRMatrix}, \code{matrix}), (\code{matrix}, \code{dgRMatrix}),
 #' (\code{dgCMatrix}, \code{matrix}), (\code{matrix}, \code{dgCMatrix}) combinations
 #'
 #' @param x,y
-#' Numeric/float matrices.
+#' dense \code{matrix} and sparse
+#'  \code{Matrix::RsparseMatrix} / \code{Matrix::CsparseMatrix} matrices.
 #'
 #' @return
 #' A dense \code{matrix}

@@ -3,7 +3,7 @@
 \docType{data}
 \name{FTRL}
 \alias{FTRL}
-\title{Creates FTRL proximal model.}
+\title{Creates FTRL proximal logistic regression  model.}
 \format{\code{R6Class} object.}
 \usage{
 FTRL

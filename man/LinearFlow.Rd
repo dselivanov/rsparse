@@ -3,7 +3,7 @@
 \docType{data}
 \name{LinearFlow}
 \alias{LinearFlow}
-\title{Linear-FLow method for one-class collaborative filtering}
+\title{Creates Linear-FLow model for one-class collaborative filtering}
 \format{\code{R6Class} object.}
 \usage{
 LinearFlow

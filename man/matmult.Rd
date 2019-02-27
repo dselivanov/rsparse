@@ -7,7 +7,7 @@
 \alias{tcrossprod,dgRMatrix,matrix-method}
 \alias{\%*\%,matrix,dgCMatrix-method}
 \alias{crossprod,matrix,dgCMatrix-method}
-\title{matmult}
+\title{Multithreaded Sparse-Dense Matrix Multiplication}
 \usage{
 \S4method{\%*\%}{dgRMatrix,matrix}(x, y)
 
@@ -18,16 +18,18 @@
 \S4method{crossprod}{matrix,dgCMatrix}(x, y)
 }
 \arguments{
-\item{x, y}{Numeric/float matrices.}
+\item{x, y}{dense \code{matrix} and sparse
+\code{Matrix::RsparseMatrix} / \code{Matrix::CsparseMatrix} matrices.}
 }
 \value{
 A dense \code{matrix}
 }
 \description{
-Multithreaded Sparse-Dense Matrix Multiplication
+Multithreaded \code{\%*\%}, \code{crossprod}, \code{tcrossprod}
+for sparse-dense matrix multiplication
 }
 \details{
-Accelerates sparse-dense matrix multiplications using openmp. Applicable to
+Accelerates sparse-dense matrix multiplications using openmp. Applicable to the following pairs:
 (\code{dgRMatrix}, \code{matrix}), (\code{matrix}, \code{dgRMatrix}),
 (\code{dgCMatrix}, \code{matrix}), (\code{matrix}, \code{dgCMatrix}) combinations
 }

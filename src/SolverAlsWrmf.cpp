@@ -106,7 +106,7 @@ double als_implicit_float(const Rcpp::S4 &m_csc_r,
                     double lambda,
                     unsigned n_threads,
                     unsigned solver, unsigned cg_steps = 3) {
-  #ifdef SINGLE_PRECISION_LAPACK_AVAILABLE
+  //#ifdef SINGLE_PRECISION_LAPACK_AVAILABLE
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
   Rcpp::IntegerMatrix XRM = XR.slot("Data");
   Rcpp::IntegerMatrix YRM = YR.slot("Data");
@@ -118,9 +118,9 @@ double als_implicit_float(const Rcpp::S4 &m_csc_r,
   arma::fmat Y = arma::fmat(y_ptr, YRM.nrow(), YRM.ncol(), false, true);
   arma::fmat XtX = arma::fmat(xtx_ptr, XtXRM.nrow(), XtXRM.ncol(), false, true);
   return (double)als_implicit_cpp<float>(Conf, X, Y, XtX, lambda, n_threads, solver, cg_steps);
-  #else
-  return -1.0;
-  #endif
+  //#else
+  //return -1.0;
+  //#endif
 }
 
 
