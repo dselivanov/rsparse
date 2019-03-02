@@ -15,7 +15,7 @@ Creates second order Factorization Machines model
 
 For usage details see \bold{Methods, Arguments and Examples} sections.
 \preformatted{
-fm = FM$new(learning_rate_w = 0.2, rank = 8, lambda_w = 0, lambda_v = 0, task = c("classification", "regression")
+fm = FM$new(learning_rate_w = 0.2, rank = 8, lambda_w = 0, lambda_v = 0, family = c("binomial", "gaussian")
   intercept = TRUE, learning_rate_v = learning_rate_w)
 fm$partial_fit(x, y, ...)
 fm$predict(x, ...)
@@ -26,7 +26,7 @@ fm$predict(x, ...)
 
 \describe{
   \item{\code{FM$new(learning_rate_w = 0.2, rank = 8, lambda_w = 1e-6, lambda_v = 1e-6,
-  task = c("classification", "regression"), intercept = TRUE, learning_rate_v = learning_rate_w)}}{Constructor
+  family = c("binomial", "gaussian"), intercept = TRUE, learning_rate_v = learning_rate_w)}}{Constructor
   for FactorizationMachines model. For description of arguments see \bold{Arguments} section.}
   \item{\code{$partial_fit(x, y, ...)}}{fits/updates model given input matrix \code{x} and target vector \code{y}.
   \code{x} shape = (n_samples, n_features)}
@@ -47,7 +47,7 @@ fm$predict(x, ...)
  \item{lambda_w}{regularization parameter for linear terms}
  \item{lambda_v}{regularization parameter for interactions terms}
  \item{n_features}{number of features in model (number of columns in expected model matrix) }
- \item{task}{ \code{"regression"} or \code{"classification"}}
+ \item{family}{ \code{"gaussian"} or \code{"binomial"}}
 }
 }
 

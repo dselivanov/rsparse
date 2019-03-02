@@ -18,3 +18,4 @@ Usually during model tuning it worth to keep some \code{x} matrix as hold-out da
 Then this \code{x} could be splitted in 2 parts - \emph{train} and \emph{test}.
 Model tries to predict \emph{test} data using \emph{train}
 }
+\keyword{internal}

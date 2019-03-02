@@ -46,10 +46,10 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
     If \code{v} (right singular vectors of the user-item interactions matrix)
     is provided then model initialized with its values.}
   \item{\code{$fit_transform(x, ...)}}{ fits model to
-    an input user-item matrix.
-    \bold{Returns factor matrix for users of size \code{n_users * rank}}}
-  \item{\code{$transform(x, ...)}}{transforms (new) sparse user-item interaction matrix into user-embeddings matrix.}
-  \item{\code{$predict(x, k, not_recommend = x, ...)}}{predict \bold{top k}
+    an input user-item interaction matrix.
+    \bold{Returns user embeddings matrix of the size \code{n_users * rank}}}
+  \item{\code{$transform(x, ...)}}{transforms user-item interaction matrix into user-embeddings matrix.}
+  \item{\code{$predict(x, k, not_recommend = x, ...)}}{predicts \bold{top k}
     item ids for users \code{x}. Users features should be defined the same way as they were defined in
     training data - as \bold{sparse matrix}. Column names (=item ids) should be in the same order as
     in the \code{fit_transform()}.}

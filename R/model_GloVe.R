@@ -1,7 +1,7 @@
 #' @name GloVe
-#' @title Creates Global Vectors word-embeddings model.
-#' @description Class for GloVe word-embeddings model.
-#' It can be trained via fully can asynchronous and parallel
+#' @title Creates Global Vectors matrix factorization model.
+#' @description GloVe matrix factorization model.
+#' Model can be trained via fully can asynchronous and parallel
 #' AdaGrad with \code{$fit_transform()} method.
 #' @format \code{R6Class} object.
 #' @section Usage:
@@ -19,7 +19,8 @@
 #'                     alpha = 0.75, lambda = 0, shuffle = FALSE)}}{Constructor for Global vectors model.
 #'                     For description of arguments see \bold{Arguments} section.}
 #'   \item{\code{$fit_transform(x, n_iter = 10L, convergence_tol = -1,
-#'               n_threads = parallel::detectCores(), ...)}}{fit Glove model to input matrix \code{x}}
+#'               n_threads = getOption("rsparse_omp_threads", 1L), ...)}}{
+#'               fit Glove model given input matrix \code{x}}
 #'}
 #' @field components represents context word vectors
 #' @field shuffle \code{logical = FALSE} by default. Defines shuffling before each SGD iteration.
@@ -30,7 +31,7 @@
 #'  \item{glove}{A \code{GloVe} object}
 #'  \item{x}{An input term co-occurence matrix. Preferably in \code{dgTMatrix} format}
 #'  \item{n_iter}{\code{integer} number of SGD iterations}
-#'  \item{word_vectors_size}{desired dimension for word vectors}
+#'  \item{word_vectors_size}{desired dimension for the word vectors}
 #'  \item{x_max}{\code{integer} maximum number of co-occurrences to use in the weighting function.
 #'    see the GloVe paper for details: \url{http://nlp.stanford.edu/pubs/glove.pdf}}
 #'  \item{learning_rate}{\code{numeric} learning rate for SGD. I do not recommend that you

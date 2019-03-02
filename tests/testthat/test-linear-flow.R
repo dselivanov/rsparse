@@ -8,7 +8,7 @@ test_that("test linear-flow", {
   lambda = 0
   rank = 8
   K = 10
-  cv_split = train_test_split(cv)
+  cv_split = rsparse:::train_test_split(cv)
   model = LinearFlow$new(rank = rank, lambda = lambda,
                          solve_right_singular_vectors = "svd", v = NULL)
 

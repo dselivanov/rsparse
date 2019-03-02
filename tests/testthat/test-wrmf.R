@@ -75,7 +75,7 @@ test_that("test WRMF extra", {
   nnmf = FALSE
   solver = "cholesky"
   n_iter = 10
-  cv_split = train_test_split(cv)
+  cv_split = rsparse:::train_test_split(cv)
   for(feedback in c("explicit", "implicit")) {
     model = WRMF$new(rank = rank,  lambda = lambda, feedback = feedback, non_negative = nnmf, solver = solver)
     user_emb = model$fit_transform(train, n_iter = n_iter, convergence_tol = 0.05)

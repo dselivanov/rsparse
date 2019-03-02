@@ -7,7 +7,7 @@
 #' Model tries to predict \emph{test} data using \emph{train}
 #' @param x sparse user-item interation matrix. Internally \code{Matrix::TsparseMatrix} is used.
 #' @param test_proportion - proportion of the observations for each user to keep as "test" data.
-#' @export
+#' @keywords internal
 train_test_split = function(x, test_proportion = 0.5) {
   stopifnot(inherits(x, "sparseMatrix"))
   temp = as(x, "TsparseMatrix")
