@@ -1,3 +1,9 @@
+[![Travis-CI Build Status](https://travis-ci.org/dselivanov/rsparse.svg?branch=master)](https://travis-ci.org/dselivanov/rsparse)
+[![codecov](https://codecov.io/gh/dselivanov/rsparse/branch/master/graph/badge.svg)](https://codecov.io/gh/dselivanov/rsparse/branch/master)
+[![License](https://img.shields.io/badge/license-GPL%3E%3D2-brightgreen.svg)](http://www.gnu.org/licenses/gpl-2.0.html)
+[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+
+
 # rsparse
 
 `rsparse` is an R package for statistical learning on **sparse data**. Notably it implements many algorithms sparse **matrix factorizations** with a focus on applications for **recommender systems**.

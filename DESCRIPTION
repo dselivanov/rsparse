@@ -51,6 +51,8 @@ Imports: Matrix,
 LinkingTo: 
     Rcpp, 
     RcppArmadillo
-Suggests: testthat
+Suggests: 
+    testthat, 
+    covr
 RoxygenNote: 6.1.0
 NeedsCompilation: yes
