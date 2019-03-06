@@ -1,3 +1,5 @@
+# nocov start
+
 make_sparse_approximation = function(x, A, B) {
   stopifnot(nrow(x) == ncol(A))
   stopifnot(ncol(x) == ncol(B))
@@ -50,3 +52,4 @@ pad_svd = function(x, rank) {
     x
   }
 }
+# nocov end

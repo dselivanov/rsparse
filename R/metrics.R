@@ -27,6 +27,8 @@ ap_k = function(predictions, actual, ...) {
 
   if(!is.integer(predictions)) {
     predictions = attr(predictions, "indices", TRUE)
+    if(is.null(predictions))
+      predictions_format_error()
   }
   y_csr = as(actual, "RsparseMatrix")
   res = numeric(n_u)
@@ -56,6 +58,8 @@ ndcg_k = function(predictions, actual, ...) {
   stopifnot(n_u == nrow(actual))
   if(!is.integer(predictions)) {
     predictions = attr(predictions, "indices", TRUE)
+    if(is.null(predictions))
+      predictions_format_error()
   }
   y_csr = as(actual, "RsparseMatrix")
   res = numeric(n_u)
@@ -109,4 +113,13 @@ idcg_at_k = function(actual_relevances, k = length(actual_relevances)) {
 ndcg_at_k = function(predicted_indices, actual_indices, actual_relevances, k = length(predicted_indices)) {
   k = min(k, length(predicted_indices), length(actual_indices))
   dcg_at_k(predicted_indices, actual_indices, actual_relevances, k) / idcg_at_k(actual_relevances, k)
+}
+
+predictions_format_error = function() {
+  stop(paste("`predictions` should be: ",
+             "1) integer matrix consisting of indices of predictions",
+             "OR",
+             "2) numeric matrix of prediction scores with 'indices' attribute",
+             "which should be integer matrix consisting of indices of predictions"
+  ))
 }

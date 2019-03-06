@@ -1,7 +1,8 @@
 # at the moment borrowed from softImpute package
 # setClass("SparsePlusLowRank", representation(x = "sparseMatrix", a = "matrix", b = "matrix"))
-
 # @export
+
+# nocov start
 splr = function(x, a = NULL, b = NULL) {
   # x + a %*% t(b)
   dx = dim(x)
@@ -112,3 +113,5 @@ splr_crossprod = function(x, y) {
 
 as.matrix.splr = function(x, ...)  as.matrix(x@x) + x@a %*% t(x@b)
 # setMethod("as.matrix","SparsePlusLowRank", as.matrix.splr)
+
+# nocov end

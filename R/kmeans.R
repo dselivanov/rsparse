@@ -1,3 +1,4 @@
+# nocov start
 kmeans = function(x, k, n_iter = 10L, init = NULL,
                   seed_mode = c("static_spread", "keep_existing", "static_subset", "random_subset", "random_spread"),
                   verbose = FALSE) {
@@ -20,3 +21,5 @@ kmeans = function(x, k, n_iter = 10L, init = NULL,
   # result is set of cluster centroids
   result
 }
+
+# nocov end
