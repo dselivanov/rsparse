@@ -22,27 +22,49 @@ NULL
 #' @rdname matmult
 #' @export
 setMethod("%*%", signature(x="dgRMatrix", y="matrix"), function(x, y) {
-  if(ncol(x) != nrow(y)) stop("non-conformable arguments")
-  csr_dense_tcrossprod(x, t(y), getOption("rsparse_omp_threads", 1))
+  check_dimensions_match(x, y)
+  res = csr_dense_tcrossprod(x, t(y), getOption("rsparse_omp_threads", 1))
+  set_dimnames(res, rownames(x), colnames(y))
 })
 
 #' @rdname matmult
 #' @export
 setMethod("tcrossprod", signature(x="dgRMatrix", y="matrix"), function(x, y) {
-  if(ncol(x) != ncol(y)) stop("non-conformable arguments")
-  csr_dense_tcrossprod(x, y, getOption("rsparse_omp_threads", 1))
+  check_dimensions_match(x, y, y_transposed = TRUE)
+  res = csr_dense_tcrossprod(x, y, getOption("rsparse_omp_threads", 1))
+  set_dimnames(res, rownames(x), rownames(y))
 })
 
 #' @rdname matmult
 #' @export
 setMethod("%*%", signature(x="matrix", y="dgCMatrix"), function(x, y) {
-  if(ncol(x) != nrow(y)) stop("non-conformable arguments")
-  dense_csc_prod(x, y, getOption("rsparse_omp_threads", 1))
+  check_dimensions_match(x, y)
+  res = dense_csc_prod(x, y, getOption("rsparse_omp_threads", 1))
+  set_dimnames(res, rownames(x), colnames(y))
 })
 
 #' @rdname matmult
 #' @export
 setMethod("crossprod", signature(x="matrix", y="dgCMatrix"), function(x, y) {
-  if(nrow(x) != nrow(y)) stop("non-conformable arguments")
-  dense_csc_prod(t(x), y, getOption("rsparse_omp_threads", 1))
+  x = t(x)
+  check_dimensions_match(x, y)
+  res = dense_csc_prod(x, y, getOption("rsparse_omp_threads", 1))
+  set_dimnames(res, rownames(x), colnames(y))
 })
+
+# nocov start
+set_dimnames = function(target, new_rownames, new_colnames) {
+  data.table::setattr(target, 'dimnames', list(new_rownames, new_colnames))
+  invisible(target)
+}
+
+check_dimensions_match = function(x, y, y_transposed = FALSE) {
+  test_non_conformable = if(y_transposed) {
+    ncol(x) != ncol(y)
+  } else {
+    ncol(x) != nrow(y)
+  }
+  if(test_non_conformable) stop("non-conformable arguments")
+}
+
+# nocov end

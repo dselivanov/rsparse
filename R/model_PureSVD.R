@@ -70,10 +70,13 @@ PureSVD = R6::R6Class(
       stopifnot(is.function(preprocess))
       private$preprocess = preprocess
     },
-    fit_transform = function(x, n_iter = 10L, convergence_tol = 1e-3, ...) {
+    fit_transform = function(x, n_iter = 100L, convergence_tol = 1e-3, ...) {
+      uids = rownames(x)
+      private$item_ids = colnames(x)
+
       x = private$check_convert_input(x)
       x = private$preprocess(x)
-      private$item_ids = colnames(x)
+
       n_user = nrow(x)
       n_item = ncol(x)
       private$svd = soft_svd(x, rank = private$rank,
@@ -83,15 +86,20 @@ PureSVD = R6::R6Class(
                      init = private$init,
                      ...)
       res = private$svd$u %*% diag(x = private$svd$d)
+      data.table::setattr(res, "dimnames", list(uids, NULL))
+
       private$components_ = t(private$svd$v %*%  diag(x = private$svd$d))
+      data.table::setattr(private$components_, "dimnames", list(NULL, private$item_ids))
       invisible(res)
     },
     transform = function(x, ...) {
+      uids = rownames(x)
       x = private$check_convert_input(x)
       x = private$preprocess(x)
       res = x %*% private$svd$v
-      rownames(res) = rownames(x)
-      as.matrix(res)
+      res = as.matrix(res)
+      data.table::setattr(res, "dimnames", list(uids, NULL))
+      res
     }
   ),
   private = list(
