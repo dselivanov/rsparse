@@ -1,6 +1,6 @@
-BaseRecommender = R6::R6Class(
+MatrixFactorizationRecommender = R6::R6Class(
   inherit = mlapi::mlapiDecomposition,
-  classname = "BaseRecommender",
+  classname = "MatrixFactorizationRecommender",
   public = list(
     predict = function(x, k, not_recommend = x, items_exclude = integer(0), ...) {
       items_exclude = unique(items_exclude)
@@ -19,11 +19,11 @@ BaseRecommender = R6::R6Class(
   private = list(
     predict_low_level = function(user_embeddings, item_embeddings, k, not_recommend, items_exclude = integer(0), ...) {
 
-      flog.debug("BaseRecommender$predict(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
+      flog.debug("MatrixFactorizationRecommender$predict(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
       RhpcBLASctl::blas_set_num_threads(1)
       on.exit({
         n_physical_cores = RhpcBLASctl::get_num_cores()
-        flog.debug("BaseRecommender$predict(): on exit `RhpcBLASctl::blas_set_num_threads(%d)` (=number of physical cores)", n_physical_cores)
+        flog.debug("MatrixFactorizationRecommender$predict(): on exit `RhpcBLASctl::blas_set_num_threads(%d)` (=number of physical cores)", n_physical_cores)
         RhpcBLASctl::blas_set_num_threads(n_physical_cores)
       })
 

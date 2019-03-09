@@ -55,7 +55,7 @@
 #' }
 #' @export
 PureSVD = R6::R6Class(
-  inherit = BaseRecommender,
+  inherit = MatrixFactorizationRecommender,
   classname = "PureSVD",
   public = list(
     initialize = function(rank = 10L,

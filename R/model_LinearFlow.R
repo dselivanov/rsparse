@@ -78,7 +78,7 @@
 #' @export
 LinearFlow = R6::R6Class(
   classname = "LinearFlow",
-  inherit = BaseRecommender,
+  inherit = MatrixFactorizationRecommender,
   public = list(
     v = NULL,
     initialize = function(rank = 8L,

@@ -102,7 +102,7 @@
 #' }
 #' @export
 WRMF = R6::R6Class(
-  inherit = BaseRecommender,
+  inherit = MatrixFactorizationRecommender,
   classname = "WRMF",
   public = list(
     initialize = function(rank = 10L,
