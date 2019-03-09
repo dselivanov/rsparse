@@ -104,7 +104,7 @@ FactorizationMachine = R6::R6Class(
       if(anyNA(x@x))
         stop("NA's in input matrix are not allowed")
 
-      p = fm_partial_fit(private$ptr_model, x, y, weights, do_update = TRUE, n_threads = getOption("rsparse_omp_threads"))
+      p = fm_partial_fit(private$ptr_model, x, y, weights, do_update = TRUE, n_threads = getOption("rsparse_omp_threads", 1L))
       invisible(p)
     },
     fit = function(x, y, weights = rep(1.0, length(y)), n_iter = 1L, ...) {
@@ -137,7 +137,7 @@ FactorizationMachine = R6::R6Class(
       if(any(is.na(x)))
         stop("NA's in input matrix are not allowed")
       # dummy numeric(0) - don't have y and don't need weights
-      p = fm_partial_fit(private$ptr_model, x, numeric(0), numeric(0), do_update = FALSE, n_threads = getOption("rsparse_omp_threads"))
+      p = fm_partial_fit(private$ptr_model, x, numeric(0), numeric(0), do_update = FALSE, n_threads = getOption("rsparse_omp_threads", 1L))
       return(p);
     }
   ),

@@ -198,7 +198,7 @@ WRMF = R6::R6Class(
 
       trace_values = vector("numeric", n_iter)
 
-      flog.info("starting factorization with %d threads", getOption("rsparse_omp_threads"))
+      flog.info("starting factorization with %d threads", getOption("rsparse_omp_threads", 1L))
       trace_lst = vector("list", n_iter)
       loss_prev_iter = Inf
       # iterate
@@ -208,7 +208,7 @@ WRMF = R6::R6Class(
         stopifnot(ncol(private$U) == ncol(c_iu))
         if (private$feedback == "implicit") {
           # private$U will be modified in place
-          loss = private$als_implicit_fun(c_iu, private$components_, private$U, private$XtX, n_threads = getOption("rsparse_omp_threads"),
+          loss = private$als_implicit_fun(c_iu, private$components_, private$U, private$XtX, n_threads = getOption("rsparse_omp_threads", 1L),
                                           lambda = private$lambda, solver = private$solver_code, cg_steps = private$cg_steps)
         } else if (private$feedback == "explicit") {
           private$U = private$solver_explicit_feedback(c_iu, private$components_)
@@ -225,7 +225,7 @@ WRMF = R6::R6Class(
 
         if (private$feedback == "implicit") {
           # private$components_ will be modified in place
-          loss = private$als_implicit_fun(c_ui, private$U, private$components_, YtY, n_threads = getOption("rsparse_omp_threads"),
+          loss = private$als_implicit_fun(c_ui, private$U, private$components_, YtY, n_threads = getOption("rsparse_omp_threads", 1L),
                                           lambda = private$lambda, private$solver_code, private$cg_steps)
         } else if (private$feedback == "explicit") {
           private$components_ = private$solver_explicit_feedback(c_ui, private$U)
@@ -237,7 +237,7 @@ WRMF = R6::R6Class(
         # calculate some metrics if needed in order to diagnose convergence
         #------------------------------------------------------------------------
         if (private$feedback == "explicit")
-          loss = als_loss_explicit(c_ui, private$U, private$components_, private$lambda, getOption("rsparse_omp_threads"));
+          loss = als_loss_explicit(c_ui, private$U, private$components_, private$lambda, getOption("rsparse_omp_threads", 1L));
 
         #update XtX
         private$XtX = tcrossprod(private$components_) +
@@ -308,7 +308,7 @@ WRMF = R6::R6Class(
         } else {
           res = float(0, nrow = private$rank, ncol = nrow(x))
         }
-        private$als_implicit_fun(t(x), private$components_, res, private$XtX, n_threads = getOption("rsparse_omp_threads"),
+        private$als_implicit_fun(t(x), private$components_, res, private$XtX, n_threads = getOption("rsparse_omp_threads", 1L),
                                  lambda = private$lambda,
                                  private$solver_code, private$cg_steps)
       } else if(private$feedback == "explicit")

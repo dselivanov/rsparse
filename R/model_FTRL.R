@@ -113,7 +113,7 @@ FTRL = R6::R6Class(
 
       # NOTE THAT private$z and private$n will be updated in place during the call !!!
       p = ftrl_partial_fit(m = x, y = y, R_model = private$model, weights = weights,
-                           do_update = TRUE, n_threads = getOption("rsparse_omp_threads"))
+                           do_update = TRUE, n_threads = getOption("rsparse_omp_threads", 1L))
       invisible(p)
     },
     fit = function(x, y, weights = rep(1.0, length(y)), n_iter = 1L, ...) {
@@ -138,7 +138,7 @@ FTRL = R6::R6Class(
       p = ftrl_partial_fit(m = x, y = numeric(0), R_model = private$model,
                            weights = rep(1, nrow(x)),
                            do_update = FALSE,
-                           n_threads = getOption("rsparse_omp_threads"))
+                           n_threads = getOption("rsparse_omp_threads", 1L))
       return(p);
     },
     #-----------------------------------------------------------------

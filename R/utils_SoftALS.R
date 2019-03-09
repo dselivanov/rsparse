@@ -9,13 +9,13 @@ make_sparse_approximation = function(x, A, B) {
 make_sparse_approximation.CsparseMatrix = function(x, A, B) {
   CSC = 1L
   CSR = 2L
-  cpp_make_sparse_approximation(x, A, B, CSC, getOption("rsparse_omp_threads"))
+  cpp_make_sparse_approximation(x, A, B, CSC, getOption("rsparse_omp_threads", 1L))
 }
 
 make_sparse_approximation.RsparseMatrix = function(x, A, B) {
   CSC = 1L
   CSR = 2L
-  cpp_make_sparse_approximation(x, A, B, CSR, getOption("rsparse_omp_threads"))
+  cpp_make_sparse_approximation(x, A, B, CSR, getOption("rsparse_omp_threads", 1L))
 }
 
 calc_frobenius_norm_delta = function(svd_old, svd_new) {

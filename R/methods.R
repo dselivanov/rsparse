@@ -23,7 +23,7 @@ NULL
 #' @export
 setMethod("%*%", signature(x="dgRMatrix", y="matrix"), function(x, y) {
   check_dimensions_match(x, y)
-  res = csr_dense_tcrossprod(x, t(y), getOption("rsparse_omp_threads", 1))
+  res = csr_dense_tcrossprod(x, t(y), getOption("rsparse_omp_threads", 1L))
   set_dimnames(res, rownames(x), colnames(y))
 })
 
@@ -31,7 +31,7 @@ setMethod("%*%", signature(x="dgRMatrix", y="matrix"), function(x, y) {
 #' @export
 setMethod("tcrossprod", signature(x="dgRMatrix", y="matrix"), function(x, y) {
   check_dimensions_match(x, y, y_transposed = TRUE)
-  res = csr_dense_tcrossprod(x, y, getOption("rsparse_omp_threads", 1))
+  res = csr_dense_tcrossprod(x, y, getOption("rsparse_omp_threads", 1L))
   set_dimnames(res, rownames(x), rownames(y))
 })
 
@@ -39,7 +39,7 @@ setMethod("tcrossprod", signature(x="dgRMatrix", y="matrix"), function(x, y) {
 #' @export
 setMethod("%*%", signature(x="matrix", y="dgCMatrix"), function(x, y) {
   check_dimensions_match(x, y)
-  res = dense_csc_prod(x, y, getOption("rsparse_omp_threads", 1))
+  res = dense_csc_prod(x, y, getOption("rsparse_omp_threads", 1L))
   set_dimnames(res, rownames(x), colnames(y))
 })
 
@@ -48,7 +48,7 @@ setMethod("%*%", signature(x="matrix", y="dgCMatrix"), function(x, y) {
 setMethod("crossprod", signature(x="matrix", y="dgCMatrix"), function(x, y) {
   x = t(x)
   check_dimensions_match(x, y)
-  res = dense_csc_prod(x, y, getOption("rsparse_omp_threads", 1))
+  res = dense_csc_prod(x, y, getOption("rsparse_omp_threads", 1L))
   set_dimnames(res, rownames(x), colnames(y))
 })
 
