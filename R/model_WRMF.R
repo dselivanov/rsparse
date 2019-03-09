@@ -1,6 +1,6 @@
 #' @name WRMF
 #'
-#' @title (Weighted) Regularized Matrix Facrtorization for collaborative filtering
+#' @title Weighted Regularized Matrix Facrtorization for collaborative filtering
 #' @description Creates matrix factorization model which could be solved with Alternating Least Squares (Weighted ALS for implicit feedback).
 #' For implicit feedback see (Hu, Koren, Volinsky)'2008 paper \url{http://yifanhu.net/PUB/cf.pdf}.
 #' For explicit feedback model is classic model for rating matrix decomposition with MSE error (without biases at the moment).
@@ -21,24 +21,23 @@
 #' \preformatted{
 #'   model = WRMF$new(rank = 10L, lambda = 0,
 #'                   feedback = c("implicit", "explicit"),
-#'                   init_stdv = 0.01,
 #'                   non_negative = FALSE,
 #'                   solver = c("conjugate_gradient", "cholesky"),
 #'                   cg_steps = 3L,
-#'                   components = NULL)
+#'                   init = NULL)
 #'   model$fit_transform(x, n_iter = 5L, ...)
+#'   model$transform(x)
 #'   model$predict(x, k, not_recommend = x, items_exclude = NULL, ...)
 #'   model$components
-#'   model$add_scorers(x_train, x_cv, specs = list("map10" = "map@@10"), ...)
 #'   model$remove_scorer(name)
 #' }
 #' @section Methods:
 #' \describe{
 #'   \item{\code{$new(rank = 10L, lambda = 0, feedback = c("implicit", "explicit"),
-#'                    init_stdv = 0.01, non_negative = FALSE,
+#'                    non_negative = FALSE,
 #'                    solver = c("conjugate_gradient", "cholesky"), cg_steps = 3L,
-#'                    components = NULL) }}{ creates matrix
-#'     factorization model model with \code{rank} latent factors. If \code{components} is provided then initialize
+#'                    init = NULL) }}{ creates matrix
+#'     factorization model model with \code{rank} latent factors. If \code{init} is provided then initialize
 #'     item embeddings with its values.}
 #'   \item{\code{$fit_transform(x, n_iter = 5L, ...)}}{ fits model to
 #'     an input user-item matrix. (preferably in "dgCMatrix" format).
@@ -46,6 +45,8 @@
 #'     Usually \code{r_ui} corresponds to the number of interactions of user \code{u} and item \code{i}.
 #'     For explicit feedback values in \code{x} represents ratings.
 #'     \bold{Returns factor matrix for users of size \code{n_users * rank}}}
+#'   \item{\code{$transform(x, ...)}}{Calculates user embeddings from given \code{x} user-item matrix.
+#'     Result is \code{n_users * rank} matrix}
 #'   \item{\code{$predict(x, k, not_recommend = x, ...)}}{predicts \code{top k}
 #'     item indices for users \code{x}. Additionally contains \code{scores} attribute - "score"
 #'     values for each prediction. If model contains item ids (input matrix to \code{fit_transform()} had column-names
@@ -54,11 +55,7 @@
 #'     Users features \code{x} should be defined the same way as they were defined in training data -
 #'     as \bold{sparse matrix} of confidence values (implicit feedback) or ratings (explicit feedback).
 #'     Column names (=item ids) should be in the same order as in the \code{fit_transform()}.}
-#'   \item{\code{$add_scorers(x_train, x_cv, specs = list("map10" = "map@@10"), ...)}}{add a metric to watchlist.
-#'   Metric will be evaluated after each ALS interation. At the moment following metrices are supported:
-#'     \bold{"loss"}, \bold{"map@@k"}, \bold{"ndcg@@k"}, where \bold{k} is some integer. For example \code{map@@10}.}
-#'   \item{\code{$remove_scorer(name)}}{remove a metric from watchlist}
-#'   \item{\code{$components}}{item factors matrix of size \code{rank * n_items}}
+#'   \item{\code{$components}}{items embeddings matrix of size \code{rank * n_items}}
 #'}
 #' @section Arguments:
 #' \describe{
@@ -68,11 +65,6 @@
 #'  For implicit feedback all positive interactions should be filled with \bold{confidence} values.
 #'  Missed interactions should me zeros/empty.
 #'  So for simple case case when \code{confidence = 1 + alpha * x}}
-#'  \item{x_train}{An input user-item \bold{relevance} matrix. Used during evaluation of \code{map@@k}, \code{ndcg@@k}
-#'    Should have the same shape as corresponding confidence matrix \code{x_cv}.
-#'    Values are used as "relevance" in ndgc calculation}
-#'  \item{x_cv}{user-item matrix used for validation (ground-truth observations)}
-#'  \item{name}{\code{character} - user-defined name of the scorer. For example "ndcg-scorer-1"}
 #'  \item{rank}{\code{integer} - number of latent factors}
 #'  \item{lambda}{\code{numeric} - regularization parameter}
 #'  \item{feedback}{\code{character} - feedback type - one of \code{c("implicit", "explicit")}}
@@ -94,10 +86,9 @@
 #'    By default it excludes previously seen/consumed items.}
 #'  \item{items_exclude}{\code{character} = item ids or \code{integer} = item indices or \code{NULL} -
 #'  items to exclude from recommendations for \bold{all} users.}
-#'  \item{convergence_tol}{{\code{numeric = -Inf} defines early stopping strategy. We stop fitting
-#'     when one of two following conditions will be satisfied: (a) we have used
-#'     all iterations, or (b) \code{loss_previous_iter / loss_current_iter - 1 < convergence_tol}}}
-#'  \item{init_stdv}{\code{numeric} standart deviation for initialization of the initial latent matrices}
+#'  \item{convergence_tol}{{\code{numeric = -Inf} defines early stopping strategy. Model stops fitting
+#'     when one of two following conditions is satisfied: (a) exceed number of iterations,
+#'     or (b) \code{loss_previous_iter / loss_current_iter - 1 < convergence_tol}}}
 #'  \item{...}{other arguments. Not used at the moment}
 #' }
 #' @export
@@ -107,17 +98,16 @@ WRMF = R6::R6Class(
   public = list(
     initialize = function(rank = 10L,
                           lambda = 0,
+                          init = NULL,
+                          preprocess = identity,
                           feedback = c("implicit", "explicit"),
-                          init_stdv = 0.01,
                           non_negative = FALSE,
                           solver = c("conjugate_gradient", "cholesky"),
                           cg_steps = 3L,
-                          components = NULL,
-                          preprocess = identity,
                           precision = c("double", "float"),
                           ...) {
-      stopifnot(is.null(components) || is.matrix(components))
-      private$components_ = components
+      stopifnot(is.null(init) || is.matrix(init))
+      private$components_ = init
       solver = match.arg(solver)
       private$precision = match.arg(precision)
 
@@ -140,7 +130,6 @@ WRMF = R6::R6Class(
 
       private$set_internal_matrix_formats(sparse = "CsparseMatrix", dense = NULL)
       private$lambda = as.numeric(lambda)
-      private$init_stdv = as.numeric(init_stdv)
       private$rank = as.integer(rank)
       stopifnot(is.function(preprocess))
       private$preprocess = preprocess
@@ -182,7 +171,11 @@ WRMF = R6::R6Class(
 
       if(is.null(private$components_)) {
         if(private$precision == "double")
-          private$components_ = matrix(rnorm(n_item * private$rank, 0, private$init_stdv), ncol = n_item, nrow = private$rank)
+          private$components_ = matrix(
+            rnorm(n_item * private$rank, 0, 0.01),
+            ncol = n_item,
+            nrow = private$rank
+          )
         else
           private$components_ = flrnorm(private$rank, n_item)
       } else {
@@ -324,8 +317,10 @@ WRMF = R6::R6Class(
       else
         setattr(res@Data, "dimnames", list(rownames(x), NULL))
       res
-
-    },
+    }
+  ),
+  private = list(
+    # FIXME - not used anymore - consider to remove
     add_scorers = function(x_train, x_cv, specs = list("map10" = "map@10"), ...) {
       stopifnot(data.table::uniqueN(names(specs)) == length(specs))
       private$cv_data = list(train = x_train, cv = x_cv)
@@ -347,10 +342,10 @@ WRMF = R6::R6Class(
         scorer_fun = scorer_conf[[1]]
         if(scorer_fun == "map")
           scorer_placeholder[["scorer_function"]] =
-            function(predictions, ...) mean(ap_k(predictions, private$cv_data$cv, ...), na.rm = T)
+          function(predictions, ...) mean(ap_k(predictions, private$cv_data$cv, ...), na.rm = T)
         if(scorer_fun == "ndcg")
           scorer_placeholder[["scorer_function"]] =
-            function(predictions, ...) mean(ndcg_k(predictions, private$cv_data$cv, ...), na.rm = T)
+          function(predictions, ...) mean(ndcg_k(predictions, private$cv_data$cv, ...), na.rm = T)
 
         private$scorers[[scorer_name]] = scorer_placeholder
       }
@@ -360,18 +355,10 @@ WRMF = R6::R6Class(
         stop(sprintf("can't find scorer '%s'", scorer_name))
       rm(list = scorer_name, envir = private$scorers)
     },
-    finalize = function() {
-      rm(list = names(private$scorers), envir = private$scorers)
-      private$scorers = NULL
-      gc();
-    }
-  ),
-  private = list(
     solver_code = NULL,
     cg_steps = NULL,
     scorers = NULL,
     lambda = NULL,
-    init_stdv = NULL,
     rank = NULL,
     non_negative = NULL,
     # user factor matrix = rank * n_users

@@ -21,9 +21,9 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 \preformatted{
   model = LinearFlow$new( rank = 8L,
                           lambda = 0,
-                          solve_right_singular_vectors = c("soft_impute", "svd"),
-                          v = NULL,
+                          init = NULL,
                           preprocess = identity,
+                          solve_right_singular_vectors = c("soft_impute", "svd")
                           ...)
   model$fit_transform(x, ...)
   model$transform(x, ...)
@@ -41,9 +41,11 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 
 \describe{
   \item{\code{$new(rank = 8L, lambda = 0,
+              init = NULL,
+              preprocess = identity,
               solve_right_singular_vectors = c("svd", "soft_impute"),
-              v = NULL, preprocess = identity, ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
-    If \code{v} (right singular vectors of the user-item interactions matrix)
+              ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
+    If \code{init} (right singular vectors of the user-item interactions matrix)
     is provided then model initialized with its values.}
   \item{\code{$fit_transform(x, ...)}}{ fits model to
     an input user-item interaction matrix.

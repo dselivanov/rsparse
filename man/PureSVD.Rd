@@ -23,6 +23,7 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
                       preprocess = identity,
                       ...)
   model$fit_transform(x, n_iter = 5L, ...)
+  model$transform(x, ...)
   model$predict(x, k, not_recommend = x, ...)
   model$components
 }
@@ -41,6 +42,8 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
   \item{\code{$fit_transform(x, n_iter = 5L, ...)}}{ fits model to
     an input user-item matrix.
     \bold{Returns factor matrix for users of size \code{n_users * rank}}}
+  \item{\code{$transform(x, ...)}}{Calculates user embeddings from given \code{x} user-item matrix.
+    Result is \code{n_users * rank} matrix}
   \item{\code{$predict(x, k, not_recommend = x, ...)}}{predict \code{top k}
     item ids for users \code{x} (= column names from the matrix passed to \code{fit_transform()} method).
     Users features should be defined the same way as they were defined in training data - as \bold{sparse matrix}

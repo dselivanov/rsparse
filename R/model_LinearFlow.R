@@ -17,9 +17,9 @@
 #' \preformatted{
 #'   model = LinearFlow$new( rank = 8L,
 #'                           lambda = 0,
-#'                           solve_right_singular_vectors = c("soft_impute", "svd"),
-#'                           v = NULL,
+#'                           init = NULL,
 #'                           preprocess = identity,
+#'                           solve_right_singular_vectors = c("soft_impute", "svd")
 #'                           ...)
 #'   model$fit_transform(x, ...)
 #'   model$transform(x, ...)
@@ -34,9 +34,11 @@
 #' @section Methods:
 #' \describe{
 #'   \item{\code{$new(rank = 8L, lambda = 0,
+#'               init = NULL,
+#'               preprocess = identity,
 #'               solve_right_singular_vectors = c("svd", "soft_impute"),
-#'               v = NULL, preprocess = identity, ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
-#'     If \code{v} (right singular vectors of the user-item interactions matrix)
+#'               ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
+#'     If \code{init} (right singular vectors of the user-item interactions matrix)
 #'     is provided then model initialized with its values.}
 #'   \item{\code{$fit_transform(x, ...)}}{ fits model to
 #'     an input user-item interaction matrix.
@@ -83,14 +85,14 @@ LinearFlow = R6::R6Class(
     v = NULL,
     initialize = function(rank = 8L,
                           lambda = 0,
-                          solve_right_singular_vectors = c("soft_impute", "svd"),
-                          v = NULL,
-                          preprocess = identity) {
+                          init = NULL,
+                          preprocess = identity,
+                          solve_right_singular_vectors = c("soft_impute", "svd")) {
       private$preprocess = preprocess
       private$rank = as.integer(rank)
       private$solve_right_singular_vectors = match.arg(solve_right_singular_vectors)
       private$lambda = as.numeric(lambda)
-      self$v = v
+      self$v = init
     },
     fit_transform = function(x, ...) {
       stopifnot(inherits(x, "sparseMatrix") || inherits(x, "SparsePlusLowRank"))

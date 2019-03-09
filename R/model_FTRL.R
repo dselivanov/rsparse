@@ -39,10 +39,9 @@
 #'  \item{l1_ratio}{controls L1 vs L2 penalty mixing.
 #'  1 = Lasso regression, 0 = Ridge regression. Elastic net is in between.}
 #'  \item{dropout}{dropout - percentage of random features to
-#'  exclude from each sample. Kind of regularization.}
-#'  \item{n_features}{number of features in model (number of columns in expected model matrix) }
-#'  \item{family}{family of generalized linear model to solve. Only
-#'  \code{binomial} (or logistic regression) supported at the moment.}
+#'  exclude from each sample. Acts as regularization.}
+#'  \item{family}{ a description of the error distribution and link function to be used in the model.
+#'        Only \code{binomial} (or logistic regression) supported at the moment.}
 #' }
 #' @export
 #' @examples

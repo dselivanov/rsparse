@@ -4,7 +4,7 @@
 #' @section Usage:
 #' For usage details see \bold{Methods, Arguments and Examples} sections.
 #' \preformatted{
-#' fm = FM$new(learning_rate_w = 0.2, rank = 8, lambda_w = 0, lambda_v = 0, family = c("binomial", "gaussian")
+#' fm = FM$new(learning_rate_w = 0.2, rank = 4, lambda_w = 0, lambda_v = 0, family = c("binomial", "gaussian")
 #'   intercept = TRUE, learning_rate_v = learning_rate_w)
 #' fm$partial_fit(x, y, ...)
 #' fm$predict(x, ...)
@@ -12,7 +12,7 @@
 #' @format \code{R6Class} object.
 #' @section Methods:
 #' \describe{
-#'   \item{\code{FM$new(learning_rate_w = 0.2, rank = 8, lambda_w = 1e-6, lambda_v = 1e-6,
+#'   \item{\code{FM$new(learning_rate_w = 0.2, rank = 4, lambda_w = 0, lambda_v = 0,
 #'   family = c("binomial", "gaussian"), intercept = TRUE, learning_rate_v = learning_rate_w)}}{Constructor
 #'   for FactorizationMachines model. For description of arguments see \bold{Arguments} section.}
 #'   \item{\code{$partial_fit(x, y, ...)}}{fits/updates model given input matrix \code{x} and target vector \code{y}.
@@ -30,8 +30,10 @@
 #'  \item{rank}{rank of the latent dimension in factorization}
 #'  \item{lambda_w}{regularization parameter for linear terms}
 #'  \item{lambda_v}{regularization parameter for interactions terms}
-#'  \item{n_features}{number of features in model (number of columns in expected model matrix) }
-#'  \item{family}{ \code{"gaussian"} or \code{"binomial"}}
+#'  \item{intercept}{logical flag which specify whether to allow model to have non-zero
+#'       intercept/bias}
+#'  \item{family}{ a description of the error distribution and link function to be used in the model.
+#'        Can be \code{"gaussian"} (for regression) or \code{"binomial"} (for classification)}
 #' }
 #' @export
 FactorizationMachine = R6::R6Class(
@@ -47,14 +49,14 @@ FactorizationMachine = R6::R6Class(
                           intercept = TRUE,
                           learning_rate_v = learning_rate_w) {
       stopifnot(lambda_w >= 0 && lambda_v >= 0 && learning_rate_w > 0 && rank >= 1 && learning_rate_v > 0)
-      family = match.arg(family);
-      private$learning_rate_w = learning_rate_w
-      private$learning_rate_v = learning_rate_v
-      private$rank = rank
-      private$lambda_w = lambda_w
-      private$lambda_v = lambda_v
+      family = match.arg(family)
       private$family = family
-      private$intercept = intercept
+      private$learning_rate_w = as.numeric(learning_rate_w)
+      private$learning_rate_v = as.numeric(learning_rate_v)
+      private$rank = as.integer(rank)
+      private$lambda_w = as.numeric(lambda_w)
+      private$lambda_v = as.numeric(lambda_v)
+      private$intercept = as.logical(intercept)
     },
     partial_fit = function(x, y, weights = rep(1.0, length(y)), ...) {
       if(!inherits(class(x), private$internal_matrix_format)) {
