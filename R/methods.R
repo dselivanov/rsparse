@@ -52,6 +52,99 @@ setMethod("crossprod", signature(x="matrix", y="dgCMatrix"), function(x, y) {
   set_dimnames(res, rownames(x), colnames(y))
 })
 
+get_indices_integer = function(i, max_i, index_names) {
+  if(is.numeric(i)) i = as.integer(i)
+  if(is.logical(i)) i = which(i)
+  if(is.character(i)) i = match(i, index_names)
+  i[i < 0] = max_i + i[i < 0] + 1L
+  if(anyNA(i) || any(i >  max_i, na.rm = TRUE))
+    stop("some of row subset indices are not present in matrix")
+  i
+}
+
+#' CSR Matrices Slicing
+#'
+#' @description natively slice CSR matrices without converting them to triplet/CSC
+#'
+#' @param i row indices to subset
+#' @param j column indices to subset
+#' @param drop whether to simplify 1d matrix to a vector
+#'
+#' @return
+#' A \code{RsparseMatrix}
+#'
+#' @name slice
+#' @rdname slice
+NULL
+
+subset_csr = function(x, i, j, ..., drop = TRUE) {
+
+  if(missing(i) && missing(j)) return(x)
+
+  row_names = rownames(x)
+  col_names = colnames(x)
+
+  if(missing(i)) i = seq_len(nrow(x))
+  if(missing(j)) j = seq_len(ncol(x))
+  # convert integer/numeric/logical/character indices to integer indices
+  # also takes care of negatice indices
+  i = get_indices_integer(i, nrow(x), row_names)
+  j = get_indices_integer(j, ncol(x), col_names)
+
+  n_row = length(i)
+  n_col = length(j)
+  col_indices = vector('list', n_row)
+  x_values = vector('list', n_row)
+
+  for(k in seq_len(n_row) ) {
+    j1 = x@p[[ i[[k]] ]]
+    j2 = x@p[[ i[[k]] + 1L ]]
+    if(j2 > j1) {
+      j_seq = seq.int(j1, j2 - 1L) + 1L
+
+      # indices should start with 1
+      jj = x@j[j_seq] + 1L
+      # FIXME may be it will make sense to replace with fastmatch::fmatch
+      keep = match(jj, j, nomatch = 0L)
+      # keep only those which are in requested columns
+      which_keep = keep > 0L
+      keep = keep[which_keep]
+
+      # indices starting with 0
+      col_indices[[k]] = keep - 1L
+
+      x_values[[k]] = x@x[j_seq][which_keep]
+    }
+  }
+  res = new("dgRMatrix")
+  res@p = c(0L, cumsum(lengths(x_values)))
+  res@j = do.call(c, col_indices)
+  res@x = do.call(c, x_values)
+  res@Dim = c(n_row, n_col)
+
+  row_names = if(is.null(row_names)) NULL else row_names[i]
+  col_names = if(is.null(col_names)) NULL else col_names[j]
+  res@Dimnames = list(row_names, col_names)
+
+  if(isTRUE(drop) && (n_row == 1L || n_col == 1L))
+    res = as.vector(res)
+  res
+}
+
+#' @rdname slice
+#' @export
+setMethod(`[`, signature(x = "RsparseMatrix", i = "index", j = "index", drop="logical"), subset_csr)
+#' @rdname slice
+#' @export
+setMethod(`[`, signature(x = "RsparseMatrix", i = "missing", j = "index", drop="logical"), subset_csr)
+#' @rdname slice
+#' @export
+setMethod(`[`, signature(x = "RsparseMatrix", i = "index", j = "missing", drop="logical"), subset_csr)
+#' @rdname slice
+#' @export
+setMethod(`[`, signature(x = "RsparseMatrix", i = "missing", j = "missing", drop="logical"), subset_csr)
+
+
 # nocov start
 set_dimnames = function(target, new_rownames, new_colnames) {
   data.table::setattr(target, 'dimnames', list(new_rownames, new_colnames))

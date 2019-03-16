@@ -41,7 +41,8 @@ Encoding: UTF-8
 LazyData: true
 ByteCompile: true
 Depends: R (>= 3.1.0), methods
-Imports: Matrix, 
+Imports: 
+    Matrix, 
     Rcpp, 
     mlapi (>= 0.1.0), 
     data.table (>= 1.10.0),

@@ -1,3 +1,5 @@
+- 2019-03-16
+    - added methods to natively slice CSR matrices without converting them to triplet/CSC
 - 2018-10-25
     - add GloVe matrix factorization (adapted from `text2vec`)
     - link to `float` package - credits to @snoweye and @wrathematics
