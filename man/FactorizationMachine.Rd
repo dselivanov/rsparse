@@ -15,7 +15,7 @@ Creates second order Factorization Machines model
 
 For usage details see \bold{Methods, Arguments and Examples} sections.
 \preformatted{
-fm = FM$new(learning_rate_w = 0.2, rank = 8, lambda_w = 0, lambda_v = 0, family = c("binomial", "gaussian")
+fm = FM$new(learning_rate_w = 0.2, rank = 4, lambda_w = 0, lambda_v = 0, family = c("binomial", "gaussian")
   intercept = TRUE, learning_rate_v = learning_rate_w)
 fm$partial_fit(x, y, ...)
 fm$predict(x, ...)
@@ -25,7 +25,7 @@ fm$predict(x, ...)
 \section{Methods}{
 
 \describe{
-  \item{\code{FM$new(learning_rate_w = 0.2, rank = 8, lambda_w = 1e-6, lambda_v = 1e-6,
+  \item{\code{FM$new(learning_rate_w = 0.2, rank = 4, lambda_w = 0, lambda_v = 0,
   family = c("binomial", "gaussian"), intercept = TRUE, learning_rate_v = learning_rate_w)}}{Constructor
   for FactorizationMachines model. For description of arguments see \bold{Arguments} section.}
   \item{\code{$partial_fit(x, y, ...)}}{fits/updates model given input matrix \code{x} and target vector \code{y}.
@@ -46,8 +46,10 @@ fm$predict(x, ...)
  \item{rank}{rank of the latent dimension in factorization}
  \item{lambda_w}{regularization parameter for linear terms}
  \item{lambda_v}{regularization parameter for interactions terms}
- \item{n_features}{number of features in model (number of columns in expected model matrix) }
- \item{family}{ \code{"gaussian"} or \code{"binomial"}}
+ \item{intercept}{logical flag which specify whether to allow model to have non-zero
+      intercept/bias}
+ \item{family}{ a description of the error distribution and link function to be used in the model.
+       Can be \code{"gaussian"} (for regression) or \code{"binomial"} (for classification)}
 }
 }
 
