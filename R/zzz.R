@@ -4,7 +4,6 @@
 #' @import data.table
 #' @import Rcpp
 #' @import float
-#' @import futile.logger
 #' @importFrom RhpcBLASctl get_num_cores
 #' @importFrom mlapi mlapiDecomposition
 #' @useDynLib rsparse
@@ -21,6 +20,10 @@
 
 .onLoad = function(libname, pkgname) {
   options("rsparse_omp_threads" = detect_number_omp_threads())
+
+  logger = lgr::get_logger('rsparse')
+  logger$set_threshold('info')
+  assign('logger', logger, envir = parent.env(environment()))
 }
 
 #' Detects number of OpenMP threads in the system

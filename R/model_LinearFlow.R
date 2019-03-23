@@ -99,13 +99,13 @@ LinearFlow = R6::R6Class(
       x = private$preprocess(x)
       private$item_ids = colnames(x)
       self$v = private$get_right_singular_vectors(x, ...)
-      flog.debug("calculating RHS")
+      logger$trace("calculating RHS")
 
       # rhs = t(self$v) %*% t(x) %*% x
       # same as above but a bit faster:
       rhs = crossprod(x %*% self$v, x)
 
-      flog.debug("calculating LHS")
+      logger$trace("calculating LHS")
       lhs = rhs %*% self$v
       private$components_ = private$fit_transform_internal(lhs, rhs, private$lambda, ...)
       invisible(as.matrix(x %*% self$v))
@@ -150,12 +150,12 @@ LinearFlow = R6::R6Class(
       metric_name = metric[[1]]
 
       self$v = private$get_right_singular_vectors(x, ...)
-      flog.debug("calculating RHS")
+      logger$trace("calculating RHS")
       # rhs = t(self$v) %*% t(x) %*% x
       # same as above but a bit faster:
       rhs = crossprod(x %*% self$v, x)
 
-      flog.debug("calculating LHS")
+      logger$trace("calculating LHS")
       lhs = rhs %*% self$v
       # calculate "reasonable" lambda from values of main diagonal of LHS
       if(lambda_auto) {
@@ -184,7 +184,7 @@ LinearFlow = R6::R6Class(
           private$components_ = Y
           private$lambda = lambda_i
         }
-        flog.info("%d/%d lambda %.3f score = %.3f", i, length(lambda), lambda_i, score)
+        logger$trace("%d/%d lambda %.3f score = %.3f", i, length(lambda), lambda_i, score)
       }
       cv_res
     }
@@ -198,7 +198,7 @@ LinearFlow = R6::R6Class(
     get_right_singular_vectors = function(x, ...) {
       result = NULL
       if(!is.null(self$v)) {
-        flog.debug("found v, checking it...")
+        logger$trace("found `init`, checking it")
         stopifnot(nrow((self$v)) == ncol(x))
         stopifnot(ncol((self$v)) == private$rank)
         result = self$v
@@ -217,7 +217,7 @@ LinearFlow = R6::R6Class(
       result
     },
     fit_transform_internal = function(lhs, rhs, lambda, ...) {
-      flog.debug("solving least squares with lambda %.3f", lambda)
+      logger$trace("solving least squares with lambda %.3f", lambda)
       lhs_ridge = lhs + diag(rep(lambda, private$rank))
       as.matrix(solve(lhs_ridge, rhs))
     }

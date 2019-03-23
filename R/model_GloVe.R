@@ -88,22 +88,18 @@ GloVe = R6::R6Class(
     fit_transform = function(x, n_iter = 10L, convergence_tol = -1,
                              n_threads = getOption("rsparse_omp_threads", 1L), ...) {
       # convert to internal native format
-      flog.trace("checking input format")
       x = super$check_convert_input(x)
       stopifnot(ncol(x) == nrow(x))
       embedding_names = colnames(x)
       if(is.null(embedding_names)) embedding_names = rownames(x)
 
-      flog.trace("checking all entries > 0")
       stopifnot(all(x@x > 0))
 
-      flog.trace("checking if input is triangular")
       IS_TRIANGULAR = isTriangular(x)
 
       n = ncol(x)
       m = private$word_vectors_size
 
-      flog.trace("initializing matrices with random numbers")
       private$w_i = matrix(runif(m * n, -0.5, 0.5), m, n)
       private$b_i = runif(n, -0.5, 0.5)
       private$w_j = matrix(runif(m * n, -0.5, 0.5), m, n)
@@ -126,7 +122,6 @@ GloVe = R6::R6Class(
              initial = initial)
       #--------------------------------------------------------
       # init C++ class which actually perform fitting
-      flog.trace("initializing c++ class")
       private$glove_fitter = cpp_glove_create(glove_params)
       private$cost_history = numeric(0)
       # number of non-zero elements in co-occurence matrix
@@ -141,11 +136,9 @@ GloVe = R6::R6Class(
       while (i <= n_iter) {
         # if shuffling is required, perform reordering at each iteration
         if ( self$shuffle ) {
-          flog.trace("generationg random traverse order")
           iter_order = sample.int( n_nnz, replace = FALSE)
         }
 
-        flog.trace("fitting model")
         cost = cpp_glove_partial_fit(private$glove_fitter, x@i, x@j, x@x, iter_order, n_threads)
         if (is.nan(cost)) stop("Cost becomes NaN, try to use smaller learning_rate.")
 
@@ -158,11 +151,11 @@ GloVe = R6::R6Class(
 
         # save cost history
         private$cost_history = c(private$cost_history, cost / n_nnz)
-        flog.info(sprintf("epoch %d, expected cost %.4f", i, private$cost_history[[i]]))
+        logger$info("epoch %d, loss %.4f", i, private$cost_history[[i]])
 
         # check convergence
         if ( i > 1 && (private$cost_history[[i - 1]] / private$cost_history[[i]] - 1) < convergence_tol) {
-          flog.info("Success: early stopping. Improvement at iterartion %d is less then convergence_tol", i)
+          logger$info("Success: early stopping. Improvement at iterartion %d is less then convergence_tol", i)
           break;
         }
         i = i + 1
@@ -177,8 +170,9 @@ GloVe = R6::R6Class(
       t(private$w_i)
     },
     transform = function(x, y = NULL, ...) {
-      flog.error("transform() method doesn't make sense for GloVe model")
-      stop("transform() method doesn't make sense for GloVe model")
+      msg = "transform() is not implemented for GloVe model (unclear what it should to)"
+      logger$error(msg)
+      stop(msg)
     },
     get_history = function() {
       list(cost_history = private$cost_history)

@@ -1,7 +1,7 @@
 Package: rsparse
 Type: Package
 Title: Statistical Learning on Sparse Matrices
-Version: 0.3.2
+Version: 0.3.3
 Authors@R: c(
     person("Dmitriy", "Selivanov", role=c("aut", "cre", "cph"), email="selivanov.dmitriy@gmail.com"),
     person("Drew", "Schmidt", role="ctb", comment="configure script for BLAS, LAPACK detection"), 
@@ -17,25 +17,18 @@ Description: Implements many algorithms for statistical learning on
   datasets - millions of rows and millions of columns.
   List of algorithms for supervised learning:
   1) Elastic net regression via Follow The Proximally-Regularized leader algorithm
-  2) Second order Factorization Machines via stochastic gradient descent with 
-     adaptive learning rates. Allows to learn model parameters out-of-core. 
-     Fast - asynchronous parallel, SIMD accelerated.
+  2) Factorization Machines
   List of algorithms for matrix factorization:
-  1) Weighted Regularazied Matrix Factorization with Alternating Least Squares (ALS) 
-    for implicit feedback (inculding approximate Conjugate Gradient solver).
-    Optional non-negativity (NNMF, non-negative matrix factorization).
+  1) Weighted Regularazied Matrix Factorization (WRMF) with Alternating Least Squares (ALS) 
   2) Regularazied Matrix Factorization with ALS for explicit feedback
-    Optional non-negativity (NNMF, non-negative matrix factorization).
   3) Fast Trunceate SVD and Soft-SVD via ALS
-  4) Soft-Impute via fast ALS and solution in SVD form
-  5) LinearFlow method which learns item-item similarity matrix from the data
+  4) Soft-Impute via fast ALS with a solution in SVD format
+  5) LinearFlow - learns item-item similarity matrix from the data
   6) GloVe - GlobalVectors embeddings
-  Clustering:
-  1) kmeans from Armadillo library which provides smart (similar to kmeans++) 
-    cluster initializations.
   Misc utils/methods:
   1) multithreaded `%*%` and `tcrossprod()` for `<dgRMatrix, matrix>`
   2) multithreaded `%*%` and `crossprod()` for `<matrix, dgCMatrix>`
+  3) native CSR matrix slicing (no conversion to triple/CSC)
 License: GPL (>= 2) | file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -47,8 +40,8 @@ Imports:
     mlapi (>= 0.1.0), 
     data.table (>= 1.10.0),
     float (>= 0.2-2),
-    futile.logger, 
-    RhpcBLASctl
+    RhpcBLASctl,
+    lgr (>= 0.2)
 LinkingTo: 
     Rcpp, 
     RcppArmadillo

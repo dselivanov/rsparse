@@ -5,3 +5,4 @@ data/lastfm.rds
 docs/papers/
 autom4te.cache
 docs/
+.travis.yml

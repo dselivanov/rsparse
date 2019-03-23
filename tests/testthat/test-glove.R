@@ -1,6 +1,8 @@
 context("GloVe")
 
-futile.logger::flog.threshold(futile.logger::WARN)
+logger = lgr::get_logger('rsparse')
+logger$set_threshold('warn')
+
 
 k = 10
 tcm = crossprod(sign(movielens100k))

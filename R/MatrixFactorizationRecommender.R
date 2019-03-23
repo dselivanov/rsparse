@@ -19,11 +19,11 @@ MatrixFactorizationRecommender = R6::R6Class(
   private = list(
     predict_low_level = function(user_embeddings, item_embeddings, k, not_recommend, items_exclude = integer(0), ...) {
 
-      flog.debug("MatrixFactorizationRecommender$predict(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
+      logger$trace("MatrixFactorizationRecommender$predict(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
       RhpcBLASctl::blas_set_num_threads(1)
       on.exit({
         n_physical_cores = RhpcBLASctl::get_num_cores()
-        flog.debug("MatrixFactorizationRecommender$predict(): on exit `RhpcBLASctl::blas_set_num_threads(%d)` (=number of physical cores)", n_physical_cores)
+        logger$trace("MatrixFactorizationRecommender$predict(): on exit `RhpcBLASctl::blas_set_num_threads(%d)` (=number of physical cores)", n_physical_cores)
         RhpcBLASctl::blas_set_num_threads(n_physical_cores)
       })
 
@@ -36,7 +36,7 @@ MatrixFactorizationRecommender = R6::R6Class(
       if(is.integer(items_exclude) && length(items_exclude) > 0) {
         if(max(items_exclude) > ncol(item_embeddings))
           stop("some of items_exclude indices are bigger than number of items")
-        flog.debug("found %d items to exclude for all recommendations", length(items_exclude))
+        logger$trace("found %d items to exclude for all recommendations", length(items_exclude))
       }
 
       if(!is.null(not_recommend))
@@ -90,7 +90,7 @@ MatrixFactorizationRecommender = R6::R6Class(
     # prepare components
     init_components_l2 = function(force_init = FALSE) {
       if(is.null(private$components_l2) || force_init) {
-        flog.debug("calculating components_l2")
+        logger$trace("calculating components_l2")
         t(t(private$components_) / sqrt(colSums(private$components_ ^ 2)))
       }
     },

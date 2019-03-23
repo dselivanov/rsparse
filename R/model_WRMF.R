@@ -119,12 +119,11 @@ WRMF = R6::R6Class(
         stop("Explicit solver doesn't support single precision at the moment (but in principle can support).")
 
       if(solver == "conjugate_gradient" && private$feedback == "explicit")
-        flog.warn("only 'cholesky' is available for 'explicit' feedback")
+        logger$warn("only 'cholesky' is available for 'explicit' feedback")
 
       if(solver == "cholesky") private$solver_code = 0L
       if(solver == "conjugate_gradient") private$solver_code = 1L
 
-      if(solver == "cholesky") flog.info("'cg_steps' ignored for 'cholesky' solver")
       stopifnot(is.integer(cg_steps) && length(cg_steps) == 1)
       private$cg_steps = cg_steps
 
@@ -139,31 +138,32 @@ WRMF = R6::R6Class(
     },
     fit_transform = function(x, n_iter = 10L, convergence_tol = 0.005, ...) {
       if(private$feedback == "implicit" ) {
-        flog.debug("WRMF$fit_transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
+        logger$trace("WRMF$fit_transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
         RhpcBLASctl::blas_set_num_threads(1)
         on.exit({
           n_physical_cores = RhpcBLASctl::get_num_cores()
-          flog.debug("WRMF$fit_transform(): on exit `RhpcBLASctl::blas_set_num_threads(%d)` (=number of physical cores)", n_physical_cores)
+          logger$trace("WRMF$fit_transform(): on exit `RhpcBLASctl::blas_set_num_threads(%d)` (=number of physical cores)", n_physical_cores)
           RhpcBLASctl::blas_set_num_threads(n_physical_cores)
         })
       }
 
-      flog.debug("convert input to %s if needed", private$internal_matrix_formats$sparse)
+      logger$trace("convert input to %s if needed", private$internal_matrix_formats$sparse)
       c_ui = private$check_convert_input(x)
       c_ui = private$preprocess(c_ui)
       # strore item_ids in order to use them in predict method
       private$item_ids = colnames(c_ui)
 
-      flog.debug("check items in input are not negative")
+      logger$trace("check items in input are not negative")
       stopifnot(all(c_ui@x >= 0))
 
-      flog.debug("making antoher matrix for convenient traverse by users - transposing input matrix")
+      logger$trace("making antoher matrix for convenient traverse by users - transposing input matrix")
       c_iu = t(c_ui)
 
       # init
       n_user = nrow(c_ui)
       n_item = ncol(c_ui)
 
+      logger$trace("initializing U")
       if(private$precision == "double")
         private$U = matrix(0.0, ncol = n_user, nrow = private$rank)
       else
@@ -191,13 +191,13 @@ WRMF = R6::R6Class(
 
       trace_values = vector("numeric", n_iter)
 
-      flog.info("starting factorization with %d threads", getOption("rsparse_omp_threads", 1L))
+      logger$info("starting factorization with %d threads", getOption("rsparse_omp_threads", 1L))
       trace_lst = vector("list", n_iter)
       loss_prev_iter = Inf
       # iterate
       for (i in seq_len(n_iter)) {
 
-        flog.debug("iter %d by item", i)
+        logger$trace("iter %d by item", i)
         stopifnot(ncol(private$U) == ncol(c_iu))
         if (private$feedback == "implicit") {
           # private$U will be modified in place
@@ -209,7 +209,7 @@ WRMF = R6::R6Class(
         # if need non-negative matrix factorization - just set all negative values to zero
         if(private$non_negative) private$U[private$U < 0] = 0
 
-        flog.debug("iter %d by user", i)
+        logger$trace("iter %d by user", i)
         stopifnot(ncol(private$components_) == ncol(c_ui))
 
         YtY = tcrossprod(private$U) +
@@ -257,9 +257,9 @@ WRMF = R6::R6Class(
         }
 
         trace_lst[[i]] = data.table::rbindlist(list(trace_iter, list(iter = i, scorer = "loss", value = loss)))
-        flog.info("iter %d loss = %.4f %s", i, loss, trace_scors_string)
+        logger$info("iter %d loss = %.4f %s", i, loss, trace_scors_string)
         if(loss_prev_iter / loss - 1 < convergence_tol) {
-          flog.info("Converged after %d iterations", i)
+          logger$info("Converged after %d iterations", i)
           break
         }
         loss_prev_iter = loss
@@ -284,11 +284,11 @@ WRMF = R6::R6Class(
     transform = function(x, ...) {
       stopifnot(ncol(x) == ncol(private$components_))
       if(private$feedback == "implicit" ) {
-        flog.debug("WRMF$transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
+        logger$trace("WRMF$transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
         RhpcBLASctl::blas_set_num_threads(1)
         on.exit({
           n_physical_cores = RhpcBLASctl::get_num_cores()
-          flog.debug("WRMF$transform(): on exit `RhpcBLASctl::blas_set_num_threads(%d)` (=number of physical cores)", n_physical_cores)
+          logger$trace("WRMF$transform(): on exit `RhpcBLASctl::blas_set_num_threads(%d)` (=number of physical cores)", n_physical_cores)
           RhpcBLASctl::blas_set_num_threads(n_physical_cores)
         })
       }

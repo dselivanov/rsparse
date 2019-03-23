@@ -111,7 +111,7 @@ FactorizationMachine = R6::R6Class(
     },
     fit = function(x, y, weights = rep(1.0, length(y)), n_iter = 1L, ...) {
       for(i in seq_len(n_iter)) {
-        futile.logger::flog.debug("FactorizationMachine iter %03d", i)
+        logger$trace("iter %03d", i)
         self$partial_fit(x, y, weights, ...)
       }
     },
