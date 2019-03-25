@@ -9,19 +9,17 @@
 \alias{[,RsparseMatrix,missing,missing,logical-method}
 \title{CSR Matrices Slicing}
 \usage{
-\S4method{[}{RsparseMatrix,index,index,logical}(x, i, j, ...,
-  drop = TRUE)
+\S4method{[}{RsparseMatrix,index,index,logical}(x, i, j, drop = TRUE)
 
-\S4method{[}{RsparseMatrix,missing,index,logical}(x, i, j, ...,
-  drop = TRUE)
+\S4method{[}{RsparseMatrix,missing,index,logical}(x, i, j, drop = TRUE)
 
-\S4method{[}{RsparseMatrix,index,missing,logical}(x, i, j, ...,
-  drop = TRUE)
+\S4method{[}{RsparseMatrix,index,missing,logical}(x, i, j, drop = TRUE)
 
-\S4method{[}{RsparseMatrix,missing,missing,logical}(x, i, j, ...,
-  drop = TRUE)
+\S4method{[}{RsparseMatrix,missing,missing,logical}(x, i, j, drop = TRUE)
 }
 \arguments{
+\item{x}{input \code{RsparseMatrix}}
+
 \item{i}{row indices to subset}
 
 \item{j}{column indices to subset}

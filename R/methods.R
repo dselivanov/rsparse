@@ -66,6 +66,7 @@ get_indices_integer = function(i, max_i, index_names) {
 #'
 #' @description natively slice CSR matrices without converting them to triplet/CSC
 #'
+#' @param x input \code{RsparseMatrix}
 #' @param i row indices to subset
 #' @param j column indices to subset
 #' @param drop whether to simplify 1d matrix to a vector
@@ -74,10 +75,9 @@ get_indices_integer = function(i, max_i, index_names) {
 #' A \code{RsparseMatrix}
 #'
 #' @name slice
-#' @rdname slice
 NULL
 
-subset_csr = function(x, i, j, ..., drop = TRUE) {
+subset_csr = function(x, i, j, drop = TRUE) {
 
   if(missing(i) && missing(j)) return(x)
 
