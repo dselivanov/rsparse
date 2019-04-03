@@ -1,4 +1,7 @@
-This is the first submission of the package to CRAN.
+Resubmission
+
+- removed https links which had issues
+- updated rbuildignore
 
 # Test environments
 

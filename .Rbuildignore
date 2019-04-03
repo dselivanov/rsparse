@@ -1,3 +1,4 @@
+^CRAN-RELEASE$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 demo/
@@ -6,3 +7,4 @@ docs/papers/
 autom4te.cache
 docs/
 .travis.yml
+^cran-comments\.md$
