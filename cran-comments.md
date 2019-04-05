@@ -1,7 +1,6 @@
 Resubmission
 
-- changed configure script which was failing on some linux distributions for 
-unknown reason
+- replaced backticks by single quotes, added period at the of description as suggested by CRAN team
 
 # Test environments
 
@@ -21,8 +20,3 @@ unknown reason
       libs   7.8Mb
 
 Not sure I can do something about this - C++ pkg with Armadillo and float dependencies
-
-> checking DESCRIPTION meta-information ... NOTE
-  Malformed Description field: should contain one or more complete sentences.
-
-This sounds cryptic for me. I've tried to rephrase description several times without any luck - can't figure out where is the problem.

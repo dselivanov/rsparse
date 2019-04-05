@@ -10,25 +10,25 @@ Authors@R: c(
     )
 Maintainer: Dmitriy Selivanov <selivanov.dmitriy@gmail.com>
 Description: Implements many algorithms for statistical learning on 
-  sparse matrices - matrix factorizations with a focus on applications for recommender systems, 
-  regression, classification. Implementation takes advantage of 
-  optimized BLAS, LAPACK and parallelized with OpenMP where possible.
-  Package is reasonably fast and allows to work with large
-  datasets - millions of rows and millions of columns.
-  List of algorithms for supervised learning:
-  1) Elastic net regression via Follow The Proximally-Regularized leader algorithm
-  2) Factorization Machines
-  List of algorithms for matrix factorization:
-  1) Weighted Regularized Matrix Factorization (WRMF) with Alternating Least Squares (ALS) 
-  2) Regularized Matrix Factorization with ALS for explicit feedback
-  3) Fast Truncated SVD and Soft-SVD via ALS
-  4) Soft-Impute via fast ALS with a solution in SVD format
-  5) LinearFlow - learns item-item similarity matrix from the data
-  6) GloVe - GlobalVectors embeddings
-  Misc utils/methods:
-  1) multithreaded `%*%` and `tcrossprod()` for `<dgRMatrix, matrix>`
-  2) multithreaded `%*%` and `crossprod()` for `<matrix, dgCMatrix>`
-  3) native CSR matrix slicing (no conversion to triple/CSC)
+  sparse matrices - matrix factorizations, matrix completion, 
+  elastic net regressions, factorization machines. 
+  Also 'rsparse' enhances 'Matrix' package by providing methods for 
+  multithreaded <sparse, dense> matrix products and native slicing of 
+  the CSR matrices.
+  List of the algorithms for regression problems:
+  1) Elastic net regression via Follow The Proximally-Regularized leader Stochastic Gradient Descent (SGD)
+  2) Factorization Machines (SGD)
+  List of algorithms for matrix factorization and matrix completion:
+  1) Weighted Regularized Matrix Factorization (WRMF) via Alternating Least Squares (ALS)
+  2) Maximum-Margin Matrix Factorization (ALS)
+  3) Fast Truncated SVD (ALS)
+  4) Soft-Thresholded SVD (ALS)
+  5) Soft-Impute matrix completion (ALS)
+  6) Linear-Flow matrix factorization
+  7) GlobalVectors (GloVe) matrix factorization (SGD)
+  Package is reasonably fast and memory efficient - it allows to work with large
+  datasets - millions of rows and millions of columns. This is particularly useful 
+  for practitioners working on recommender systems.
 License: GPL (>= 2) | file LICENSE
 Encoding: UTF-8
 LazyData: true
