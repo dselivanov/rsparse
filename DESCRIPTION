@@ -13,15 +13,15 @@ Description: Implements many algorithms for statistical learning on
   sparse matrices - matrix factorizations with a focus on applications for recommender systems, 
   regression, classification. Implementation takes advantage of 
   optimized BLAS, LAPACK and parallelized with OpenMP where possible.
-  Pakckage is reasonably fast and allows to work with large
+  Package is reasonably fast and allows to work with large
   datasets - millions of rows and millions of columns.
   List of algorithms for supervised learning:
   1) Elastic net regression via Follow The Proximally-Regularized leader algorithm
   2) Factorization Machines
   List of algorithms for matrix factorization:
-  1) Weighted Regularazied Matrix Factorization (WRMF) with Alternating Least Squares (ALS) 
-  2) Regularazied Matrix Factorization with ALS for explicit feedback
-  3) Fast Trunceate SVD and Soft-SVD via ALS
+  1) Weighted Regularized Matrix Factorization (WRMF) with Alternating Least Squares (ALS) 
+  2) Regularized Matrix Factorization with ALS for explicit feedback
+  3) Fast Truncated SVD and Soft-SVD via ALS
   4) Soft-Impute via fast ALS with a solution in SVD format
   5) LinearFlow - learns item-item similarity matrix from the data
   6) GloVe - GlobalVectors embeddings

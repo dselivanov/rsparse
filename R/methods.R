@@ -93,8 +93,8 @@ subset_csr = function(x, i, j, drop = TRUE) {
 
   n_row = length(i)
   n_col = length(j)
-  col_indices = vector('list', n_row)
-  x_values = vector('list', n_row)
+  col_indices = lapply(seq_len(n_row), function(x) integer())
+  x_values = lapply(seq_len(n_row), function(x) numeric())
 
   for(k in seq_len(n_row) ) {
     j1 = x@p[[ i[[k]] ]]
