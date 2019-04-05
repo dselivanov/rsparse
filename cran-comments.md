@@ -1,10 +1,12 @@
 Resubmission
 
-- removed https links which had issues
-- updated rbuildignore
+- changed configure script which was failing on some linux distributions for 
+unknown reason
 
 # Test environments
 
+- fedora distribution from rhub
+- debian based docker with r-devel based (from rocker)
 - local ubuntu 16.04, R 3.5.1
 - laptop OS X, R 3.4.0
 - win-builder (devel)
