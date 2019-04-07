@@ -12,7 +12,7 @@ Resubmission
 
 # R CMD check results
 
-0 errors | 0 warning | 2 notes
+0 errors | 0 warning | 1 note
 
 > checking installed package size ... NOTE
     installed size is  8.5Mb
