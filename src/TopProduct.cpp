@@ -22,9 +22,12 @@ Rcpp::IntegerMatrix top_product(const arma::mat &x, const arma::mat &y,
   size_t nc = y.n_cols;
 
   Rcpp::IntegerMatrix res(nr, k);
-  int *res_ptr = res.begin();
+  //int *res_ptr = ;
+  arma::imat res_arma = arma::imat(res.begin(), nr, k, false, false);
+
   Rcpp::NumericMatrix scores(nr, k);
-  double *scores_ptr = scores.begin();
+  arma::dmat scores_arma = arma::dmat(scores.begin(), nr, k, false, false);
+
   #ifdef _OPENMP
   #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE)
   #endif
@@ -66,14 +69,12 @@ Rcpp::IntegerMatrix top_product(const arma::mat &x, const arma::mat &y,
         q.push(std::pair<double, int>(val, i));
       }
     }
-    for (size_t i = 0; i < k; ++i) {
-      int ind = nr * (k - i - 1) + j;
-      res_ptr[ind] = q.top().second + 1;
-      scores_ptr[ind] = q.top().first;
+    // q_size always <= k
+    uint32_t q_size = q.size();
+    for (size_t i = 0; i < q_size; ++i) {
+      res_arma.at(j, q_size - i - 1) = q.top().second + 1;
+      scores_arma.at(j, q_size - i - 1) = q.top().first;
       q.pop();
-      // pathologic case
-      // break if there were less than k predictions
-      if(q.size() == 0) break;
     }
   }
   res.attr("scores") = scores;
