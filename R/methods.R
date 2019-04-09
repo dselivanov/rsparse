@@ -17,6 +17,19 @@
 #'
 #' @name matmult
 #' @rdname matmult
+#' @examples
+#' library(Matrix)
+#' data("movielens100k")
+#' k = 10
+#' nc = ncol(movielens100k)
+#' nr = nrow(movielens100k)
+#' x_nc = matrix(rep(1:k, nc), nrow = nc)
+#' x_nr = t(matrix(rep(1:k, nr), nrow = nr))
+#' csc = movielens100k
+#' csr = as(movielens100k, "RsparseMatrix")
+#' dense = as.matrix(movielens100k)
+#' identical(csr %*% x_nc, dense %*% x_nc)
+#' identical(x_nr %*% csc, x_nr %*% dense)
 NULL
 
 #' @rdname matmult
@@ -75,6 +88,15 @@ get_indices_integer = function(i, max_i, index_names) {
 #' A \code{RsparseMatrix}
 #'
 #' @name slice
+#' @examples
+#' library(Matrix)
+#' library(rsparse)
+#' # dgCMatrix - CSC
+#' m = rsparsematrix(20, 20, 0.1)
+#' # make CSR
+#' m = as(m, "RsparseMatrix")
+#' inherits(m[1:2, ], "RsparseMatrix")
+#' inherits(m[1:2, 3:4], "RsparseMatrix")
 NULL
 
 subset_csr = function(x, i, j, drop = TRUE) {

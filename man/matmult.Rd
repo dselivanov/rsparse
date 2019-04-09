@@ -33,3 +33,17 @@ Accelerates sparse-dense matrix multiplications using openmp. Applicable to the 
 (\code{dgRMatrix}, \code{matrix}), (\code{matrix}, \code{dgRMatrix}),
 (\code{dgCMatrix}, \code{matrix}), (\code{matrix}, \code{dgCMatrix}) combinations
 }
+\examples{
+library(Matrix)
+data("movielens100k")
+k = 10
+nc = ncol(movielens100k)
+nr = nrow(movielens100k)
+x_nc = matrix(rep(1:k, nc), nrow = nc)
+x_nr = t(matrix(rep(1:k, nr), nrow = nr))
+csc = movielens100k
+csr = as(movielens100k, "RsparseMatrix")
+dense = as.matrix(movielens100k)
+identical(csr \%*\% x_nc, dense \%*\% x_nc)
+identical(x_nr \%*\% csc, x_nr \%*\% dense)
+}

@@ -32,3 +32,13 @@ A \code{RsparseMatrix}
 \description{
 natively slice CSR matrices without converting them to triplet/CSC
 }
+\examples{
+library(Matrix)
+library(rsparse)
+# dgCMatrix - CSC
+m = rsparsematrix(20, 20, 0.1)
+# make CSR
+m = as(m, "RsparseMatrix")
+inherits(m[1:2, ], "RsparseMatrix")
+inherits(m[1:2, 3:4], "RsparseMatrix")
+}

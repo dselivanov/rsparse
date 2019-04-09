@@ -31,3 +31,15 @@ Please refer to \href{Information retrieval wikipedia article}{https://en.wikipe
 \code{ndcg_k()} calculates \bold{Normalized Discounted Cumulative Gain at K (\code{ndcg@k})}.
 Please refer to \href{Discounted cumulative gain}{https://en.wikipedia.org/wiki/Discounted_cumulative_gain#Normalized_DCG}
 }
+\examples{
+predictions = matrix(
+  c(5L, 7L, 9L, 2L),
+  nrow = 1
+)
+actual = matrix(
+  c(0, 0, 0, 0, 1, 0, 1, 0, 1, 0),
+  nrow = 1
+)
+actual = as(actual, "RsparseMatrix")
+identical(rsparse::ap_k(predictions, actual), 1)
+}

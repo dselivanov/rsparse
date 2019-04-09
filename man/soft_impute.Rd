@@ -45,3 +45,17 @@ paper by Trevor Hastie, Rahul Mazumder, Jason D. Lee, Reza Zadeh
 by "Matrix Completion and Low-Rank SVD via Fast Alternating Least Squares" -
 \url{https://arxiv.org/pdf/1410.2596.pdf}
 }
+\examples{
+\donttest{
+set.seed(42)
+data('movielens100k')
+k = 10
+seq_k = seq_len(k)
+m = movielens100k[1:100, 1:200]
+svd_ground_true = svd(m)
+svd_soft_svd = soft_svd(m, rank = k, n_iter = 100, convergence_tol = 1e-6)
+m_restored_svd = svd_ground_true$u[, seq_k] \%*\% diag(x = svd_ground_true$d[seq_k]) \%*\% t(svd_ground_true$v[, seq_k])
+m_restored_soft_svd = svd_soft_svd$u \%*\% diag(x = svd_soft_svd$d) \%*\% t(svd_soft_svd$v)
+all.equal(m_restored_svd, m_restored_soft_svd, tolerance = 1e-1)
+}
+}

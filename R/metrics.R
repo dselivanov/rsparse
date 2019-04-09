@@ -11,6 +11,17 @@
 #'   It should inherit from \code{Matrix::sparseMatrix}. Internally \code{Matrix::RsparseMatrix} is used.
 #' @param ... other arguments (not used at the moment)
 #' @rdname metrics
+#' @examples
+#' predictions = matrix(
+#'   c(5L, 7L, 9L, 2L),
+#'   nrow = 1
+#' )
+#' actual = matrix(
+#'   c(0, 0, 0, 0, 1, 0, 1, 0, 1, 0),
+#'   nrow = 1
+#' )
+#' actual = as(actual, "RsparseMatrix")
+#' identical(rsparse::ap_k(predictions, actual), 1)
 NULL
 
 #' @description \code{ap_k} calculates \bold{Average Precision at K (\code{ap@@k})}.

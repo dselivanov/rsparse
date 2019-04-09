@@ -68,7 +68,7 @@ glove$components
 }
 
 \examples{
-\dontrun{
+\donttest{
 temp = tempfile()
 download.file('http://mattmahoney.net/dc/text8.zip', temp)
 text8 = readLines(unz(temp, "text8"))

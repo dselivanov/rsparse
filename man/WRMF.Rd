@@ -98,6 +98,15 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 }
 }
 
+\examples{
+data('movielens100k')
+train = movielens100k[1:900, , drop = F]
+cv = movielens100k[901:nrow(movielens100k), , drop = F]
+model = WRMF$new(rank = 5,  lambda = 0, feedback = 'implicit')
+user_emb = model$fit_transform(train, n_iter = 5, convergence_tol = -1)
+item_emb = model$components
+preds = model$predict(cv, k = 10, not_recommend = cv)
+}
 \seealso{
 \itemize{
   \item{\url{https://math.stackexchange.com/questions/1072451/analytic-solution-for-matrix-factorization-using-alternating-least-squares/1073170#1073170}}

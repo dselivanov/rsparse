@@ -57,6 +57,19 @@
 #'  \item{...}{other arguments. Not used at the moment}
 #' }
 #' @export
+#' @examples
+#' data('movielens100k')
+#' i_train = sample(nrow(movielens100k), 900)
+#' i_test = setdiff(seq_len(nrow(movielens100k)), i_train)
+#' train = movielens100k[i_train, , drop = F]
+#' test = movielens100k[i_test, , drop = F]
+#' rank = 32
+#' lambda = 0
+#' model = PureSVD$new(rank = rank,  lambda = lambda)
+#' user_emb = model$fit_transform(sign(test), n_iter = 100, convergence_tol = 0.00001)
+#' item_emb = model$components
+#' preds = model$predict(sign(test), k = 1500, not_recommend = NULL)
+#' mean(ap_k(preds, actual = test))
 PureSVD = R6::R6Class(
   inherit = MatrixFactorizationRecommender,
   classname = "PureSVD",
