@@ -2,6 +2,18 @@
 #include <queue>
 #include <vector>
 
+Rcpp::NumericMatrix NumericMatrixNA(int n, int m){
+  Rcpp::NumericMatrix x(n, m) ;
+  std::fill( x.begin(), x.end(), Rcpp::NumericVector::get_na() ) ;
+  return x ;
+}
+
+Rcpp::IntegerMatrix IntegerMatrixNA(int n, int m){
+  Rcpp::IntegerMatrix x(n, m) ;
+  std::fill( x.begin(), x.end(), Rcpp::IntegerVector::get_na() ) ;
+  return x ;
+}
+
 // Find top k elements (and their indices) of the dot-product of 2 matrices in O(n * log (k))
 // https://stackoverflow.com/a/38391603/1069256
 // [[Rcpp::export]]
@@ -21,11 +33,11 @@ Rcpp::IntegerMatrix top_product(const arma::mat &x, const arma::mat &y,
   size_t nr = x.n_rows;
   size_t nc = y.n_cols;
 
-  Rcpp::IntegerMatrix res(nr, k);
-  //int *res_ptr = ;
-  arma::imat res_arma = arma::imat(res.begin(), nr, k, false, false);
+  // init matrices with NA by default
+  Rcpp::IntegerMatrix res = IntegerMatrixNA(nr, k);
+  Rcpp::NumericMatrix scores = NumericMatrixNA(nr, k);
 
-  Rcpp::NumericMatrix scores(nr, k);
+  arma::imat res_arma = arma::imat(res.begin(), nr, k, false, false);
   arma::dmat scores_arma = arma::dmat(scores.begin(), nr, k, false, false);
 
   #ifdef _OPENMP
@@ -72,6 +84,7 @@ Rcpp::IntegerMatrix top_product(const arma::mat &x, const arma::mat &y,
     // q_size always <= k
     uint32_t q_size = q.size();
     for (size_t i = 0; i < q_size; ++i) {
+      // fill from the end because queue holds smallest element as top element
       res_arma.at(j, q_size - i - 1) = q.top().second + 1;
       scores_arma.at(j, q_size - i - 1) = q.top().first;
       q.pop();
