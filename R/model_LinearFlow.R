@@ -80,8 +80,8 @@
 #' @export
 #' @examples
 #' data('movielens100k')
-#' train = movielens100k[1:900, , drop = F]
-#' cv = movielens100k[901:nrow(movielens100k), , drop = F]
+#' train = movielens100k[1:900, ]
+#' cv = movielens100k[901:nrow(movielens100k), ]
 #' model = LinearFlow$new(rank = 10, lambda = 0, init = NULL,
 #'                        solve_right_singular_vectors = "svd")
 #' user_emb = model$fit_transform(train)

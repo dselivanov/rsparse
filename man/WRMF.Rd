@@ -100,8 +100,8 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 
 \examples{
 data('movielens100k')
-train = movielens100k[1:900, , drop = F]
-cv = movielens100k[901:nrow(movielens100k), , drop = F]
+train = movielens100k[1:900, ]
+cv = movielens100k[901:nrow(movielens100k), ]
 model = WRMF$new(rank = 5,  lambda = 0, feedback = 'implicit')
 user_emb = model$fit_transform(train, n_iter = 5, convergence_tol = -1)
 item_emb = model$components

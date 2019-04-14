@@ -3,8 +3,8 @@ context("LinearFlow")
 logger = lgr::get_logger('rsparse')
 logger$set_threshold('warn')
 
-train = movielens100k[1:900, , drop = F]
-cv = movielens100k[901:nrow(movielens100k), , drop = F]
+train = movielens100k[1:900, ]
+cv = movielens100k[901:nrow(movielens100k), ]
 
 test_that("test linear-flow", {
   lambda = 0

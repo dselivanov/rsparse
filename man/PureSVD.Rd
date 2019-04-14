@@ -77,8 +77,8 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 data('movielens100k')
 i_train = sample(nrow(movielens100k), 900)
 i_test = setdiff(seq_len(nrow(movielens100k)), i_train)
-train = movielens100k[i_train, , drop = F]
-test = movielens100k[i_test, , drop = F]
+train = movielens100k[i_train, ]
+test = movielens100k[i_test, ]
 rank = 32
 lambda = 0
 model = PureSVD$new(rank = rank,  lambda = lambda)

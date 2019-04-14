@@ -14,7 +14,7 @@ Description: Implements many algorithms for statistical learning on
   elastic net regressions, factorization machines. 
   Also 'rsparse' enhances 'Matrix' package by providing methods for 
   multithreaded <sparse, dense> matrix products and native slicing of 
-  the sparse matrices in Compressed Sparse Row (CSR) formar.
+  the sparse matrices in Compressed Sparse Row (CSR) format.
   List of the algorithms for regression problems:
   1) Elastic Net regression via Follow The Proximally-Regularized Leader (FTRL) 
   Stochastic Gradient Descent (SGD), as per McMahan et al(, <doi:10.1145/2487575.2488200>)
@@ -35,14 +35,14 @@ Description: Implements many algorithms for statistical learning on
   Package is reasonably fast and memory efficient - it allows to work with large
   datasets - millions of rows and millions of columns. This is particularly useful 
   for practitioners working on recommender systems.
-License: GPL (>= 2) | file LICENSE
+License: GPL (>= 2)
 Encoding: UTF-8
 LazyData: true
 ByteCompile: true
 Depends: R (>= 3.1.0), methods
 Imports: 
-    Matrix, 
-    Rcpp, 
+    Matrix (>= 1.2), 
+    Rcpp (>= 0.11), 
     mlapi (>= 0.1.0), 
     data.table (>= 1.10.0),
     float (>= 0.2-2),
@@ -50,7 +50,7 @@ Imports:
     lgr (>= 0.2)
 LinkingTo: 
     Rcpp, 
-    RcppArmadillo
+    RcppArmadillo (>= 0.9.100.5.0)
 Suggests: 
     testthat, 
     covr
