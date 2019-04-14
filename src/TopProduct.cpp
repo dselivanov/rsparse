@@ -19,14 +19,14 @@ Rcpp::IntegerMatrix IntegerMatrixNA(int n, int m){
 // [[Rcpp::export]]
 Rcpp::IntegerMatrix top_product(const arma::mat &x, const arma::mat &y,
                           unsigned k, unsigned n_threads,
-                          Rcpp::S4 &not_recommend_r,
+                          const Rcpp::S4 &not_recommend_r,
                           const Rcpp::IntegerVector &exclude) {
   std::unordered_set<int> exclude_set;
   for(Rcpp::IntegerVector::const_iterator it = exclude.begin(); it != exclude.end(); ++it) {
     exclude_set.insert( *it );
   }
 
-  dMappedCSR not_recommend = extract_mapped_csr(not_recommend_r);
+  const dMappedCSR not_recommend = extract_mapped_csr(not_recommend_r);
 
   int not_empty_filter_matrix = not_recommend.nnz > 0;
 
@@ -60,15 +60,17 @@ Rcpp::IntegerMatrix top_product(const arma::mat &x, const arma::mat &y,
     // iterate through all columns and add insert top values in queue
     // also checks if current column should be excluded
     for (size_t i = 0; i < nc; ++i) {
-      double val = arma::as_scalar(yvec.at(i));
+      double val = arma::as_scalar(yvec(i));
 
       bool skip = false;
       // skip if column should be excluded for a given row
-      if(not_empty_filter_matrix && not_recommend_col_indices.size() > 0) {
-        if(i == not_recommend_col_indices[u]) {
-          skip = true;
-          u++;
-        }
+      if(not_empty_filter_matrix &&
+         not_recommend_col_indices.size() > 0 &&
+         u < not_recommend_col_indices.size()) {
+          if(i == not_recommend_col_indices(u)) {
+            skip = true;
+            u++;
+          }
       }
       // skip if column excluded globally
       // add + 1 because inidices in R start from 1
@@ -85,8 +87,8 @@ Rcpp::IntegerMatrix top_product(const arma::mat &x, const arma::mat &y,
     uint32_t q_size = q.size();
     for (size_t i = 0; i < q_size; ++i) {
       // fill from the end because queue holds smallest element as top element
-      res_arma.at(j, q_size - i - 1) = q.top().second + 1;
-      scores_arma.at(j, q_size - i - 1) = q.top().first;
+      res_arma(j, q_size - i - 1) = q.top().second + 1;
+      scores_arma(j, q_size - i - 1) = q.top().first;
       q.pop();
     }
   }

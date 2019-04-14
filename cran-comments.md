@@ -1,7 +1,6 @@
-Resubmission
+New submission
 
-- added citation in description
-- added examples in all exported functions
+- fixed illegal memory access as reported by CRAN UBSAN checks
 
 # Test environments
 
@@ -10,6 +9,7 @@ Resubmission
 - local ubuntu 16.04, R 3.5.1
 - laptop OS X, R 3.4.0
 - win-builder (devel)
+- R-devel ubsan-clang (https://hub.docker.com/r/rocker/r-devel-ubsan-clang/)
 
 # R CMD check results
 

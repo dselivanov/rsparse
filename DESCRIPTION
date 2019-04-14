@@ -1,7 +1,7 @@
 Package: rsparse
 Type: Package
 Title: Statistical Learning on Sparse Matrices
-Version: 0.3.3
+Version: 0.3.3.1
 Authors@R: c(
     person("Dmitriy", "Selivanov", role=c("aut", "cre", "cph"), email="selivanov.dmitriy@gmail.com", 
     comment = c(ORCID = "0000-0001-5413-1506")),
@@ -54,5 +54,7 @@ LinkingTo:
 Suggests: 
     testthat, 
     covr
+URL: https://github.com/dselivanov/rsparse
+BugReports: https://github.com/dselivanov/rsparse/issues
 RoxygenNote: 6.1.0
 NeedsCompilation: yes

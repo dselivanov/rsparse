@@ -16,7 +16,7 @@ AdaGrad with \code{$fit_transform()} method.
 \section{Fields}{
 
 \describe{
-\item{\code{components}}{represents context word vectors}
+\item{\code{components}}{represents context embeddings}
 
 \item{\code{shuffle}}{\code{logical = FALSE} by default. Defines shuffling before each SGD iteration.
 Generally shuffling is a good idea for stochastic-gradient descent, but
@@ -27,7 +27,7 @@ from my experience in this particular case it does not improve convergence.}
 
 For usage details see \bold{Methods, Arguments and Examples} sections.
 \preformatted{
-glove = GloVe$new(word_vectors_size, x_max, learning_rate = 0.15,
+glove = GloVe$new(rank, x_max, learning_rate = 0.15,
                           alpha = 0.75, lambda = 0.0, shuffle = FALSE)
 glove$fit_transform(x, n_iter = 10L, convergence_tol = -1,
               n_threads = getOption("rsparse_omp_threads", 1L), ...)
@@ -38,7 +38,7 @@ glove$components
 \section{Methods}{
 
 \describe{
-  \item{\code{$new(word_vectors_size, x_max, learning_rate = 0.15,
+  \item{\code{$new(rank, x_max, learning_rate = 0.15,
                     alpha = 0.75, lambda = 0, shuffle = FALSE)}}{Constructor for Global vectors model.
                     For description of arguments see \bold{Arguments} section.}
   \item{\code{$fit_transform(x, n_iter = 10L, convergence_tol = -1,
@@ -53,7 +53,7 @@ glove$components
  \item{glove}{A \code{GloVe} object}
  \item{x}{An input term co-occurence matrix. Preferably in \code{dgTMatrix} format}
  \item{n_iter}{\code{integer} number of SGD iterations}
- \item{word_vectors_size}{desired dimension for the word vectors}
+ \item{rank}{desired dimension for the latent vectors}
  \item{x_max}{\code{integer} maximum number of co-occurrences to use in the weighting function.
    see the GloVe paper for details: \url{http://nlp.stanford.edu/pubs/glove.pdf}}
  \item{learning_rate}{\code{numeric} learning rate for SGD. I do not recommend that you
@@ -64,6 +64,12 @@ glove$components
     convergence_tol}. By default perform all iterations.}
  \item{alpha}{\code{numeric = 0.75} the alpha in weighting function formula : \eqn{f(x) = 1 if x >
   x_max; else (x/x_max)^alpha}}
+ \item{lambda}{\code{numeric = 0.0} regularization parameter}
+ \item{init}{\code{list(w_i = NULL, b_i = NULL, w_j = NULL, b_j = NULL)}
+ initialization for embeddings (w_i, w_j) and biases (b_i, b_j).
+ \code{w_i, w_j} - numeric matrices, should number of #rows = rank, #columns - expected number of rows/columns in
+ input matrix. \code{b_i, b_j} = numeric vectors, should have length of
+ # expected number of rows/columns in input matrix}
 }
 }
 
@@ -77,7 +83,7 @@ vocabulary = create_vocabulary(it)
 vocabulary = prune_vocabulary(vocabulary, term_count_min = 5)
 v_vect = vocab_vectorizer(vocabulary)
 tcm = create_tcm(it, v_vect, skip_grams_window = 5L)
-glove_model = GloVe$new(word_vectors_size = 50, x_max = 10, learning_rate = .25)
+glove_model = GloVe$new(rank = 50, x_max = 10, learning_rate = .25)
 # fit model and get word vectors
 word_vectors_main = glove_model$fit_transform(tcm, n_iter = 10)
 word_vectors_context = glove_model$components
