@@ -1,6 +1,7 @@
 Resubmission
 
-- replaced backticks by single quotes, added period at the of description as suggested by CRAN team
+- added citation in description
+- added examples in all exported functions
 
 # Test environments
 
@@ -15,8 +16,8 @@ Resubmission
 0 errors | 0 warning | 1 note
 
 > checking installed package size ... NOTE
-    installed size is  8.5Mb
+    installed size is  8.2Mb
     sub-directories of 1Mb or more:
-      libs   7.8Mb
+      libs   7.5Mb
 
 Not sure I can do something about this - C++ pkg with Armadillo and float dependencies

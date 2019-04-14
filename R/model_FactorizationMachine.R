@@ -48,7 +48,8 @@
 #' y = c(0, 1, 1, 0)
 #'
 #' x = as(x, "RsparseMatrix")
-#' fm = FactorizationMachine$new(learning_rate_w = 10, rank = 2, lambda_w = 0, lambda_v = 0, family = 'binomial', intercept = TRUE)
+#' fm = FactorizationMachine$new(learning_rate_w = 10, rank = 2, lambda_w = 0,
+#'   lambda_v = 0, family = 'binomial', intercept = TRUE)
 #' res = fm$fit(x, y, n_iter = 100)
 #' preds = fm$predict(x)
 #' all(preds[c(1, 4)] < 0.01)
