@@ -1,4 +1,4 @@
-<a href="https://www.rexy.ai"><img src="https://www.rexy.ai/images/logo.png" height="64" width="64"></a>. 
+<a href="https://www.rexy.ai"><img src="https://s3-eu-west-1.amazonaws.com/rexy.ai/images/favicon.ico" height="32" width="32"></a>
 [![Travis-CI Build Status](https://travis-ci.org/dselivanov/rsparse.svg?branch=master)](https://travis-ci.org/dselivanov/rsparse)
 [![codecov](https://codecov.io/gh/dselivanov/rsparse/branch/master/graph/badge.svg)](https://codecov.io/gh/dselivanov/rsparse/branch/master)
 [![License](https://eddelbuettel.github.io/badges/GPL2+.svg)](http://www.gnu.org/licenses/gpl-2.0.html)
