@@ -86,9 +86,7 @@ FactorizationMachine = R6::R6Class(
       if(!private$is_initialized) {
         private$n_features = x_ncol
         #---------------------------------------------
-        private$w0 = 0L
-        fill_float_vector(private$w0, 0.0)
-        #---------------------------------------------
+        private$w0 = float::as.float(0.0)@Data
         private$w = integer(private$n_features)
         fill_float_vector_randn(private$w, 0.001)
         #---------------------------------------------
