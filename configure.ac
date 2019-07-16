@@ -1,13 +1,17 @@
 AC_PREREQ([2.69])
 AC_INIT(DESCRIPTION)
 
-
-dnl Determine R_HOME.
-: ${R_HOME=`R RHOME`}
+## Set R_HOME, respecting an environment variable if one is set
+: ${R_HOME=$(R RHOME)}
 if test -z "${R_HOME}"; then
-  AC_MSG_ERROR([could not determine R_HOME])
+    AC_MSG_ERROR([Could not determine R_HOME.])
 fi
 
+## Use R to set CXX and CXXFLAGS
+CXX=$(${R_HOME}/bin/R CMD config CXX)
+CXXFLAGS=$("${R_HOME}/bin/R" CMD config CXXFLAGS)
+
+## configure float libs
 FLOAT_LIBS=`${R_HOME}/bin/Rscript -e "float:::ldflags()"`
 
 #------------------------------------------------------
