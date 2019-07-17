@@ -1,15 +1,12 @@
-New submission
+Resumbission
 
-- fixed illegal memory access as reported by CRAN UBSAN checks
+- fixed incorrect urls in the documentation as found by CRAN
 
 # Test environments
 
-- fedora distribution from rhub
-- debian based docker with r-devel based (from rocker)
-- local ubuntu 16.04, R 3.5.1
-- laptop OS X, R 3.4.0
+- local ubuntu 16.04, R 3.6.0
+- laptop OS X, R 3.6.0
 - win-builder (devel)
-- R-devel ubsan-clang (https://hub.docker.com/r/rocker/r-devel-ubsan-clang/)
 
 # R CMD check results
 

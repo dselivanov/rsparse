@@ -1,7 +1,12 @@
-- 2019-04-14
+- 2019-07-17 - `v0.3.3.2`
+    - faster `find_top_product()` - avoid BLAS and openmp thread contention
+    - correctly identify openmp on OSX
+    - fixed issue with CRAN 'rcnst' check
+    - use `install_name_tool` hook in the `.onLoad()` - changes location of the `float.so` for CRAN binary installation - see #25
+- 2019-04-14 - `v0.3.3.1`
     - fixed out of bound memory access as reported by CRAN UBSAN
     - added ability to init GloVe embeddings with user provided values
-- 2019-03-16
+- 2019-03-16 - - `v0.3.3`
     - added methods to natively slice CSR matrices without converting them to triplet/CSC
 - 2018-10-25
     - add GloVe matrix factorization (adapted from `text2vec`)

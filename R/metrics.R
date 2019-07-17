@@ -25,7 +25,7 @@
 NULL
 
 #' @description \code{ap_k} calculates \bold{Average Precision at K (\code{ap@@k})}.
-#' Please refer to \href{Information retrieval wikipedia article}{https://en.wikipedia.org/wiki/Information_retrieval#Average_precision}
+#' Please refer to \href{https://en.wikipedia.org/wiki/Information_retrieval#Average_precision}{Information retrieval wikipedia article}
 #' @rdname metrics
 #' @export
 ap_k = function(predictions, actual, ...) {
@@ -57,7 +57,7 @@ ap_k = function(predictions, actual, ...) {
 }
 
 #' @description \code{ndcg_k()} calculates \bold{Normalized Discounted Cumulative Gain at K (\code{ndcg@@k})}.
-#' Please refer to \href{Discounted cumulative gain}{https://en.wikipedia.org/wiki/Discounted_cumulative_gain#Normalized_DCG}
+#' Please refer to \href{https://en.wikipedia.org/wiki/Discounted_cumulative_gain#Normalized_DCG}{Discounted cumulative gain}
 #' @rdname metrics
 #' @export
 ndcg_k = function(predictions, actual, ...) {
