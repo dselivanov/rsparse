@@ -13,18 +13,20 @@ soft_svd(x, rank = 10L, lambda = 0, n_iter = 100L,
 }
 \arguments{
 \item{x}{sparse matrix. Both CSR \code{dgRMatrix} and CSC \code{dgCMatrix} are supported.
-in case of CSR matrix we suggest to load \url{https://github.com/dselivanov/MatrixCSR} package
-which provides multithreaded CSR*dense matrix products (if OpenMP is supported on your platform).
+CSR matrix is preffered because in this case algorithm will benefit from multithreaded
+CSR * dense matrix products (if OpenMP is supported on your platform).
 On many-cores machines this reduces fitting time significantly.}
 
 \item{rank}{maximum rank of the low-rank solution.}
 
-\item{lambda}{regularization parameter for nuclear norm}
+\item{lambda}{regularization parameter for the nuclear norm}
 
 \item{n_iter}{maximum number of iterations of the algorithms}
 
 \item{convergence_tol}{convergence tolerance.
-Internally we keep track relative change of frobenious norm of two consequent iterations.}
+Internally functions keeps track of the relative change of the Frobenious norm
+of the two consequent iterations. If the change is less than \code{convergence_tol}
+then the process is considered as converged and function returns result.}
 
 \item{init}{\link{svd} like object with \code{u, v, d} components to initialize algorithm.
 Algorithm benefit from warm starts. \code{init} could be rank up \code{rank} of the maximum allowed rank.
@@ -34,12 +36,30 @@ If \code{init} has rank less than max rank it will be padded automatically.}
 This is not necessary but cleans up rank nicely - hithly recommnded to leave it \code{TRUE}.}
 }
 \value{
-\link{svd}-like object - \code{list} with \code{u, v, d}
-components - left, right singular vectors and singular vectors.
+\link{svd}-like object - \code{list(u, v, d)}. \code{u, v, d}
+components represent left, right singular vectors and singular values.
 }
 \description{
 Fit SoftImpute/SoftSVD via fast alternating least squares. Based on the
 paper by Trevor Hastie, Rahul Mazumder, Jason D. Lee, Reza Zadeh
 by "Matrix Completion and Low-Rank SVD via Fast Alternating Least Squares" -
 \url{https://arxiv.org/pdf/1410.2596.pdf}
+}
+\examples{
+\donttest{
+set.seed(42)
+data('movielens100k')
+k = 10
+seq_k = seq_len(k)
+m = movielens100k[1:100, 1:200]
+svd_ground_true = svd(m)
+svd_soft_svd = soft_svd(m, rank = k, n_iter = 100, convergence_tol = 1e-6)
+m_restored_svd = svd_ground_true$u[, seq_k]  \%*\%
+   diag(x = svd_ground_true$d[seq_k]) \%*\%
+   t(svd_ground_true$v[, seq_k])
+m_restored_soft_svd = svd_soft_svd$u \%*\%
+  diag(x = svd_soft_svd$d) \%*\%
+  t(svd_soft_svd$v)
+all.equal(m_restored_svd, m_restored_soft_svd, tolerance = 1e-1)
+}
 }

@@ -12,7 +12,7 @@ public:
           float learning_rate_v,
           int rank,
           float lambda_w, float lambda_v,
-          std::string task_name,
+          std::string family,
           int intercept):
     learning_rate_w(learning_rate_w),
     learning_rate_v(learning_rate_v),
@@ -20,9 +20,9 @@ public:
     lambda_w(lambda_w),
     lambda_v(lambda_v),
     intercept(intercept) {
-    if ( task_name == "classification")
+    if ( family == "binomial")
       this->task = CLASSIFICATION;
-    else if( task_name == "regression")
+    else if( family == "gaussian")
       this->task = REGRESSION;
     else throw(Rcpp::exception("can't match task code - not in (1=CLASSIFICATION, 2=REGRESSION)"));
   }

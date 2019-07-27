@@ -10,7 +10,7 @@
   \item values are ratings
 }}
 \source{
-\url{https://grouplens.org/datasets/movielens/100k/}
+\url{https://en.wikipedia.org/wiki/MovieLens#Datasets}
 }
 \usage{
 data("movielens100k")

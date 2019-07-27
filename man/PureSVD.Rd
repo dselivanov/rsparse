@@ -23,6 +23,7 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
                       preprocess = identity,
                       ...)
   model$fit_transform(x, n_iter = 5L, ...)
+  model$transform(x, ...)
   model$predict(x, k, not_recommend = x, ...)
   model$components
 }
@@ -41,6 +42,8 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
   \item{\code{$fit_transform(x, n_iter = 5L, ...)}}{ fits model to
     an input user-item matrix.
     \bold{Returns factor matrix for users of size \code{n_users * rank}}}
+  \item{\code{$transform(x, ...)}}{Calculates user embeddings from given \code{x} user-item matrix.
+    Result is \code{n_users * rank} matrix}
   \item{\code{$predict(x, k, not_recommend = x, ...)}}{predict \code{top k}
     item ids for users \code{x} (= column names from the matrix passed to \code{fit_transform()} method).
     Users features should be defined the same way as they were defined in training data - as \bold{sparse matrix}
@@ -70,4 +73,18 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 }
 }
 
+\examples{
+data('movielens100k')
+i_train = sample(nrow(movielens100k), 900)
+i_test = setdiff(seq_len(nrow(movielens100k)), i_train)
+train = movielens100k[i_train, ]
+test = movielens100k[i_test, ]
+rank = 32
+lambda = 0
+model = PureSVD$new(rank = rank,  lambda = lambda)
+user_emb = model$fit_transform(sign(test), n_iter = 100, convergence_tol = 0.00001)
+item_emb = model$components
+preds = model$predict(sign(test), k = 1500, not_recommend = NULL)
+mean(ap_k(preds, actual = test))
+}
 \keyword{datasets}

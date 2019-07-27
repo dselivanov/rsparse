@@ -1,6 +1,10 @@
+^CRAN-RELEASE$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 demo/
 data/lastfm.rds
 docs/papers/
 autom4te.cache
+docs/
+.travis.yml
+^cran-comments\.md$

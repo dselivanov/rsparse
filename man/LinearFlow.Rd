@@ -3,7 +3,7 @@
 \docType{data}
 \name{LinearFlow}
 \alias{LinearFlow}
-\title{Linear-FLow method for one-class collaborative filtering}
+\title{Creates Linear-FLow model for one-class collaborative filtering}
 \format{\code{R6Class} object.}
 \usage{
 LinearFlow
@@ -21,9 +21,9 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 \preformatted{
   model = LinearFlow$new( rank = 8L,
                           lambda = 0,
-                          solve_right_singular_vectors = c("soft_impute", "svd"),
-                          v = NULL,
+                          init = NULL,
                           preprocess = identity,
+                          solve_right_singular_vectors = c("soft_impute", "svd")
                           ...)
   model$fit_transform(x, ...)
   model$transform(x, ...)
@@ -41,15 +41,17 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 
 \describe{
   \item{\code{$new(rank = 8L, lambda = 0,
+              init = NULL,
+              preprocess = identity,
               solve_right_singular_vectors = c("svd", "soft_impute"),
-              v = NULL, preprocess = identity, ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
-    If \code{v} (right singular vectors of the user-item interactions matrix)
+              ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
+    If \code{init} (right singular vectors of the user-item interactions matrix)
     is provided then model initialized with its values.}
   \item{\code{$fit_transform(x, ...)}}{ fits model to
-    an input user-item matrix.
-    \bold{Returns factor matrix for users of size \code{n_users * rank}}}
-  \item{\code{$transform(x, ...)}}{transforms (new) sparse user-item interaction matrix into user-embeddings matrix.}
-  \item{\code{$predict(x, k, not_recommend = x, ...)}}{predict \bold{top k}
+    an input user-item interaction matrix.
+    \bold{Returns user embeddings matrix of the size \code{n_users * rank}}}
+  \item{\code{$transform(x, ...)}}{transforms user-item interaction matrix into user-embeddings matrix.}
+  \item{\code{$predict(x, k, not_recommend = x, ...)}}{predicts \bold{top k}
     item ids for users \code{x}. Users features should be defined the same way as they were defined in
     training data - as \bold{sparse matrix}. Column names (=item ids) should be in the same order as
     in the \code{fit_transform()}.}
@@ -87,6 +89,15 @@ For usage details see \bold{Methods, Arguments and Examples} sections.
 }
 }
 
+\examples{
+data('movielens100k')
+train = movielens100k[1:900, ]
+cv = movielens100k[901:nrow(movielens100k), ]
+model = LinearFlow$new(rank = 10, lambda = 0, init = NULL,
+                       solve_right_singular_vectors = "svd")
+user_emb = model$fit_transform(train)
+preds = model$predict(cv, k = 10)
+}
 \seealso{
 \itemize{
   \item{\url{http://www.bkveton.com/docs/ijcai2016.pdf}}

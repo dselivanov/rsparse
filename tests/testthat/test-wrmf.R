@@ -1,8 +1,10 @@
 context("WRMF")
 
-futile.logger::flog.threshold(futile.logger::WARN)
-train = movielens100k[1:900, , drop = F]
-cv = movielens100k[901:nrow(movielens100k), , drop = F]
+logger = lgr::get_logger('rsparse')
+logger$set_threshold('warn')
+
+train = movielens100k[1:900, ]
+cv = movielens100k[901:nrow(movielens100k), ]
 
 test_that("test WRMF core", {
   p_impl = expand.grid(solver = c("conjugate_gradient", "cholesky"),
@@ -49,26 +51,25 @@ test_that("test WRMF core", {
   }
 })
 
-if(rsparse:::SINGLE_PRECISION_LAPACK_AVAILABLE)
-  test_that("test WRMF FLOAT", {
-    params = expand.grid(solver = c("conjugate_gradient", "cholesky"),
-                         feedback = c("implicit"),
-                         lambda = c(0, 1000),
-                         stringsAsFactors = FALSE)
-    for(i in 1:nrow(params)) {
-      rank = 8
-      solver = params$solver[[i]]
-      feedback = params$feedback[[i]]
-      lambda = params$lambda[[i]]
-      message(sprintf("testing WRMF FLOAT with parameters: solver = '%s' feedback = '%s' lambda = %.3f, rank = %d",
-                      solver, feedback, lambda, rank))
-      model = WRMF$new(rank = rank,  lambda = lambda, feedback = feedback, solver = solver, precision = "float")
-      user_emb = model$fit_transform(train, n_iter = 5, convergence_tol = -1)
-      expect_true(inherits(user_emb, "float32"))
-      expect_true(inherits(model$components, "float32"))
-    }
-    }
-  )
+test_that("test WRMF FLOAT", {
+  params = expand.grid(solver = c("conjugate_gradient", "cholesky"),
+                       feedback = c("implicit"),
+                       lambda = c(0, 1000),
+                       stringsAsFactors = FALSE)
+  for(i in 1:nrow(params)) {
+    rank = 8
+    solver = params$solver[[i]]
+    feedback = params$feedback[[i]]
+    lambda = params$lambda[[i]]
+    message(sprintf("testing WRMF FLOAT with parameters: solver = '%s' feedback = '%s' lambda = %.3f, rank = %d",
+                    solver, feedback, lambda, rank))
+    model = WRMF$new(rank = rank,  lambda = lambda, feedback = feedback, solver = solver, precision = "float")
+    user_emb = model$fit_transform(train, n_iter = 5, convergence_tol = -1)
+    expect_true(inherits(user_emb, "float32"))
+    expect_true(inherits(model$components, "float32"))
+  }
+}
+)
 
 test_that("test WRMF extra", {
   lambda = 0.1
@@ -76,7 +77,7 @@ test_that("test WRMF extra", {
   nnmf = FALSE
   solver = "cholesky"
   n_iter = 10
-  cv_split = train_test_split(cv)
+  cv_split = rsparse:::train_test_split(cv)
   for(feedback in c("explicit", "implicit")) {
     model = WRMF$new(rank = rank,  lambda = lambda, feedback = feedback, non_negative = nnmf, solver = solver)
     user_emb = model$fit_transform(train, n_iter = n_iter, convergence_tol = 0.05)

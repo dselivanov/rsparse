@@ -1,145 +1,120 @@
 AC_PREREQ([2.69])
 AC_INIT(DESCRIPTION)
 
-
-dnl Determine R_HOME.
-: ${R_HOME=`R RHOME`}
+## Set R_HOME, respecting an environment variable if one is set
+: ${R_HOME=$(R RHOME)}
 if test -z "${R_HOME}"; then
-  AC_MSG_ERROR([could not determine R_HOME])
+    AC_MSG_ERROR([Could not determine R_HOME.])
 fi
 
-# Obtain from R.
-R_SCMD="${R_HOME}/bin/R CMD config"
-BLAS_LIBS=`${R_SCMD} BLAS_LIBS`
-LAPACK_LIBS=`${R_SCMD} LAPACK_LIBS`
+## Use R to set CXX and CXXFLAGS
+CXX=$(${R_HOME}/bin/R CMD config CXX)
+CXXFLAGS=$("${R_HOME}/bin/R" CMD config CXXFLAGS)
+
+## configure float libs
 FLOAT_LIBS=`${R_HOME}/bin/Rscript -e "float:::ldflags()"`
 
-# Check tools.
-AC_CHECK_PROG([echo_ok], [echo], [yes], [no], ,)
-AC_CHECK_PROG([grep_ok], [grep], [yes], [no], ,)
-
-
 #------------------------------------------------------
-# borrowed from https://github.com/wrathematics/float
+# borrowed from https://github.com/RcppCore/RcppArmadillo/blob/c2fde536fe9b70238a95c2e2e413bca9681d23d2/configure.ac#L1
 #------------------------------------------------------
-### Check for single precision BLAS/LAPACK symbols. These can be present/absent
-### in almost any imaginable combination. For example, OpenBLAS (and others?)
-### ship LAPACK symbols in the blas.[so|dylib|dll] file.
+## default to not even thinking about OpenMP as Armadillo wants a pragma
+## variant available if and only if C++11 is used with g++ 5.4 or newer
+can_use_openmp=""
 
-# Check Rblas.
-if test -f "${FLOAT_LIBS}" ; then
-  HAVESBLAS="yes"
-  HAVESLAPACK="yes"
-else
-  if test "X${echo_ok}" = "Xyes" -a "X${grep_ok}" = "Xyes"; then
-    useRblas=`echo ${BLAS_LIBS} | grep "\-lRblas"`
-    if test "X${useRblas}" = "X"; then
-      AC_CHECK_LIB(blas, [sgemm_], [HAVESBLAS=yes], [HAVESBLAS=no])
-      AC_CHECK_LIB(blas, [sgetrf_], [HAVESLAPACK=yes], [HAVESLAPACK=no])
-    else
-      LDFLAGS_OLD="${LDFLAGS}"
-      LDFLAGS="${LDFLAGS} ${BLAS_LIBS}"
-      AC_CHECK_LIB(Rblas, [sgemm_], [HAVESBLAS=yes], [HAVESBLAS=no])
-      AC_CHECK_LIB(Rblas, [sgetrf_], [HAVESLAPACK=yes], [HAVESLAPACK=no])
-      LDFLAGS="${LDFLAGS_OLD}"  # WCC: do you need a "if-else-fi" to check?
-    fi
-  else
-    HAVESBLAS="no"
-  fi
-fi
-
-
-# Check for single precision LAPACK symbols.
-if test "X${HAVESLAPACK}" = "X" -o "X${HAVESLAPACK}" = "Xno"; then
-  if test "X${echo_ok}" = "Xyes" -a "X${grep_ok}" = "Xyes"; then
-    useRlapack=`echo ${LAPACK_LIBS} | grep "\-lRlapack"`
-    if test "X${useRlapack}" = "X"; then
-      AC_CHECK_LIB(lapack, [sgetrf_], [HAVESLAPACK=yes], [HAVESLAPACK=no])
-    else
-      LDFLAGS_OLD="${LDFLAGS}"
-      LDFLAGS="${LDFLAGS} ${LAPACK_LIBS}"
-      AC_CHECK_LIB(Rlapack, [sgetrf_], [HAVESLAPACK=yes], [HAVESLAPACK=no])
-      LDFLAGS="${LDFLAGS_OLD}"
-    fi
-  else
-    HAVESLAPACK="no"
-  fi
-fi
-
-
-# Set additional object files and messages
-ARMA_BLAS=""
-SINGLE_PRECISION_BLAS_AVAILABLE="FALSE"
-
-if test "X${HAVESBLAS}" = "Xno"; then
-  echo "* NOTE: defining ARMA_DONT_USE_BLAS"
-  echo "* WARNING: using Armadillo reference BLAS implementation"
-  ARMA_BLAS="${ARMA_BLAS} -DARMA_DONT_USE_BLAS"
-else
-  echo "* NOTE: using system-wide BLAS"
-  SINGLE_PRECISION_BLAS_AVAILABLE="TRUE"
-fi
-
-# Set additional object files and messages
-SINGLE_PRECISION_LAPACK_AVAILABLE="FALSE"
-DSINGLE_PRECISION_LAPACK_AVAILABLE=""
-
-if test "X${HAVESLAPACK}" = "Xyes"; then
-  echo "* NOTE: using system-wide LAPACK"
-  SINGLE_PRECISION_LAPACK_AVAILABLE="TRUE"
-  DSINGLE_PRECISION_LAPACK_AVAILABLE="-DSINGLE_PRECISION_LAPACK_AVAILABLE"
-else
-  echo "* WARNING: single precision LAPACK is not available"
-fi
-
-#------------------------------------------------------
-# borrowed from https://github.com/zhangh12/ARTP2/blob/88597ea2c81119821feaed218142372178aaf430/configure.ac
-#------------------------------------------------------
-CXX1X=`"${R_HOME}/bin/R" CMD config CXX1X`
-CXX1XSTD=`"${R_HOME}/bin/R" CMD config CXX1XSTD`
-CXX="${CXX1X} ${CXX1XSTD}"
-CXXFLAGS=`"${R_HOME}/bin/R" CMD config CXX1XFLAGS`
-
-AC_LANG(C++)
-dnl this the meat of R's m4/openmp.m4
-  OPENMP_[]_AC_LANG_PREFIX[]FLAGS=
-  AC_ARG_ENABLE([openmp],
-    [AS_HELP_STRING([--disable-openmp], [do not use OpenMP])])
-  if test "$enable_openmp" != no; then
-    AC_CACHE_CHECK([for $[]_AC_CC[] option to support OpenMP],
-      [ac_cv_prog_[]_AC_LANG_ABBREV[]_openmp],
-      [AC_LINK_IFELSE([_AC_LANG_OPENMP],
-	 [ac_cv_prog_[]_AC_LANG_ABBREV[]_openmp='none needed'],
-	 [ac_cv_prog_[]_AC_LANG_ABBREV[]_openmp='unsupported'
-	  for ac_option in -fopenmp -xopenmp -qopenmp \
-                           -openmp -mp -omp -qsmp=omp -homp \
-			   -fopenmp=libomp \
-                           -Popenmp --openmp; do
-	    ac_save_[]_AC_LANG_PREFIX[]FLAGS=$[]_AC_LANG_PREFIX[]FLAGS
-	    _AC_LANG_PREFIX[]FLAGS="$[]_AC_LANG_PREFIX[]FLAGS $ac_option"
-	    AC_LINK_IFELSE([_AC_LANG_OPENMP],
-	      [ac_cv_prog_[]_AC_LANG_ABBREV[]_openmp=$ac_option])
-	    _AC_LANG_PREFIX[]FLAGS=$ac_save_[]_AC_LANG_PREFIX[]FLAGS
-	    if test "$ac_cv_prog_[]_AC_LANG_ABBREV[]_openmp" != unsupported; then
-	      break
-	    fi
-	  done])])
-    case $ac_cv_prog_[]_AC_LANG_ABBREV[]_openmp in #(
-      "none needed" | unsupported)
-	;; #(
-      *)
-	OPENMP_[]_AC_LANG_PREFIX[]FLAGS=$ac_cv_prog_[]_AC_LANG_ABBREV[]_openmp ;;
+## Check the C++ compiler using the CXX value set
+AC_PROG_CXX
+## If it is g++, we have GXX set so let's examine it
+if test "${GXX}" = yes; then
+    AC_MSG_CHECKING([whether g++ version is sufficient])
+    gxx_version=$(${CXX} -v 2>&1 | awk '/^.*g.. version/ {print $3}')
+    case ${gxx_version} in
+        1.*|2.*|3.*|4.0.*|4.1.*|4.2.*|4.3.*|4.4.*|4.5.*|4.6.*|4.7.0|4.7.1)
+             AC_MSG_RESULT([no])
+             AC_MSG_WARN([Only g++ version 4.7.2 or greater can be used with RcppArmadillo.])
+             AC_MSG_ERROR([Please use a different compiler.])
+        ;;
+        4.7.*|4.8.*|4.9.*|5.0*|5.1*|5.2*|5.3*)
+             AC_MSG_RESULT([yes, but without OpenMP as version ${gxx_version} (Armadillo constraint)])
+             ## we know this one is bad
+             can_use_openmp="no"
+        ;;
+        5.4*|5.5*|5.6*|5.7*|5.8*|5.9*|6.*|7.*|8.*|9.*|10.*)
+             AC_MSG_RESULT([yes, with OpenMP as version ${gxx_version}])
+             ## we know this one is good, yay
+             can_use_openmp="yes"
+        ;;
+        *)
+             AC_MSG_RESULT([almost])
+             AC_MSG_WARN([Compiler self-identifies as being compliant with GNUC extensions but is not g++.])
+             ## we know nothing, so no
+             can_use_openmp="no"
+        ;;
     esac
-  fi
+fi
+
+## Check for Apple LLVM
+
+AC_MSG_CHECKING([for macOS])
+RSysinfoName=$("${R_HOME}/bin/Rscript" --vanilla -e 'cat(Sys.info()[["sysname"]])')
+
+if test x"${RSysinfoName}" == x"Darwin"; then
+    AC_MSG_RESULT([found])
+    AC_MSG_CHECKING([for macOS Apple compiler])
+
+    apple_compiler=$($CXX --version 2>&1 | grep -i -c -e 'apple llvm')
+
+    if test x"${apple_compiler}" == x"1"; then
+        AC_MSG_RESULT([found])
+        AC_MSG_WARN([OpenMP unavailable and turned off.])
+        can_use_openmp="no"
+    else
+        AC_MSG_RESULT([not found])
+        AC_MSG_CHECKING([for clang compiler])
+        clang_compiler=$($CXX --version 2>&1 | grep -i -c -e 'clang ')
+
+        if test x"${clang_compiler}" == x"1"; then
+            AC_MSG_RESULT([found])
+            AC_MSG_CHECKING([for OpenMP compatible version of clang])
+            clang_version=$(${CXX} -v 2>&1 | awk '/^.*clang version/ {print $3}')
+
+            case ${clang_version} in
+                4.*|5.*|6.*|7.*|8.*)
+                    AC_MSG_RESULT([found and suitable])
+                    can_use_openmp="yes"
+                ;;
+                *)
+                    AC_MSG_RESULT([not found])
+                    AC_MSG_WARN([OpenMP unavailable and turned off.])
+                    can_use_openmp="no"
+                ;;
+            esac
+        else
+            AC_MSG_RESULT([not found])
+            AC_MSG_WARN([unsupported macOS build detected; if anything breaks, you keep the pieces.])
+        fi
+    fi
+fi
+
+## Default the OpenMP flag to the empty string.
+## If and only if OpenMP is found, expand to $(SHLIB_OPENMP_CXXFLAGS)
+openmp_flag=""
+
+if test x"${can_use_openmp}" == x"yes"; then
+    AC_MSG_CHECKING([for OpenMP])
+    ## if R has -fopenmp we should be good
+    allldflags=$(${R_HOME}/bin/R CMD config --ldflags)
+    hasOpenMP=$(echo ${allldflags} | grep -- -fopenmp)
+    if test x"${hasOpenMP}" == x""; then
+        AC_MSG_RESULT([missing])
+    else
+        AC_MSG_RESULT([found and suitable])
+        openmp_flag='$(SHLIB_OPENMP_CXXFLAGS)'
+    fi
+fi
+
 #------------------------------------------------------
 
 AC_SUBST(OPENMP_CXXFLAGS)
-AC_SUBST(ARMA_BLAS)
-AC_SUBST(DSINGLE_PRECISION_LAPACK_AVAILABLE)
+AC_SUBST([OPENMP_FLAG], ["${openmp_flag}"])
 AC_SUBST(FLOAT_LIBS)
 AC_OUTPUT(src/Makevars)
-
-AC_SUBST(SINGLE_PRECISION_LAPACK_AVAILABLE)
-AC_SUBST(SINGLE_PRECISION_BLAS_AVAILABLE)
-AC_OUTPUT([R/configure.R])
-

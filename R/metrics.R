@@ -1,6 +1,5 @@
+#' @name metrics
 #' @title Ranking Metrics for Top-K Items
-#' @description \code{ap_k} calculates \bold{Average Precision at K (\code{ap@@k})}.
-#'   Please refer to \href{Information retrieval wikipedia article}{https://en.wikipedia.org/wiki/Information_retrieval#Average_precision}
 #' @param predictions matrix of predictions. Predctions can be defined 2 ways:
 #' \enumerate{
 #'   \item \code{predictions} = \code{integer} matrix with item indices (correspond to column numbers in \code{actual})
@@ -11,6 +10,23 @@
 #'   Value of the each non-zero entry considered as relevance for calculation of \code{ndcg@@k}.
 #'   It should inherit from \code{Matrix::sparseMatrix}. Internally \code{Matrix::RsparseMatrix} is used.
 #' @param ... other arguments (not used at the moment)
+#' @rdname metrics
+#' @examples
+#' predictions = matrix(
+#'   c(5L, 7L, 9L, 2L),
+#'   nrow = 1
+#' )
+#' actual = matrix(
+#'   c(0, 0, 0, 0, 1, 0, 1, 0, 1, 0),
+#'   nrow = 1
+#' )
+#' actual = as(actual, "RsparseMatrix")
+#' identical(rsparse::ap_k(predictions, actual), 1)
+NULL
+
+#' @description \code{ap_k} calculates \bold{Average Precision at K (\code{ap@@k})}.
+#' Please refer to \href{Information retrieval wikipedia article}{https://en.wikipedia.org/wiki/Information_retrieval#Average_precision}
+#' @rdname metrics
 #' @export
 ap_k = function(predictions, actual, ...) {
   stopifnot(is.matrix(predictions))
@@ -22,6 +38,8 @@ ap_k = function(predictions, actual, ...) {
 
   if(!is.integer(predictions)) {
     predictions = attr(predictions, "indices", TRUE)
+    if(is.null(predictions))
+      predictions_format_error()
   }
   y_csr = as(actual, "RsparseMatrix")
   res = numeric(n_u)
@@ -40,7 +58,7 @@ ap_k = function(predictions, actual, ...) {
 
 #' @description \code{ndcg_k()} calculates \bold{Normalized Discounted Cumulative Gain at K (\code{ndcg@@k})}.
 #' Please refer to \href{Discounted cumulative gain}{https://en.wikipedia.org/wiki/Discounted_cumulative_gain#Normalized_DCG}
-#' @rdname ap_k
+#' @rdname metrics
 #' @export
 ndcg_k = function(predictions, actual, ...) {
   stopifnot(is.matrix(predictions))
@@ -51,6 +69,8 @@ ndcg_k = function(predictions, actual, ...) {
   stopifnot(n_u == nrow(actual))
   if(!is.integer(predictions)) {
     predictions = attr(predictions, "indices", TRUE)
+    if(is.null(predictions))
+      predictions_format_error()
   }
   y_csr = as(actual, "RsparseMatrix")
   res = numeric(n_u)
@@ -104,4 +124,13 @@ idcg_at_k = function(actual_relevances, k = length(actual_relevances)) {
 ndcg_at_k = function(predicted_indices, actual_indices, actual_relevances, k = length(predicted_indices)) {
   k = min(k, length(predicted_indices), length(actual_indices))
   dcg_at_k(predicted_indices, actual_indices, actual_relevances, k) / idcg_at_k(actual_relevances, k)
+}
+
+predictions_format_error = function() {
+  stop(paste("`predictions` should be: ",
+             "1) integer matrix consisting of indices of predictions",
+             "OR",
+             "2) numeric matrix of prediction scores with 'indices' attribute",
+             "which should be integer matrix consisting of indices of predictions"
+  ))
 }

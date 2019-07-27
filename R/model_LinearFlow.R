@@ -1,6 +1,6 @@
 #' @name LinearFlow
 #'
-#' @title Linear-FLow method for one-class collaborative filtering
+#' @title Creates Linear-FLow model for one-class collaborative filtering
 #' @description Creates \bold{Linear-FLow} model described in
 #' \href{http://www.bkveton.com/docs/ijcai2016.pdf}{Practical Linear Models for Large-Scale One-Class Collaborative Filtering}.
 #' The goal is to find item-item (or user-user) similarity matrix which is \bold{low-rank and has small Frobenius norm}. Such
@@ -17,9 +17,9 @@
 #' \preformatted{
 #'   model = LinearFlow$new( rank = 8L,
 #'                           lambda = 0,
-#'                           solve_right_singular_vectors = c("soft_impute", "svd"),
-#'                           v = NULL,
+#'                           init = NULL,
 #'                           preprocess = identity,
+#'                           solve_right_singular_vectors = c("soft_impute", "svd")
 #'                           ...)
 #'   model$fit_transform(x, ...)
 #'   model$transform(x, ...)
@@ -34,15 +34,17 @@
 #' @section Methods:
 #' \describe{
 #'   \item{\code{$new(rank = 8L, lambda = 0,
+#'               init = NULL,
+#'               preprocess = identity,
 #'               solve_right_singular_vectors = c("svd", "soft_impute"),
-#'               v = NULL, preprocess = identity, ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
-#'     If \code{v} (right singular vectors of the user-item interactions matrix)
+#'               ...)}}{ creates Linear-FLow model with \code{rank} latent factors.
+#'     If \code{init} (right singular vectors of the user-item interactions matrix)
 #'     is provided then model initialized with its values.}
 #'   \item{\code{$fit_transform(x, ...)}}{ fits model to
-#'     an input user-item matrix.
-#'     \bold{Returns factor matrix for users of size \code{n_users * rank}}}
-#'   \item{\code{$transform(x, ...)}}{transforms (new) sparse user-item interaction matrix into user-embeddings matrix.}
-#'   \item{\code{$predict(x, k, not_recommend = x, ...)}}{predict \bold{top k}
+#'     an input user-item interaction matrix.
+#'     \bold{Returns user embeddings matrix of the size \code{n_users * rank}}}
+#'   \item{\code{$transform(x, ...)}}{transforms user-item interaction matrix into user-embeddings matrix.}
+#'   \item{\code{$predict(x, k, not_recommend = x, ...)}}{predicts \bold{top k}
 #'     item ids for users \code{x}. Users features should be defined the same way as they were defined in
 #'     training data - as \bold{sparse matrix}. Column names (=item ids) should be in the same order as
 #'     in the \code{fit_transform()}.}
@@ -76,34 +78,42 @@
 #'  \item{...}{other arguments (not used at the moment)}
 #' }
 #' @export
+#' @examples
+#' data('movielens100k')
+#' train = movielens100k[1:900, ]
+#' cv = movielens100k[901:nrow(movielens100k), ]
+#' model = LinearFlow$new(rank = 10, lambda = 0, init = NULL,
+#'                        solve_right_singular_vectors = "svd")
+#' user_emb = model$fit_transform(train)
+#' preds = model$predict(cv, k = 10)
 LinearFlow = R6::R6Class(
   classname = "LinearFlow",
-  inherit = BaseRecommender,
+  inherit = MatrixFactorizationRecommender,
   public = list(
     v = NULL,
     initialize = function(rank = 8L,
                           lambda = 0,
-                          solve_right_singular_vectors = c("soft_impute", "svd"),
-                          v = NULL,
-                          preprocess = identity) {
+                          init = NULL,
+                          preprocess = identity,
+                          solve_right_singular_vectors = c("soft_impute", "svd")) {
       private$preprocess = preprocess
       private$rank = as.integer(rank)
       private$solve_right_singular_vectors = match.arg(solve_right_singular_vectors)
       private$lambda = as.numeric(lambda)
-      self$v = v
+      self$v = init
     },
     fit_transform = function(x, ...) {
       stopifnot(inherits(x, "sparseMatrix") || inherits(x, "SparsePlusLowRank"))
       x = private$preprocess(x)
       private$item_ids = colnames(x)
       self$v = private$get_right_singular_vectors(x, ...)
-      flog.debug("calculating RHS")
+      logger$trace("calculating RHS")
 
       # rhs = t(self$v) %*% t(x) %*% x
       # same as above but a bit faster:
       rhs = crossprod(x %*% self$v, x)
 
-      flog.debug("calculating LHS")
+      logger$trace("calculating LHS")
       lhs = rhs %*% self$v
       private$components_ = private$fit_transform_internal(lhs, rhs, private$lambda, ...)
       invisible(as.matrix(x %*% self$v))
@@ -148,12 +158,12 @@ LinearFlow = R6::R6Class(
       metric_name = metric[[1]]
 
       self$v = private$get_right_singular_vectors(x, ...)
-      flog.debug("calculating RHS")
+      logger$trace("calculating RHS")
       # rhs = t(self$v) %*% t(x) %*% x
       # same as above but a bit faster:
       rhs = crossprod(x %*% self$v, x)
 
-      flog.debug("calculating LHS")
+      logger$trace("calculating LHS")
       lhs = rhs %*% self$v
       # calculate "reasonable" lambda from values of main diagonal of LHS
       if(lambda_auto) {
@@ -182,7 +192,7 @@ LinearFlow = R6::R6Class(
           private$components_ = Y
           private$lambda = lambda_i
         }
-        flog.info("%d/%d lambda %.3f score = %.3f", i, length(lambda), lambda_i, score)
+        logger$trace("%d/%d lambda %.3f score = %.3f", i, length(lambda), lambda_i, score)
       }
       cv_res
     }
@@ -196,7 +206,7 @@ LinearFlow = R6::R6Class(
     get_right_singular_vectors = function(x, ...) {
       result = NULL
       if(!is.null(self$v)) {
-        flog.debug("found v, checking it...")
+        logger$trace("found `init`, checking it")
         stopifnot(nrow((self$v)) == ncol(x))
         stopifnot(ncol((self$v)) == private$rank)
         result = self$v
@@ -215,7 +225,7 @@ LinearFlow = R6::R6Class(
       result
     },
     fit_transform_internal = function(lhs, rhs, lambda, ...) {
-      flog.debug("solving least squares with lambda %.3f", lambda)
+      logger$trace("solving least squares with lambda %.3f", lambda)
       lhs_ridge = lhs + diag(rep(lambda, private$rank))
       as.matrix(solve(lhs_ridge, rhs))
     }

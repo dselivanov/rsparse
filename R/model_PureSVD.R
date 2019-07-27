@@ -14,6 +14,7 @@
 #'                       preprocess = identity,
 #'                       ...)
 #'   model$fit_transform(x, n_iter = 5L, ...)
+#'   model$transform(x, ...)
 #'   model$predict(x, k, not_recommend = x, ...)
 #'   model$components
 #' }
@@ -29,6 +30,8 @@
 #'   \item{\code{$fit_transform(x, n_iter = 5L, ...)}}{ fits model to
 #'     an input user-item matrix.
 #'     \bold{Returns factor matrix for users of size \code{n_users * rank}}}
+#'   \item{\code{$transform(x, ...)}}{Calculates user embeddings from given \code{x} user-item matrix.
+#'     Result is \code{n_users * rank} matrix}
 #'   \item{\code{$predict(x, k, not_recommend = x, ...)}}{predict \code{top k}
 #'     item ids for users \code{x} (= column names from the matrix passed to \code{fit_transform()} method).
 #'     Users features should be defined the same way as they were defined in training data - as \bold{sparse matrix}
@@ -54,8 +57,21 @@
 #'  \item{...}{other arguments. Not used at the moment}
 #' }
 #' @export
+#' @examples
+#' data('movielens100k')
+#' i_train = sample(nrow(movielens100k), 900)
+#' i_test = setdiff(seq_len(nrow(movielens100k)), i_train)
+#' train = movielens100k[i_train, ]
+#' test = movielens100k[i_test, ]
+#' rank = 32
+#' lambda = 0
+#' model = PureSVD$new(rank = rank,  lambda = lambda)
+#' user_emb = model$fit_transform(sign(test), n_iter = 100, convergence_tol = 0.00001)
+#' item_emb = model$components
+#' preds = model$predict(sign(test), k = 1500, not_recommend = NULL)
+#' mean(ap_k(preds, actual = test))
 PureSVD = R6::R6Class(
-  inherit = BaseRecommender,
+  inherit = MatrixFactorizationRecommender,
   classname = "PureSVD",
   public = list(
     initialize = function(rank = 10L,
@@ -70,10 +86,13 @@ PureSVD = R6::R6Class(
       stopifnot(is.function(preprocess))
       private$preprocess = preprocess
     },
-    fit_transform = function(x, n_iter = 10L, convergence_tol = 1e-3, ...) {
+    fit_transform = function(x, n_iter = 100L, convergence_tol = 1e-3, ...) {
+      uids = rownames(x)
+      private$item_ids = colnames(x)
+
       x = private$check_convert_input(x)
       x = private$preprocess(x)
-      private$item_ids = colnames(x)
+
       n_user = nrow(x)
       n_item = ncol(x)
       private$svd = soft_svd(x, rank = private$rank,
@@ -83,15 +102,20 @@ PureSVD = R6::R6Class(
                      init = private$init,
                      ...)
       res = private$svd$u %*% diag(x = private$svd$d)
+      data.table::setattr(res, "dimnames", list(uids, NULL))
+
       private$components_ = t(private$svd$v %*%  diag(x = private$svd$d))
+      data.table::setattr(private$components_, "dimnames", list(NULL, private$item_ids))
       invisible(res)
     },
     transform = function(x, ...) {
+      uids = rownames(x)
       x = private$check_convert_input(x)
       x = private$preprocess(x)
       res = x %*% private$svd$v
-      rownames(res) = rownames(x)
-      as.matrix(res)
+      res = as.matrix(res)
+      data.table::setattr(res, "dimnames", list(uids, NULL))
+      res
     }
   ),
   private = list(

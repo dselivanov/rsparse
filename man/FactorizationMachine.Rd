@@ -15,7 +15,7 @@ Creates second order Factorization Machines model
 
 For usage details see \bold{Methods, Arguments and Examples} sections.
 \preformatted{
-fm = FM$new(learning_rate_w = 0.2, rank = 8, lambda_w = 0, lambda_v = 0, task = c("classification", "regression")
+fm = FM$new(learning_rate_w = 0.2, rank = 4, lambda_w = 0, lambda_v = 0, family = c("binomial", "gaussian")
   intercept = TRUE, learning_rate_v = learning_rate_w)
 fm$partial_fit(x, y, ...)
 fm$predict(x, ...)
@@ -25,8 +25,8 @@ fm$predict(x, ...)
 \section{Methods}{
 
 \describe{
-  \item{\code{FM$new(learning_rate_w = 0.2, rank = 8, lambda_w = 1e-6, lambda_v = 1e-6,
-  task = c("classification", "regression"), intercept = TRUE, learning_rate_v = learning_rate_w)}}{Constructor
+  \item{\code{FM$new(learning_rate_w = 0.2, rank = 4, lambda_w = 0, lambda_v = 0,
+  family = c("binomial", "gaussian"), intercept = TRUE, learning_rate_v = learning_rate_w)}}{Constructor
   for FactorizationMachines model. For description of arguments see \bold{Arguments} section.}
   \item{\code{$partial_fit(x, y, ...)}}{fits/updates model given input matrix \code{x} and target vector \code{y}.
   \code{x} shape = (n_samples, n_features)}
@@ -46,9 +46,31 @@ fm$predict(x, ...)
  \item{rank}{rank of the latent dimension in factorization}
  \item{lambda_w}{regularization parameter for linear terms}
  \item{lambda_v}{regularization parameter for interactions terms}
- \item{n_features}{number of features in model (number of columns in expected model matrix) }
- \item{task}{ \code{"regression"} or \code{"classification"}}
+ \item{intercept}{logical flag which specify whether to allow model to have non-zero
+      intercept/bias}
+ \item{family}{ a description of the error distribution and link function to be used in the model.
+       Can be \code{"gaussian"} (for regression) or \code{"binomial"} (for classification)}
 }
 }
 
+\examples{
+\donttest{
+# Factorization Machines can fit XOR function!
+x = rbind(
+  c(0, 0),
+  c(0, 1),
+  c(1, 0),
+  c(1, 1)
+)
+y = c(0, 1, 1, 0)
+
+x = as(x, "RsparseMatrix")
+fm = FactorizationMachine$new(learning_rate_w = 10, rank = 2, lambda_w = 0,
+  lambda_v = 0, family = 'binomial', intercept = TRUE)
+res = fm$fit(x, y, n_iter = 100)
+preds = fm$predict(x)
+all(preds[c(1, 4)] < 0.01)
+all(preds[c(2, 3)] > 0.99)
+}
+}
 \keyword{datasets}

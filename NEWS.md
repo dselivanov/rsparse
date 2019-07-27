@@ -1,0 +1,8 @@
+- 2019-04-14
+    - fixed out of bound memory access as reported by CRAN UBSAN
+    - added ability to init GloVe embeddings with user provided values
+- 2019-03-16
+    - added methods to natively slice CSR matrices without converting them to triplet/CSC
+- 2018-10-25
+    - add GloVe matrix factorization (adapted from `text2vec`)
+    - link to `float` package - credits to @snoweye and @wrathematics
