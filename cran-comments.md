@@ -1,6 +1,6 @@
-Resumbission
+New submission
 
-- fixed incorrect urls in the documentation as found by CRAN
+- another way of linking to float shared library on binary OS X installations
 
 # Test environments
 
