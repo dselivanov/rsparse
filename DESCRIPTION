@@ -54,6 +54,7 @@ LinkingTo:
 Suggests: 
     testthat, 
     covr
+StagedInstall: TRUE
 URL: https://github.com/dselivanov/rsparse
 BugReports: https://github.com/dselivanov/rsparse/issues
 RoxygenNote: 6.1.1
