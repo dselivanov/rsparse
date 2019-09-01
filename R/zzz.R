@@ -19,7 +19,7 @@
 }
 
 .onLoad = function(libname, pkgname) {
-  install_name_tool_change_float(libname, pkgname)
+  install_name_tool_change_float()
   library.dynam("rsparse", pkgname, libname)
   options("rsparse_omp_threads" = detect_number_omp_threads())
   logger = lgr::get_logger('rsparse')
@@ -68,7 +68,7 @@ install_name_tool_change_float_org = function() {
   }
 }
 
-install_name_tool_change_float <- function(libname, pkgname){
+install_name_tool_change_float <- function(){
   if(Sys.info()[["sysname"]] == "Darwin"){
     R_ARCH <- Sys.getenv("R_ARCH")
     libsarch <- if(nzchar(R_ARCH)) paste("libs", R_ARCH, sep = "") else "libs"
