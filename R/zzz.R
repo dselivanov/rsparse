@@ -6,7 +6,7 @@
 #' @import float
 #' @importFrom RhpcBLASctl get_num_cores
 #' @importFrom mlapi mlapiDecomposition
-#' @useDynLib rsparse
+## @useDynLib rsparse
 
 
 .onAttach = function(libname, pkgname) {
@@ -20,6 +20,7 @@
 
 .onLoad = function(libname, pkgname) {
   install_name_tool_change_float()
+  library.dynam("rsparse", pkgname, libname)
   options("rsparse_omp_threads" = detect_number_omp_threads())
   logger = lgr::get_logger('rsparse')
   logger$set_threshold('info')
@@ -44,7 +45,7 @@ detect_number_omp_threads = function() {
 }
 
 # see https://github.com/dselivanov/rsparse/issues/25
-install_name_tool_change_float = function() {
+install_name_tool_change_float_org = function() {
   if (Sys.info()[["sysname"]] == "Darwin") {
     install_name_tool = 'install_name_tool'
     rsparse_path = system.file('libs', package = 'rsparse')
@@ -64,5 +65,36 @@ install_name_tool_change_float = function() {
     # useful info - https://github.com/conda/conda-build/issues/279#issuecomment-67241554
     install_name_tool_args = sprintf('-change %s %s %s', float_rpath, new_float_rpath, rsparse_path)
     invisible(system2(install_name_tool, install_name_tool_args))
+  }
+}
+
+install_name_tool_change_float <- function(){
+  if(Sys.info()[["sysname"]] == "Darwin"){
+    R_ARCH <- Sys.getenv("R_ARCH")
+    libsarch <- if(nzchar(R_ARCH)) paste("libs", R_ARCH, sep = "") else "libs"
+
+    dest.rsparse <- file.path(system.file(package = "rsparse"), libsarch)
+    fn.rsparse.so <- file.path(dest.rsparse, "rsparse.so")
+
+    dest.float <- file.path(system.file(package = "float"), libsarch)
+    fn.float.so <- file.path(dest.float, "float.so")
+
+    cmd.int <- system("which install_name_tool", intern = TRUE)
+    cmd.ot <- system("which otool", intern = TRUE)
+
+    rpath <- system(paste(cmd.ot, " -L ", fn.rsparse.so, sep = ""),
+                    intern = TRUE)
+    id <- grep("float.so", rpath)
+    fn.float.so.org <- gsub("^\\t(.*float.so) \\(.*\\)$", "\\1", rpath[id])
+
+    ret <- NULL
+    if(fn.float.so.org != fn.float.so){
+      print(fn.float.so.org)
+      print(fn.float.so)
+      cmd <- paste(cmd.int, " -change ", fn.float.so.org, " ", fn.float.so, " ",
+                   fn.rsparse.so, sep = "")
+      ret <- system(cmd, intern = TRUE)
+    }
+    invisible(ret)
   }
 }
