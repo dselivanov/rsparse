@@ -8,3 +8,4 @@ autom4te.cache
 docs/
 .travis.yml
 ^cran-comments\.md$
+.github/
