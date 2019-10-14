@@ -6,7 +6,7 @@
 #' @import float
 #' @importFrom RhpcBLASctl get_num_cores
 #' @importFrom mlapi mlapiDecomposition
-## @useDynLib rsparse
+#' @useDynLib rsparse, .registration = TRUE
 
 
 .onAttach = function(libname, pkgname) {
@@ -24,7 +24,7 @@
 
 .onLoad = function(libname, pkgname) {
   # install_name_tool_change_float()
-  library.dynam("rsparse", pkgname, libname)
+  # library.dynam("rsparse", pkgname, libname)
   options("rsparse_omp_threads" = detect_number_omp_threads())
   logger = lgr::get_logger('rsparse')
   logger$set_threshold('info')
