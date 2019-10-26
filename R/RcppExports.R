@@ -2,86 +2,86 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 get_ftrl_weights <- function(R_model) {
-    .Call('_rsparse_get_ftrl_weights', PACKAGE = 'rsparse', R_model)
+    .Call(`_rsparse_get_ftrl_weights`, R_model)
 }
 
 ftrl_partial_fit <- function(m, y, R_model, weights, do_update = 1L, n_threads = 1L) {
-    .Call('_rsparse_ftrl_partial_fit', PACKAGE = 'rsparse', m, y, R_model, weights, do_update, n_threads)
+    .Call(`_rsparse_ftrl_partial_fit`, m, y, R_model, weights, do_update, n_threads)
 }
 
 fm_create_param <- function(learning_rate_w, learning_rate_v, rank, lambda_w, lambda_v, w0_R, w_R, v_R, grad_w2_R, grad_v2_R, task, intercept) {
-    .Call('_rsparse_fm_create_param', PACKAGE = 'rsparse', learning_rate_w, learning_rate_v, rank, lambda_w, lambda_v, w0_R, w_R, v_R, grad_w2_R, grad_v2_R, task, intercept)
+    .Call(`_rsparse_fm_create_param`, learning_rate_w, learning_rate_v, rank, lambda_w, lambda_v, w0_R, w_R, v_R, grad_w2_R, grad_v2_R, task, intercept)
 }
 
 fm_create_model <- function(params_ptr) {
-    .Call('_rsparse_fm_create_model', PACKAGE = 'rsparse', params_ptr)
+    .Call(`_rsparse_fm_create_model`, params_ptr)
 }
 
 fill_float_matrix_randn <- function(x, stdev = 0.001) {
-    invisible(.Call('_rsparse_fill_float_matrix_randn', PACKAGE = 'rsparse', x, stdev))
+    invisible(.Call(`_rsparse_fill_float_matrix_randn`, x, stdev))
 }
 
 fill_float_matrix <- function(x, val) {
-    invisible(.Call('_rsparse_fill_float_matrix', PACKAGE = 'rsparse', x, val))
+    invisible(.Call(`_rsparse_fill_float_matrix`, x, val))
 }
 
 fill_float_vector_randn <- function(x, stdev = 0.001) {
-    invisible(.Call('_rsparse_fill_float_vector_randn', PACKAGE = 'rsparse', x, stdev))
+    invisible(.Call(`_rsparse_fill_float_vector_randn`, x, stdev))
 }
 
 fill_float_vector <- function(x, val) {
-    invisible(.Call('_rsparse_fill_float_vector', PACKAGE = 'rsparse', x, val))
+    invisible(.Call(`_rsparse_fill_float_vector`, x, val))
 }
 
 fm_partial_fit <- function(ptr, X, y, w, n_threads = 1L, do_update = 1L) {
-    .Call('_rsparse_fm_partial_fit', PACKAGE = 'rsparse', ptr, X, y, w, n_threads, do_update)
+    .Call(`_rsparse_fm_partial_fit`, ptr, X, y, w, n_threads, do_update)
 }
 
 is_invalid_ptr <- function(sexp_ptr) {
-    .Call('_rsparse_is_invalid_ptr', PACKAGE = 'rsparse', sexp_ptr)
+    .Call(`_rsparse_is_invalid_ptr`, sexp_ptr)
 }
 
 cpp_glove_create <- function(params) {
-    .Call('_rsparse_cpp_glove_create', PACKAGE = 'rsparse', params)
+    .Call(`_rsparse_cpp_glove_create`, params)
 }
 
 cpp_glove_partial_fit <- function(ptr, x_irow, x_icol, x_val, iter_order, n_threads = 1L) {
-    .Call('_rsparse_cpp_glove_partial_fit', PACKAGE = 'rsparse', ptr, x_irow, x_icol, x_val, iter_order, n_threads)
+    .Call(`_rsparse_cpp_glove_partial_fit`, ptr, x_irow, x_icol, x_val, iter_order, n_threads)
 }
 
 csr_dense_tcrossprod <- function(x_csr_r, y_transposed, num_threads = 1L) {
-    .Call('_rsparse_csr_dense_tcrossprod', PACKAGE = 'rsparse', x_csr_r, y_transposed, num_threads)
+    .Call(`_rsparse_csr_dense_tcrossprod`, x_csr_r, y_transposed, num_threads)
 }
 
 dense_csc_prod <- function(x_r, y_csc_r, num_threads = 1L) {
-    .Call('_rsparse_dense_csc_prod', PACKAGE = 'rsparse', x_r, y_csc_r, num_threads)
+    .Call(`_rsparse_dense_csc_prod`, x_r, y_csc_r, num_threads)
 }
 
 als_implicit_double <- function(m_csc_r, X, Y, XtX, lambda, n_threads, solver, cg_steps = 3L) {
-    .Call('_rsparse_als_implicit_double', PACKAGE = 'rsparse', m_csc_r, X, Y, XtX, lambda, n_threads, solver, cg_steps)
+    .Call(`_rsparse_als_implicit_double`, m_csc_r, X, Y, XtX, lambda, n_threads, solver, cg_steps)
 }
 
 als_implicit_float <- function(m_csc_r, XR, YR, XtXR, lambda, n_threads, solver, cg_steps = 3L) {
-    .Call('_rsparse_als_implicit_float', PACKAGE = 'rsparse', m_csc_r, XR, YR, XtXR, lambda, n_threads, solver, cg_steps)
+    .Call(`_rsparse_als_implicit_float`, m_csc_r, XR, YR, XtXR, lambda, n_threads, solver, cg_steps)
 }
 
 als_loss_explicit <- function(m_csc_r, X, Y, lambda, n_threads) {
-    .Call('_rsparse_als_loss_explicit', PACKAGE = 'rsparse', m_csc_r, X, Y, lambda, n_threads)
+    .Call(`_rsparse_als_loss_explicit`, m_csc_r, X, Y, lambda, n_threads)
 }
 
 top_product <- function(x, y, k, n_threads, not_recommend_r, exclude) {
-    .Call('_rsparse_top_product', PACKAGE = 'rsparse', x, y, k, n_threads, not_recommend_r, exclude)
+    .Call(`_rsparse_top_product`, x, y, k, n_threads, not_recommend_r, exclude)
 }
 
 arma_kmeans <- function(x, k, seed_mode, n_iter, verbose, result) {
-    .Call('_rsparse_arma_kmeans', PACKAGE = 'rsparse', x, k, seed_mode, n_iter, verbose, result)
+    .Call(`_rsparse_arma_kmeans`, x, k, seed_mode, n_iter, verbose, result)
 }
 
 omp_thread_count <- function() {
-    .Call('_rsparse_omp_thread_count', PACKAGE = 'rsparse')
+    .Call(`_rsparse_omp_thread_count`)
 }
 
 cpp_make_sparse_approximation <- function(mat_template, X, Y, sparse_matrix_type, n_threads) {
-    .Call('_rsparse_cpp_make_sparse_approximation', PACKAGE = 'rsparse', mat_template, X, Y, sparse_matrix_type, n_threads)
+    .Call(`_rsparse_cpp_make_sparse_approximation`, mat_template, X, Y, sparse_matrix_type, n_threads)
 }
 

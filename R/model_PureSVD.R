@@ -78,10 +78,13 @@ PureSVD = R6::R6Class(
                           lambda = 0,
                           init = NULL,
                           preprocess = identity,
+                          method = c('svd', 'impute'),
                           ...) {
       private$rank = rank
       private$lambda = lambda
       private$init = init
+      private$method = match.arg(method)
+
       private$set_internal_matrix_formats(sparse = "sparseMatrix", dense = NULL)
       stopifnot(is.function(preprocess))
       private$preprocess = preprocess
@@ -93,18 +96,24 @@ PureSVD = R6::R6Class(
       x = private$check_convert_input(x)
       x = private$preprocess(x)
 
-      n_user = nrow(x)
-      n_item = ncol(x)
-      private$svd = soft_svd(x, rank = private$rank,
-                     lambda = private$lambda,
-                     n_iter = n_iter,
-                     convergence_tol = convergence_tol,
-                     init = private$init,
-                     ...)
-      res = private$svd$u %*% diag(x = private$svd$d)
+      if (private$method == "svd") {
+        FUN = soft_svd
+      } else {
+        FUN = soft_impute
+      }
+
+      private$svd = FUN(x, rank = private$rank,
+                             lambda = private$lambda,
+                             n_iter = n_iter,
+                             convergence_tol = convergence_tol,
+                             init = private$init,
+                             ...)
+
+      res = as.matrix(x %*% private$svd$v)
       data.table::setattr(res, "dimnames", list(uids, NULL))
 
-      private$components_ = t(private$svd$v %*%  diag(x = private$svd$d))
+      #private$components_ = t(private$svd$v %*%  diag(x = private$svd$d))
+      private$components_ = t(private$svd$v)
       data.table::setattr(private$components_, "dimnames", list(NULL, private$item_ids))
       invisible(res)
     },
@@ -118,11 +127,25 @@ PureSVD = R6::R6Class(
       res
     }
   ),
+  active = list(
+    components = function(value) {
+      if (!missing(value))
+        stop("Sorry this is a read-only variable.")
+      else {
+        if (is.null(private$components_)) {
+          warning("Decomposition model was not fitted yet!")
+          NULL
+        }
+        else t(private$svd$v %*%  diag(x = private$svd$d))
+      }
+    }
+  ),
   private = list(
     rank = NULL,
     lambda = NULL,
     init = NULL,
     svd = NULL,
-    preprocess = NULL
+    preprocess = NULL,
+    method = NULL
   )
 )
