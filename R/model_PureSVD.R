@@ -136,7 +136,11 @@ PureSVD = R6::R6Class(
           warning("Decomposition model was not fitted yet!")
           NULL
         }
-        else t(private$svd$v %*%  diag(x = private$svd$d))
+        else {
+          res = t(private$svd$v %*%  diag(x = private$svd$d))
+          data.table::setattr(res, "dimnames", list(NULL, private$item_ids))
+          res
+        }
       }
     }
   ),
