@@ -15,15 +15,16 @@ train_test_split = function(x, test_proportion = 0.5) {
   # make R CMD check happy (avoid "no visible binding for global variable" warnings)
   i = train = NULL
   temp = data.table(i = temp@i, j = temp@j, x = temp@x)
-  temp[, train := sample(c(FALSE, TRUE), .N, replace = TRUE, prob = c(test_proportion, cv_proportion)), by = i]
+  temp[, train := sample(c(FALSE, TRUE), .N, replace = TRUE, prob = c(test_proportion, cv_proportion)), keyby = i]
   x_train = temp[train == TRUE]
-  x_cv = temp[train == FALSE]
+  x_test = temp[train == FALSE]
   rm(temp)
+
   x_train = sparseMatrix( i = x_train$i, j = x_train$j, x = x_train$x,
                           dims = dim(x), dimnames = dimnames(x), index1 = FALSE)
-  x_cv = sparseMatrix( i = x_cv$i, j = x_cv$j, x = x_cv$x,
+  x_test = sparseMatrix( i = x_test$i, j = x_test$j, x = x_test$x,
                               dims = dim(x), dimnames = dimnames(x), index1 = FALSE)
-  list(x_train = x_train, x_cv = x_cv)
+  list(train = x_train, test = x_test)
 }
 
 
@@ -34,14 +35,14 @@ find_top_product = function(x, y, k, not_recommend = NULL, exclude = integer(0),
   # restore on exit
   on.exit(RhpcBLASctl::blas_set_num_threads(n_threads_blas))
 
-  if(!inherits(exclude, "integer"))
+  if (!inherits(exclude, "integer"))
     stop("'exclude' should be integer vector")
-  if(!(is.null(not_recommend) || inherits(not_recommend, "sparseMatrix")))
+  if (!(is.null(not_recommend) || inherits(not_recommend, "sparseMatrix")))
     stop("'not_recommend' should be NULL or 'sparseMatrix'")
 
   stopifnot(ncol(x) == nrow(y))
 
-  if(is.null(not_recommend))
+  if (is.null(not_recommend))
     not_recommend = new("dgRMatrix")
   else {
     stopifnot(nrow(x) == nrow(not_recommend))
