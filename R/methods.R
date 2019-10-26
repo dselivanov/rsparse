@@ -35,6 +35,15 @@ NULL
 #' @rdname matmult
 #' @export
 setMethod("%*%", signature(x="dgRMatrix", y="matrix"), function(x, y) {
+  # restore on exit
+  n_thread = RhpcBLASctl::blas_get_num_procs()
+  on.exit(RhpcBLASctl::blas_set_num_threads(n_thread))
+
+  # set num threads to 1 in order to avoid thread contention between BLAS and openmp threads
+  RhpcBLASctl::blas_set_num_threads(1L)
+
+
+
   check_dimensions_match(x, y)
   res = csr_dense_tcrossprod(x, t(y), getOption("rsparse_omp_threads", 1L))
   set_dimnames(res, rownames(x), colnames(y))
@@ -43,6 +52,13 @@ setMethod("%*%", signature(x="dgRMatrix", y="matrix"), function(x, y) {
 #' @rdname matmult
 #' @export
 setMethod("tcrossprod", signature(x="dgRMatrix", y="matrix"), function(x, y) {
+  # restore on exit
+  n_thread = RhpcBLASctl::blas_get_num_procs()
+  on.exit(RhpcBLASctl::blas_set_num_threads(n_thread))
+
+  # set num threads to 1 in order to avoid thread contention between BLAS and openmp threads
+  RhpcBLASctl::blas_set_num_threads(1L)
+
   check_dimensions_match(x, y, y_transposed = TRUE)
   res = csr_dense_tcrossprod(x, y, getOption("rsparse_omp_threads", 1L))
   set_dimnames(res, rownames(x), rownames(y))
@@ -51,6 +67,14 @@ setMethod("tcrossprod", signature(x="dgRMatrix", y="matrix"), function(x, y) {
 #' @rdname matmult
 #' @export
 setMethod("%*%", signature(x="matrix", y="dgCMatrix"), function(x, y) {
+  # restore on exit
+  n_thread = RhpcBLASctl::blas_get_num_procs()
+  on.exit(RhpcBLASctl::blas_set_num_threads(n_thread))
+
+  # set num threads to 1 in order to avoid thread contention between BLAS and openmp threads
+  RhpcBLASctl::blas_set_num_threads(1L)
+
+
   check_dimensions_match(x, y)
   res = dense_csc_prod(x, y, getOption("rsparse_omp_threads", 1L))
   set_dimnames(res, rownames(x), colnames(y))
@@ -59,6 +83,14 @@ setMethod("%*%", signature(x="matrix", y="dgCMatrix"), function(x, y) {
 #' @rdname matmult
 #' @export
 setMethod("crossprod", signature(x="matrix", y="dgCMatrix"), function(x, y) {
+  # restore on exit
+  n_thread = RhpcBLASctl::blas_get_num_procs()
+  on.exit(RhpcBLASctl::blas_set_num_threads(n_thread))
+
+  # set num threads to 1 in order to avoid thread contention between BLAS and openmp threads
+  RhpcBLASctl::blas_set_num_threads(1L)
+
+
   x = t(x)
   check_dimensions_match(x, y)
   res = dense_csc_prod(x, y, getOption("rsparse_omp_threads", 1L))
