@@ -23,6 +23,8 @@
 #'               fit Glove model given input matrix \code{x}}
 #'}
 #' @field components represents context embeddings
+#' @field bias_i bias term i as per paper
+#' @field bias_j bias term j as per paper
 #' @field shuffle \code{logical = FALSE} by default. Defines shuffling before each SGD iteration.
 #'   Generally shuffling is a good idea for stochastic-gradient descent, but
 #'   from my experience in this particular case it does not improve convergence.
@@ -72,6 +74,8 @@ GloVe = R6::R6Class(
   classname = c("GloVe"),
   inherit = mlapi::mlapiDecomposition,
   public = list(
+    bias_i = NULL,
+    bias_j = NULL,
     n_dump_every = 0L,
     shuffle = FALSE,
     initialize = function(rank,
@@ -183,6 +187,9 @@ GloVe = R6::R6Class(
       colnames(private$w_j) = embedding_names
 
       private$components_ = private$w_j
+
+      self$bias_i = private$b_i
+      self$bias_j = private$b_j
 
       t(private$w_i)
     },

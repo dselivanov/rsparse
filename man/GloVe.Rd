@@ -18,6 +18,10 @@ AdaGrad with \code{$fit_transform()} method.
 \describe{
 \item{\code{components}}{represents context embeddings}
 
+\item{\code{bias_i}}{bias term i as per paper}
+
+\item{\code{bias_j}}{bias term j as per paper}
+
 \item{\code{shuffle}}{\code{logical = FALSE} by default. Defines shuffling before each SGD iteration.
 Generally shuffling is a good idea for stochastic-gradient descent, but
 from my experience in this particular case it does not improve convergence.}
