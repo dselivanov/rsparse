@@ -164,7 +164,7 @@ WRMF = R6::R6Class(
       logger$trace("check items in input are not negative")
       stopifnot(all(c_ui@x >= 0))
 
-      logger$trace("making antoher matrix for convenient traverse by users - transposing input matrix")
+      logger$trace("making another matrix for convenient traverse by users - transposing input matrix")
       c_iu = t(c_ui)
 
       # init
