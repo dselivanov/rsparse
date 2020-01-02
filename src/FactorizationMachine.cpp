@@ -82,14 +82,14 @@ public:
   FMModel(FMParam *params): params(params) {};
   FMParam *params;
 
-  float fm_predict_internal(const uint32_t *nnz_index, const double *nnz_value, int offset_start, int offset_end) {
+  float fm_predict_internal(const arma::uword *nnz_index, const double *nnz_value, int offset_start, int offset_end) {
     float res = this->params->w0[0];
     // add linear terms
     #ifdef _OPENMP
     #pragma omp simd
     #endif
     for(int j = offset_start; j < offset_end; j++) {
-      uint32_t feature_index = nnz_index[j];
+      arma::uword feature_index = nnz_index[j];
       res += this->params->w[feature_index] * (float)nnz_value[j];
     }
     float res_pair_interactions = 0.0;
@@ -130,9 +130,9 @@ public:
     #ifdef _OPENMP
     #pragma omp parallel for num_threads(n_threads) schedule(guided, 1000)
     #endif
-    for(uint32_t i = 0; i < x.n_rows; i++) {
-      uint32_t p1 = x.row_ptrs[i];
-      uint32_t p2 = x.row_ptrs[i + 1];
+    for(arma::uword i = 0; i < x.n_rows; i++) {
+      arma::uword p1 = x.row_ptrs[i];
+      arma::uword p2 = x.row_ptrs[i + 1];
       float y_hat_raw = this->fm_predict_internal(x.col_indices, x.values, p1, p2);
       // prediction
       y_hat[i] = this->params->link_function(y_hat_raw);
@@ -153,8 +153,8 @@ public:
         // update w0
         if(this->params->intercept)
           this->params->w0 -= this->params->learning_rate_w * dL;
-        for( uint32_t p = p1; p < p2; p++) {
-          uint32_t feature_index  = x.col_indices[p];
+        for( arma::uword p = p1; p < p2; p++) {
+          arma::uword feature_index  = x.col_indices[p];
           float feature_value = x.values[p];
 
           float grad_w = clip(feature_value * dL + 2 * this->params->lambda_w);
@@ -166,8 +166,8 @@ public:
           // pairwise interactions
           //------------------------------------------------------------------------
           arma::fvec grad_v_k(-this->params->v.col(feature_index) * feature_value);
-          for(uint32_t k = 0; k < p2 - p1; k++) {
-            uint32_t index = x.col_indices[p1 + k];
+          for(arma::uword k = 0; k < p2 - p1; k++) {
+            arma::uword index = x.col_indices[p1 + k];
             float val = x.values[p1 + k];
             // same as
             // grad_v_k += this->params->v.col(index) * val;

@@ -57,21 +57,21 @@ Rcpp::NumericVector cpp_make_sparse_approximation(const Rcpp::S4 &mat_template,
 dMappedCSR extract_mapped_csr(Rcpp::S4 input) {
   Rcpp::IntegerVector dim = input.slot("Dim");
   Rcpp::NumericVector value = input.slot("x");
-  uint32_t nrows = dim[0];
-  uint32_t ncols = dim[1];
+  arma::uword nrows = dim[0];
+  arma::uword ncols = dim[1];
   Rcpp::IntegerVector rj = input.slot("j");
   Rcpp::IntegerVector rp = input.slot("p");
-  return dMappedCSR(nrows, ncols, value.length(), (uint32_t *)rj.begin(), (uint32_t *)rp.begin(), value.begin());
+  return dMappedCSR(nrows, ncols, value.length(), (arma::uword *)rj.begin(), (arma::uword *)rp.begin(), value.begin());
 }
 
 dMappedCSC extract_mapped_csc(Rcpp::S4 input) {
   Rcpp::IntegerVector dim = input.slot("Dim");
   Rcpp::NumericVector values = input.slot("x");
-  uint32_t nrows = dim[0];
-  uint32_t ncols = dim[1];
+  arma::uword nrows = dim[0];
+  arma::uword ncols = dim[1];
   Rcpp::IntegerVector row_indices = input.slot("i");
   Rcpp::IntegerVector col_ptrs = input.slot("p");
-  return dMappedCSC(nrows, ncols, values.length(), (uint32_t *)row_indices.begin(), (uint32_t *)col_ptrs.begin(), values.begin());
+  return dMappedCSC(nrows, ncols, values.length(), (arma::uword *)row_indices.begin(), (arma::uword *)col_ptrs.begin(), values.begin());
 }
 
 // returns number of available threads

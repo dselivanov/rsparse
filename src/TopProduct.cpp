@@ -44,12 +44,12 @@ Rcpp::IntegerMatrix top_product(const arma::mat &x, const arma::mat &y,
   #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE)
   #endif
   for(size_t j = 0; j < nr; j++) {
-    arma::Col<uint32_t> not_recommend_col_indices;
+    arma::uvec not_recommend_col_indices;
 
     if(not_empty_filter_matrix) {
-      uint32_t p1 = not_recommend.row_ptrs[j];
-      uint32_t p2 = not_recommend.row_ptrs[j + 1];
-      not_recommend_col_indices = arma::Col<uint32_t>(&not_recommend.col_indices[p1], p2 - p1);
+      arma::uword p1 = not_recommend.row_ptrs[j];
+      arma::uword p2 = not_recommend.row_ptrs[j + 1];
+      not_recommend_col_indices = arma::uvec(&not_recommend.col_indices[p1], p2 - p1);
     }
     // points to current postion amoung indices which should be excluded for a given row
     size_t u = 0;
@@ -84,7 +84,7 @@ Rcpp::IntegerMatrix top_product(const arma::mat &x, const arma::mat &y,
       }
     }
     // q_size always <= k
-    uint32_t q_size = q.size();
+    arma::uword q_size = q.size();
     for (size_t i = 0; i < q_size; ++i) {
       // fill from the end because queue holds smallest element as top element
       res_arma(j, q_size - i - 1) = q.top().second + 1;

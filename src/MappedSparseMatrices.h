@@ -1,22 +1,22 @@
 #include <cstdint>
 #include <stddef.h>
-
+#include <RcppArmadillo.h>
 template< typename T>
 class MappedCSR {
 public:
   MappedCSR();
-  MappedCSR(std::uint32_t n_rows,
-            std::uint32_t n_cols,
+  MappedCSR(arma::uword n_rows,
+            arma::uword n_cols,
             size_t nnz,
-            std::uint32_t * col_indices,
-            std::uint32_t * row_ptrs,
+            arma::uword * col_indices,
+            arma::uword * row_ptrs,
             T * values):
   n_rows(n_rows), n_cols(n_cols), nnz(nnz), col_indices(col_indices), row_ptrs(row_ptrs), values(values) {};
-  const std::uint32_t n_rows;
-  const std::uint32_t n_cols;
+  const arma::uword n_rows;
+  const arma::uword n_cols;
   const size_t nnz;
-  const std::uint32_t * col_indices;
-  const std::uint32_t * row_ptrs;
+  const arma::uword * col_indices;
+  const arma::uword * row_ptrs;
   T * values;
 };
 
@@ -27,18 +27,18 @@ template< typename T>
 class MappedCSC {
 public:
   MappedCSC();
-  MappedCSC(std::uint32_t n_rows,
-            std::uint32_t n_cols,
+  MappedCSC(arma::uword n_rows,
+            arma::uword n_cols,
             size_t nnz,
-            std::uint32_t * row_indices,
-            std::uint32_t * col_ptrs,
+            arma::uword * row_indices,
+            arma::uword * col_ptrs,
             T * values):
     n_rows(n_rows), n_cols(n_cols), nnz(nnz), row_indices(row_indices), col_ptrs(col_ptrs), values(values) {};
-  const std::uint32_t n_rows;
-  const std::uint32_t n_cols;
+  const arma::uword n_rows;
+  const arma::uword n_cols;
   const size_t nnz;
-  const std::uint32_t * row_indices;
-  const std::uint32_t * col_ptrs;
+  const arma::uword * row_indices;
+  const arma::uword * col_ptrs;
   T * values;
 };
 

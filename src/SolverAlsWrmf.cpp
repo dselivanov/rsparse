@@ -62,12 +62,11 @@ T als_implicit_cpp(const dMappedCSC& Conf,
   #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE) reduction(+:loss)
   #endif
   for(size_t i = 0; i < nc; i++) {
-    uint32_t p1 = Conf.col_ptrs[i];
-    uint32_t p2 = Conf.col_ptrs[i + 1];
+    arma::uword p1 = Conf.col_ptrs[i];
+    arma::uword p2 = Conf.col_ptrs[i + 1];
     // catch situation when some columns in matrix are empty, so p1 becomes equal to p2 or greater than number of columns
     if(p1 < p2) {
-      arma::Col<uint32_t> idx_temp = arma::Col<uint32_t>(&Conf.row_indices[p1], p2 - p1);
-      const arma::uvec idx = arma::conv_to<arma::uvec>::from(idx_temp);
+      arma::uvec idx = arma::uvec(&Conf.row_indices[p1], p2 - p1);
       arma::vec conf_temp = arma::vec(&Conf.values[p1], p2 - p1);
       arma::Col<T> confidence = arma::conv_to< arma::Col<T> >::from(conf_temp);
       arma::Mat<T> X_nnz = X.cols(idx);
