@@ -87,8 +87,7 @@ template <typename T> void bpr_solver(
       if(skip) {
         n_skip++;
       } else {
-        auto x_uij = W.col(u).t() * H.col(i) - W.col(u).t() * H.col(j);
-        T score = arma::as_scalar(1.0 / (1.0 + arma::exp(x_uij)));
+        T score = 1.0 / (1.0 + std::exp(dot(W.col(u), H.col(i)) - dot(W.col(u), H.col(j))));
         if (score < .5) n_correct++;
 
         // W_grad.col(u) = momentum * W_grad.col(u) + (1 - momentum) * (H.col(i) - H.col(j));
