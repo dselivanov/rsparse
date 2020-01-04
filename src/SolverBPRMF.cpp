@@ -87,24 +87,31 @@ template <typename T> void bpr_solver(
       if(skip) {
         n_skip++;
       } else {
-        T score = 1.0 / (1.0 + std::exp(dot(W.col(u), H.col(i)) - dot(W.col(u), H.col(j))));
+        const auto w_u = W.col(u);
+        const auto h_i = H.col(i);
+        const auto h_j = H.col(j);
+
+        T score = 1.0 / (1.0 + std::exp(dot(w_u, h_i) - dot(w_u, h_j)));
         if (score < .5) n_correct++;
 
         // W_grad.col(u) = momentum * W_grad.col(u) + (1 - momentum) * (H.col(i) - H.col(j));
         // H_grad.col(i) = momentum * H_grad.col(i) + (1 - momentum) * W.col(u);
         // H_grad.col(j) = momentum * H_grad.col(j) - (1 - momentum) * W.col(u);
-        // auto d_xui_d_wu = W_grad.col(u);
-        // auto d_xui_d_hi = H_grad.col(i);
-        // auto d_xui_d_hj = H_grad.col(j);
 
-        arma::Col<T> d_xui_d_wu = H.col(i) - H.col(j);
-        arma::Col<T> d_xui_d_hi = W.col(u);
-        arma::Col<T> d_xui_d_hj = -W.col(u);
-
-        W.col(u) += learning_rate * (score * d_xui_d_wu + lambda_user * W.col(u));
+        W.col(u) += learning_rate * score * (h_i - h_j);
+        if (lambda_user > 0) {
+          W.col(u) += learning_rate * lambda_user * w_u;
+        }
         if (update_items) {
-          H.col(i) += learning_rate * (score * d_xui_d_hi + lambda_item_positive * H.col(i));
-          H.col(j) += learning_rate * (score * d_xui_d_hj + lambda_item_negative * H.col(j));
+          const auto h_grad = learning_rate * score * w_u;
+          H.col(i) += h_grad;
+          if (lambda_item_positive > 0) {
+            H.col(i) += learning_rate * lambda_item_positive * h_i;
+          }
+          H.col(j) -= h_grad;
+          if (lambda_item_negative > 0) {
+            H.col(j) += learning_rate * lambda_item_negative * h_j;
+          }
         }
       }
     }
