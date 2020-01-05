@@ -22,3 +22,5 @@ dMappedCSC extract_mapped_csc(Rcpp::S4 input);
 
 // [[Rcpp::export]]
 int omp_thread_count();
+
+bool is_master();

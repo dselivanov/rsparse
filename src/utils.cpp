@@ -86,3 +86,12 @@ int omp_thread_count() {
   n += 1;
   return n;
 }
+
+
+bool is_master() {
+  #ifdef _OPENMP
+  return omp_get_thread_num() == 0;
+  #else
+  return true;
+  #endif
+}
