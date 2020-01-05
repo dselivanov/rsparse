@@ -1,5 +1,5 @@
-#include "MappedSparseMatrices.h"
 #include <RcppArmadillo.h>
+#include "MappedSparseMatrices.h"
 #include <stdexcept>
 
 #ifdef _OPENMP

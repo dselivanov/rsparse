@@ -49,7 +49,7 @@ Rcpp::IntegerMatrix top_product(const arma::mat &x, const arma::mat &y,
     if(not_empty_filter_matrix) {
       arma::uword p1 = not_recommend.row_ptrs[j];
       arma::uword p2 = not_recommend.row_ptrs[j + 1];
-      not_recommend_col_indices = arma::uvec(&not_recommend.col_indices[p1], p2 - p1);
+      not_recommend_col_indices = arma::uvec(&not_recommend.col_indices[p1], p2 - p1, false, true);
     }
     // points to current postion amoung indices which should be excluded for a given row
     size_t u = 0;

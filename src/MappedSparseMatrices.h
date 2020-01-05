@@ -1,6 +1,6 @@
 #include <cstdint>
 #include <stddef.h>
-#include <RcppArmadillo.h>
+#include <armadillo>
 template< typename T>
 class MappedCSR {
 public:
@@ -15,8 +15,8 @@ public:
   const arma::uword n_rows;
   const arma::uword n_cols;
   const size_t nnz;
-  const arma::uword * col_indices;
-  const arma::uword * row_ptrs;
+  arma::uword * col_indices;
+  arma::uword * row_ptrs;
   T * values;
 };
 
@@ -37,8 +37,8 @@ public:
   const arma::uword n_rows;
   const arma::uword n_cols;
   const size_t nnz;
-  const arma::uword * row_indices;
-  const arma::uword * col_ptrs;
+  arma::uword * row_indices;
+  arma::uword * col_ptrs;
   T * values;
 };
 

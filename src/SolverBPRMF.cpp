@@ -34,7 +34,7 @@ bool skip_element(const arma::uvec &arr, arma::uword x) {
 }
 
 template <typename T> void bpr_solver(
-    const Rcpp::S4 &m_csc_r,
+    const dMappedCSR &x,
     arma::Mat<T> &W, //user latent factors rank*n_user
     arma::Mat<T> &H,  //item latent factors rank*n_item
     const arma::uword rank,
@@ -47,8 +47,6 @@ template <typename T> void bpr_solver(
     const  arma::uword n_threads,
     bool update_items = true
     ) {
-
-  const dMappedCSR x = extract_mapped_csr(m_csc_r);
 
   const arma::uword n_user = x.n_rows;
   const arma::uword n_item = x.n_cols;
@@ -129,7 +127,7 @@ inline arma::uword get_negative_item(const arma::uword n_item) {
 arma::uvec positive_items(const dMappedCSR &x, const arma::uword u) {
   const arma::uword p1 = x.row_ptrs[u];
   const arma::uword p2 = x.row_ptrs[u + 1];
-  arma::uvec idx = arma::uvec(&x.col_indices[p1], p2 - p1);
+  arma::uvec idx = arma::uvec(&x.col_indices[p1], p2 - p1, false, true);
   return(idx);
 }
 
@@ -154,7 +152,8 @@ void bpr_solver_double(
     const arma::uword n_threads = 1,
     bool update_items = true
 ) {
-  bpr_solver<double>(m_csc_r, W, H, rank, n_updates, learning_rate, lambda_user, lambda_item_positive, lambda_item_negative, n_threads, update_items);
+  const dMappedCSR x = extract_mapped_csr(m_csc_r);
+  bpr_solver<double>(x, W, H, rank, n_updates, learning_rate, lambda_user, lambda_item_positive, lambda_item_negative, n_threads, update_items);
 }
 
 /*

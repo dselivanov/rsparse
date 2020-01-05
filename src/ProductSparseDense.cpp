@@ -18,7 +18,7 @@ Rcpp::NumericMatrix csr_dense_tcrossprod(const Rcpp::S4 &x_csr_r, const arma::Ma
   for (arma::uword i = 0; i < x_csr.n_rows; i++) {
     const arma::uword p1 = x_csr.row_ptrs[i];
     const arma::uword p2 = x_csr.row_ptrs[i + 1];
-    const arma::uvec idx = arma::uvec(&x_csr.col_indices[p1], p2 - p1);
+    const arma::uvec idx = arma::uvec(&x_csr.col_indices[p1], p2 - p1, false, true);
     const arma::colvec x_csr_row = arma::colvec(&x_csr.values[p1], p2 - p1, false, false);
     res_arma_map.row(i) = (y_transposed.cols(idx) * x_csr_row).t();
   }
@@ -37,7 +37,7 @@ Rcpp::NumericMatrix dense_csc_prod(const Rcpp::NumericMatrix &x_r, const Rcpp::S
   for (arma::uword i = 0; i < y_csc.n_cols; i++) {
     const arma::uword p1 = y_csc.col_ptrs[i];
     const arma::uword p2 = y_csc.col_ptrs[i + 1];
-    const arma::uvec idx = arma::uvec(&y_csc.row_indices[p1], p2 - p1);
+    const arma::uvec idx = arma::uvec(&y_csc.row_indices[p1], p2 - p1, false, true);
     const arma::colvec y_csc_col = arma::colvec(&y_csc.values[p1], p2 - p1, false, false);
     res_arma_map.col(i) = x.cols(idx) * y_csc_col;
   }
