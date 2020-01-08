@@ -241,30 +241,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// bpr_solver_double
-void bpr_solver_double(const Rcpp::S4& m_csc_r, arma::Mat<double>& W, arma::Mat<double>& H, const arma::uword rank, const arma::uword n_updates, double learning_rate, double momentum, double lambda_user, double lambda_item_positive, double lambda_item_negative, const arma::uword n_threads, bool update_items);
-RcppExport SEXP _rsparse_bpr_solver_double(SEXP m_csc_rSEXP, SEXP WSEXP, SEXP HSEXP, SEXP rankSEXP, SEXP n_updatesSEXP, SEXP learning_rateSEXP, SEXP momentumSEXP, SEXP lambda_userSEXP, SEXP lambda_item_positiveSEXP, SEXP lambda_item_negativeSEXP, SEXP n_threadsSEXP, SEXP update_itemsSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csc_r(m_csc_rSEXP);
-    Rcpp::traits::input_parameter< arma::Mat<double>& >::type W(WSEXP);
-    Rcpp::traits::input_parameter< arma::Mat<double>& >::type H(HSEXP);
-    Rcpp::traits::input_parameter< const arma::uword >::type rank(rankSEXP);
-    Rcpp::traits::input_parameter< const arma::uword >::type n_updates(n_updatesSEXP);
-    Rcpp::traits::input_parameter< double >::type learning_rate(learning_rateSEXP);
-    Rcpp::traits::input_parameter< double >::type momentum(momentumSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda_user(lambda_userSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda_item_positive(lambda_item_positiveSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda_item_negative(lambda_item_negativeSEXP);
-    Rcpp::traits::input_parameter< const arma::uword >::type n_threads(n_threadsSEXP);
-    Rcpp::traits::input_parameter< bool >::type update_items(update_itemsSEXP);
-    bpr_solver_double(m_csc_r, W, H, rank, n_updates, learning_rate, momentum, lambda_user, lambda_item_positive, lambda_item_negative, n_threads, update_items);
-    return R_NilValue;
-END_RCPP
-}
 // warp_solver_double
-void warp_solver_double(const Rcpp::S4& m_csc_r, arma::Mat<double>& W, arma::Mat<double>& H, const arma::uword rank, const arma::uword n_updates, double learning_rate, double momentum, double lambda_user, double lambda_item_positive, double lambda_item_negative, const arma::uword n_threads, bool update_items, const arma::uword solver, arma::uword max_negative_samples, double margin);
-RcppExport SEXP _rsparse_warp_solver_double(SEXP m_csc_rSEXP, SEXP WSEXP, SEXP HSEXP, SEXP rankSEXP, SEXP n_updatesSEXP, SEXP learning_rateSEXP, SEXP momentumSEXP, SEXP lambda_userSEXP, SEXP lambda_item_positiveSEXP, SEXP lambda_item_negativeSEXP, SEXP n_threadsSEXP, SEXP update_itemsSEXP, SEXP solverSEXP, SEXP max_negative_samplesSEXP, SEXP marginSEXP) {
+void warp_solver_double(const Rcpp::S4& m_csc_r, arma::Mat<double>& W, arma::Mat<double>& H, const arma::uword rank, const arma::uword n_updates, double learning_rate, double momentum, double lambda_user, double lambda_item_positive, double lambda_item_negative, const arma::uword n_threads, bool update_items, const arma::uword solver, const arma::uword link_function, arma::uword max_negative_samples, double margin);
+RcppExport SEXP _rsparse_warp_solver_double(SEXP m_csc_rSEXP, SEXP WSEXP, SEXP HSEXP, SEXP rankSEXP, SEXP n_updatesSEXP, SEXP learning_rateSEXP, SEXP momentumSEXP, SEXP lambda_userSEXP, SEXP lambda_item_positiveSEXP, SEXP lambda_item_negativeSEXP, SEXP n_threadsSEXP, SEXP update_itemsSEXP, SEXP solverSEXP, SEXP link_functionSEXP, SEXP max_negative_samplesSEXP, SEXP marginSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csc_r(m_csc_rSEXP);
@@ -280,9 +259,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::uword >::type n_threads(n_threadsSEXP);
     Rcpp::traits::input_parameter< bool >::type update_items(update_itemsSEXP);
     Rcpp::traits::input_parameter< const arma::uword >::type solver(solverSEXP);
+    Rcpp::traits::input_parameter< const arma::uword >::type link_function(link_functionSEXP);
     Rcpp::traits::input_parameter< arma::uword >::type max_negative_samples(max_negative_samplesSEXP);
     Rcpp::traits::input_parameter< double >::type margin(marginSEXP);
-    warp_solver_double(m_csc_r, W, H, rank, n_updates, learning_rate, momentum, lambda_user, lambda_item_positive, lambda_item_negative, n_threads, update_items, solver, max_negative_samples, margin);
+    warp_solver_double(m_csc_r, W, H, rank, n_updates, learning_rate, momentum, lambda_user, lambda_item_positive, lambda_item_negative, n_threads, update_items, solver, link_function, max_negative_samples, margin);
     return R_NilValue;
 END_RCPP
 }
@@ -362,8 +342,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_als_implicit_double", (DL_FUNC) &_rsparse_als_implicit_double, 8},
     {"_rsparse_als_implicit_float", (DL_FUNC) &_rsparse_als_implicit_float, 8},
     {"_rsparse_als_loss_explicit", (DL_FUNC) &_rsparse_als_loss_explicit, 5},
-    {"_rsparse_bpr_solver_double", (DL_FUNC) &_rsparse_bpr_solver_double, 12},
-    {"_rsparse_warp_solver_double", (DL_FUNC) &_rsparse_warp_solver_double, 15},
+    {"_rsparse_warp_solver_double", (DL_FUNC) &_rsparse_warp_solver_double, 16},
     {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 6},
     {"_rsparse_arma_kmeans", (DL_FUNC) &_rsparse_arma_kmeans, 6},
     {"_rsparse_omp_thread_count", (DL_FUNC) &_rsparse_omp_thread_count, 0},

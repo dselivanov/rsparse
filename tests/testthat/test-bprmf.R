@@ -21,8 +21,16 @@ test_that("BPR-MF", {
   thresh = 0.5
   n_threads = 1
   update_items = TRUE
-  res = capture.output(rsparse:::bpr_solver_double(x, W, H, rank, n_updates, learning_rate, momentum, lambda_user, lambda_item_positive, lambda_item_negative, n_threads, update_items))
-  res = fread(text = paste(res, collapse = "\n"), header = FALSE, col.names = c("progress", "AUC"))
-  expect_equal(res[.N, AUC], "AUC:0.872")
+
+  # optimization criterion
+  BPR = 0
+  WARP = 1
+  # link functions
+  DOT_PRODUCT = 0
+  LOGISTIC = 1
+
+  res = capture.output(rsparse:::warp_solver_double(x, W, H, rank, n_updates, learning_rate, momentum, lambda_user, lambda_item_positive, lambda_item_negative, n_threads, update_items, BPR, DOT_PRODUCT))
+  res = fread(text = paste(res, collapse = "\n"), header = FALSE, col.names = c("progress", "AUC", 'oversampling'))
+  expect_equal(res[.N, AUC], "AUC:0.816")
 })
 
