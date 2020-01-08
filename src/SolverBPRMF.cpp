@@ -1,4 +1,6 @@
 #include "rsparse.h"
+#define BPR 0
+#define WARP 1
 
 const arma::uword get_random_user(const arma::uword n_user);
 const arma::uword get_positive_item_index(const arma::uword max_index);
@@ -201,8 +203,9 @@ template <typename T> void warp_solver(
     const T lambda_item_negative,
     const  arma::uword n_threads,
     bool update_items = true,
+    const arma::uword solver = BPR,
     arma::uword max_negative_samples = 50,
-    const T margin = 1.0) {
+    const T margin = 0.1) {
 
 
   const arma::uword TRACK = n_updates / n_threads / 10;
@@ -248,38 +251,45 @@ template <typename T> void warp_solver(
       arma::Col<T> h_j;
       arma::uword j = 0, k = 0, correct_samples = 0;
       bool skip = true;
+      T r_ui = 1, r_uj = 1;
       double weight = 1;
       for (k = 0; k < max_negative_samples; k++) {
         j = get_negative_candidate(n_item);
         // continue if we've sampled a really negative element
         if (is_negative(idx, j)) {
-          // n_negative++;
           h_j = H.col(j);
-          // minimize diff
-          auto diff = dot(w_u, h_j) - dot(w_u, h_i);
-          if (diff < 0) {
+          r_ui = sigmoid(dot(w_u, h_i));
+          r_uj = sigmoid(dot(w_u, h_j));
+          auto distance = r_uj - r_ui;
+
+          if (distance < 0) {
             correct_samples++;
             // for AUC estimation
             if (k == 0) {
               n_correct += 1;
             }
           }
-          // don't update on easy negatives
-          if (diff + margin >= 0) {
+          weight = sigmoid<T>(distance);
+          if (solver == BPR) {
             skip = false;
-            // auto score = sigmoid<T>(diff);
-            // weight = score * (1 - score) * rank_loss((double(n_item) - 1.0) / double(k + 1)) / WARP_RANK_NORMALIZER;
-            weight = rank_loss((double(n_item) - 1.0) / double(k + 1)) / WARP_RANK_NORMALIZER;
             break;
+          } else { // solver WAPR
+            // don't update on easy negatives
+            if (distance + margin >= 0) {
+              skip = false;
+              weight *= rank_loss((double(n_item) - 1.0) / double(k + 1)) / WARP_RANK_NORMALIZER;
+              // weight = rank_loss((double(n_item) - 1.0) / double(k + 1)) / WARP_RANK_NORMALIZER;
+              break;
+            }
           }
         }
       }
       n_negative += (k + 1);
 
       if (!skip) {
-        arma::Col<T> w_grad = weight * (h_j - h_i);
-        arma::Col<T> h_grad_i = -weight * w_u;
-        arma::Col<T> h_grad_j = weight * w_u;
+        arma::Col<T> w_grad = weight * (r_uj * (1 - r_uj) * h_j - r_ui * (1 - r_ui) * h_i);
+        arma::Col<T> h_grad_i = -weight * r_ui * (1 - r_ui) * w_u;
+        arma::Col<T> h_grad_j = weight * r_uj * (1 - r_uj) * w_u;
 
         if (momentum > 0) {
           w_grad = momentum * W_grad.col(u) + (1 - momentum) * w_grad;
@@ -295,7 +305,7 @@ template <typename T> void warp_solver(
           W.col(u) -= learning_rate * lambda_user * w_u;
         }
         if (update_items) {
-          H.col(i) -= learning_rate * h_grad_i;
+          H.col(i) -=  learning_rate * h_grad_i;
           if (lambda_item_positive > 0) {
             H.col(i) -= learning_rate * lambda_item_positive * h_i;
           }
@@ -323,10 +333,11 @@ void warp_solver_double(
     double lambda_item_negative = 0.0,
     const arma::uword n_threads = 1,
     bool update_items = true,
+    const arma::uword solver = BPR,
     arma::uword max_negative_samples = 50,
-    double margin = 1.0 ) {
+    double margin = 0.1 ) {
   const dMappedCSR x = extract_mapped_csr(m_csc_r);
   warp_solver<double>(x, W, H, rank, n_updates, learning_rate, momentum,       \
                      lambda_user, lambda_item_positive, lambda_item_negative, \
-                     n_threads, update_items, max_negative_samples, margin);
+                     n_threads, update_items, solver, max_negative_samples, margin);
 }
