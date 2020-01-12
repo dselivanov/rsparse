@@ -3,6 +3,7 @@
 #define WARP 1
 #define DOT_PRODUCT 0
 #define LOGISTIC 1
+#define EPS 1e-10
 
 const arma::uword get_random_user(const arma::uword n_user);
 const arma::uword get_positive_item_index(const arma::uword max_index);
@@ -81,7 +82,7 @@ template <typename T> void warp_solver(
     const arma::uword rank,
     const arma::uword n_updates,
     const T learning_rate,
-    const T momentum,
+    const T gamma, // gamma in RMSprop - fraction of squared gradient to take from moving average
     const T lambda_user,
     const T lambda_item_positive,
     const T lambda_item_negative,
@@ -99,9 +100,9 @@ template <typename T> void warp_solver(
   max_negative_samples = std::min(max_negative_samples, n_item);
   const double WARP_RANK_NORMALIZER = rank_loss(double(n_item));
 
-  // accumulated gradients for momentum
-  arma::Mat<T> W_grad(W.n_rows, W.n_cols, arma::fill::zeros);
-  arma::Mat<T> H_grad(H.n_rows, H.n_cols, arma::fill::zeros);
+  // accumulated squared gradients for Adagrad
+  arma::Col<T> W2_grad(W.n_cols, arma::fill::ones);
+  arma::Col<T> H2_grad(H.n_cols, arma::fill::ones);
 
   #ifdef _OPENMP
   #pragma omp parallel num_threads(n_threads)
@@ -131,8 +132,8 @@ template <typename T> void warp_solver(
       const arma::uword i = idx[id];
       n_positive++;
 
-      const auto w_u = W.col(u);
-      const auto h_i = H.col(i);
+      const auto w_u = W.unsafe_col(u);
+      const auto h_i = H.unsafe_col(i);
       arma::Col<T> h_j;
       arma::uword j = 0, k = 0, correct_samples = 0;
       bool skip = true;
@@ -146,7 +147,7 @@ template <typename T> void warp_solver(
         // continue if we've sampled a really negative element
         if (is_negative(idx, j)) {
           n_negative++;
-          h_j = H.col(j);
+          h_j = H.unsafe_col(j);
 
           r_ui = dot(w_u, h_i);
           r_uj = dot(w_u, h_j);
@@ -187,29 +188,28 @@ template <typename T> void warp_solver(
         arma::Col<T> h_grad_i = -weight * hi_adjust * w_u;
         arma::Col<T> h_grad_j = weight * hj_adjust * w_u;
 
-        if (momentum > 0) {
-          w_grad = momentum * W_grad.col(u) + (1 - momentum) * w_grad;
-          h_grad_i = momentum * H_grad.col(i) + (1 - momentum) * h_grad_i;
-          h_grad_j = momentum * H_grad.col(j) + (1 - momentum) * h_grad_j;
-          W_grad.col(u) = w_grad;
-          H_grad.col(i) = h_grad_i;
-          H_grad.col(j) = h_grad_j;
-        }
-
-        W.col(u) -= learning_rate * w_grad;
+        // RMSprop
+        auto W2_grad_u = gamma * W2_grad[u] + (1 - gamma) * dot(w_grad, w_grad) / rank;
+        auto H2_grad_i = gamma * H2_grad[i] + (1 - gamma) * dot(h_grad_i, h_grad_i) / rank;
+        auto H2_grad_j = gamma * H2_grad[j] + (1 - gamma) * dot(h_grad_j, h_grad_j) / rank;
+        W.col(u) -= learning_rate * w_grad / sqrt(W2_grad_u + EPS);
         if (lambda_user > 0) {
           W.col(u) -= learning_rate * lambda_user * w_u;
         }
         if (update_items) {
-          H.col(i) -=  learning_rate * h_grad_i;
+          H.col(i) -=  learning_rate * h_grad_i / sqrt(H2_grad_i + EPS);
           if (lambda_item_positive > 0) {
             H.col(i) -= learning_rate * lambda_item_positive * h_i;
           }
-          H.col(j) -= learning_rate * h_grad_j;
+          H.col(j) -= learning_rate * h_grad_j / sqrt(H2_grad_j + EPS);
           if (lambda_item_negative > 0) {
             H.col(j) -= learning_rate * lambda_item_negative * h_j;
           }
         }
+        // keep sum of square of gradients per embedding
+        W2_grad[u] = W2_grad_u;
+        H2_grad[i] = H2_grad_i;
+        H2_grad[j] = H2_grad_j;
       }
     }
   }
@@ -223,7 +223,7 @@ void warp_solver_double(
     const arma::uword rank,
     const arma::uword n_updates,
     double learning_rate = 0.01,
-    double momentum = 0.8,
+    double gamma = 0.8,
     double lambda_user = 0.0,
     double lambda_item_positive = 0.0,
     double lambda_item_negative = 0.0,
@@ -234,7 +234,7 @@ void warp_solver_double(
     arma::uword max_negative_samples = 50,
     double margin = 0.1 ) {
   const dMappedCSR x = extract_mapped_csr(m_csc_r);
-  warp_solver<double>(x, W, H, rank, n_updates, learning_rate, momentum,       \
+  warp_solver<double>(x, W, H, rank, n_updates, learning_rate, gamma,       \
                      lambda_user, lambda_item_positive, lambda_item_negative, \
                      n_threads, update_items,
                      solver, link_function,
