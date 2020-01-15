@@ -69,8 +69,8 @@ als_loss_explicit <- function(m_csc_r, X, Y, lambda, n_threads) {
     .Call(`_rsparse_als_loss_explicit`, m_csc_r, X, Y, lambda, n_threads)
 }
 
-warp_solver_double <- function(m_csc_r, W, H, rank, n_updates, learning_rate = 0.01, momentum = 0.8, lambda_user = 0.0, lambda_item_positive = 0.0, lambda_item_negative = 0.0, n_threads = 1L, update_items = TRUE, solver = 0L, link_function = 0L, max_negative_samples = 50L, margin = 0.1) {
-    invisible(.Call(`_rsparse_warp_solver_double`, m_csc_r, W, H, rank, n_updates, learning_rate, momentum, lambda_user, lambda_item_positive, lambda_item_negative, n_threads, update_items, solver, link_function, max_negative_samples, margin))
+warp_solver_double <- function(x_r, W, H, user_features_r, item_features_r, rank, n_updates, learning_rate = 0.01, gamma = 0.8, lambda_user = 0.0, lambda_item_positive = 0.0, lambda_item_negative = 0.0, n_threads = 1L, update_items = TRUE, solver = 0L, link_function = 0L, max_negative_samples = 50L, margin = 0.1) {
+    invisible(.Call(`_rsparse_warp_solver_double`, x_r, W, H, user_features_r, item_features_r, rank, n_updates, learning_rate, gamma, lambda_user, lambda_item_positive, lambda_item_negative, n_threads, update_items, solver, link_function, max_negative_samples, margin))
 }
 
 top_product <- function(x, y, k, n_threads, not_recommend_r, exclude) {

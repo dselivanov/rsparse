@@ -18,12 +18,12 @@ public:
   arma::uword * col_indices;
   arma::uword * row_ptrs;
   T * values;
-  const std::pair<const arma::uvec, const arma::Col<T>> get_row(const arma::uword i) const {
+  std::pair<arma::uvec, arma::Col<T>> get_row(const arma::uword i) const {
     const arma::uword p1 = this->row_ptrs[i];
     const arma::uword p2 = this->row_ptrs[i + 1];
     const arma::uvec idx = arma::uvec(&this->col_indices[p1], p2 - p1, false, true);
     const arma::Col<T> values = arma::Col<T>(&this->values[p1], p2 - p1, false, true);
-    return(std::pair<const arma::uvec, const arma::Col<T>>(idx, values));
+    return(std::pair<arma::uvec, arma::Col<T>>(idx, values));
   };
 };
 
