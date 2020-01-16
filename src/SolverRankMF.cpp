@@ -1,8 +1,14 @@
 #include "rsparse.h"
+
+#define ADAGRAD 0
+#define RMSPROP 1
+
 #define BPR 0
 #define WARP 1
-#define DOT_PRODUCT 0
-#define LOGISTIC 1
+
+#define IDENTITY 0
+#define SIGMOID 1
+
 #define EPS 1e-10
 
 const arma::uword get_random_user(const arma::uword n_user);
@@ -75,21 +81,27 @@ const arma::uword get_positive_item_index(const arma::uword max_index) {
   return(index_random_element);
 }
 
-template <typename T> T get_grad_square_acc(const arma::Col<T> &grad, const T grad_square_acc, arma::uword rank, T gamma) {
+template <typename T> T get_grad_square_acc(const arma::Col<T> &grad, const T grad_square_acc, arma::uword rank, T gamma, const arma::uword optimizer) {
   T res = grad_square_acc;
   T grad_square = arma::dot(grad, grad) / rank; //  mean of the squared gradient per embedding
-  if(gamma > 1) { // Adagrad
+  if(optimizer == ADAGRAD) {
     res += grad_square;
-  } else { // RMSprop
-    res = gamma * grad_square_acc + (1 - gamma) * grad_square;
+  } else {
+    if(optimizer == RMSPROP) {
+      res = gamma * grad_square_acc + (1 - gamma) * grad_square;
+    }
   }
   return(res);
 }
 
-template <typename T> void warp_solver(
+template <typename T> void rankmf_solver(
     const MappedCSR<T> &x,
-    arma::Mat<T> &W, //user latent factors rank*n_user
-    arma::Mat<T> &H, //item latent factors rank*n_item
+    // embeddings
+    arma::Mat<T> &W, //user latent factors rank * n_user_features
+    arma::Mat<T> &H, //item latent factors rank * n_item_features
+    // accumulated squared gradients for Adagrad.RMSprop
+    arma::Col<T> &W2_grad, //user latent factors n_user_features
+    arma::Col<T> &H2_grad, //item latent factors n_item_features
     const MappedCSR<T> &user_features,
     const MappedCSR<T> &item_features,
     const arma::uword rank,
@@ -101,10 +113,12 @@ template <typename T> void warp_solver(
     const T lambda_item_negative,
     const  arma::uword n_threads,
     bool update_items = true,
-    const arma::uword solver = BPR,
-    const arma::uword link_function = DOT_PRODUCT,
+    const arma::uword loss = BPR,
+    const arma::uword kernel = IDENTITY,
     arma::uword max_negative_samples = 50,
-    const T margin = 0.1) {
+    const T margin = 0.1,
+    const arma::uword optimizer = ADAGRAD
+    ) {
 
 
   const arma::uword TRACK = n_updates / n_threads / 10;
@@ -112,10 +126,6 @@ template <typename T> void warp_solver(
   const arma::uword n_item = x.n_cols;
   max_negative_samples = std::min(max_negative_samples, n_item);
   const double WARP_RANK_NORMALIZER = rank_loss(double(n_item));
-
-  // accumulated squared gradients for Adagrad
-  arma::Col<T> W2_grad(user_features.n_cols, arma::fill::ones);
-  arma::Col<T> H2_grad(item_features.n_cols, arma::fill::ones);
 
   #ifdef _OPENMP
   #pragma omp parallel num_threads(n_threads)
@@ -159,7 +169,7 @@ template <typename T> void warp_solver(
       bool skip = true;
 
       // hj_adjust, hi_adjust = 1 if f(w, h) = arma::dot(w, h)
-      // if f(w, h) = LOGISTIC(arma::dot(w, h)) they are derivatives of a logistic function
+      // if f(w, h) = SIGMOID(arma::dot(w, h)) they are derivatives of a SIGMOID function
       T r_ui = 1, r_uj = 1, hj_adjust = 1, hi_adjust = 1;
       double weight = 1;
       for (k = 0; k < max_negative_samples; k++) {
@@ -174,7 +184,7 @@ template <typename T> void warp_solver(
           r_ui = arma::dot(w_u, h_i);
           r_uj = arma::dot(w_u, h_j);
 
-          if (link_function == LOGISTIC) {
+          if (kernel == SIGMOID) {
             r_ui = sigmoid(r_ui);
             r_uj = sigmoid(r_uj);
             hj_adjust = r_uj * (1 - r_uj);
@@ -191,7 +201,7 @@ template <typename T> void warp_solver(
             }
           }
           weight = sigmoid<T>(distance);
-          if (solver == BPR) {
+          if (loss == BPR) {
             skip = false;
             break;
           } else { // WAPR loss
@@ -209,7 +219,7 @@ template <typename T> void warp_solver(
         for (auto i = 0; i < user_features_nnz_indices.size(); i++) {
           auto id = user_features_nnz_indices[i];
           arma::Col<T> grad = weight * (hj_adjust * h_j - hi_adjust * h_i);
-          const T grad_square_acc = get_grad_square_acc(grad, W2_grad[id], rank, gamma);
+          const T grad_square_acc = get_grad_square_acc(grad, W2_grad[id], rank, gamma, optimizer);
 
           W.col(id) -= learning_rate * grad / sqrt(grad_square_acc + EPS);
           if (lambda_user > 0) {
@@ -222,7 +232,7 @@ template <typename T> void warp_solver(
           for (auto i = 0; i < item_features_pos_nnz_indices.size(); i++) {
             auto id = item_features_pos_nnz_indices[i];
             arma::Col<T> grad = -weight * hi_adjust * w_u;
-            const T grad_square_acc = get_grad_square_acc(grad, H2_grad[id], rank, gamma);
+            const T grad_square_acc = get_grad_square_acc(grad, H2_grad[id], rank, gamma, optimizer);
             H.col(id) -=  learning_rate * grad / sqrt(grad_square_acc + EPS);
             if (lambda_item_positive > 0) {
               H.col(id) -= learning_rate * lambda_item_positive * h_i;
@@ -234,7 +244,7 @@ template <typename T> void warp_solver(
           for (auto i = 0; i < item_features_neg_nnz_indices.size(); i++) {
             auto id = item_features_neg_nnz_indices[i];
             arma::Col<T> grad = weight * hj_adjust * w_u;
-            const T grad_square_acc = get_grad_square_acc(grad, H2_grad[id], rank, gamma);
+            const T grad_square_acc = get_grad_square_acc(grad, H2_grad[id], rank, gamma, optimizer);
             H.col(id) -= learning_rate * grad / sqrt(grad_square_acc + EPS);
             if (lambda_item_negative > 0) {
               H.col(id) -= learning_rate * lambda_item_negative * h_j;
@@ -249,36 +259,47 @@ template <typename T> void warp_solver(
 }
 
 // [[Rcpp::export]]
-void warp_solver_double(
+void rankmf_solver_double(
     const Rcpp::S4 &x_r,
-    arma::Mat<double> &W, // user latent factors rank * n_user
-    arma::Mat<double> &H, // item latent factors rank * n_item
+    arma::Mat<double> &W, //user latent factors rank * n_user_features
+    arma::Mat<double> &H, //item latent factors rank * n_item_features
+    arma::Col<double> &W2_grad, //user accumulated squared gradients for Adagrad.RMSprop
+    arma::Col<double> &H2_grad, //item accumulated squared gradients for Adagrad.RMSprop
     const Rcpp::S4 &user_features_r,
     const Rcpp::S4 &item_features_r,
     const arma::uword rank,
     const arma::uword n_updates,
     double learning_rate = 0.01,
-    double gamma = 0.8,
+    double gamma = 1,
     double lambda_user = 0.0,
     double lambda_item_positive = 0.0,
     double lambda_item_negative = 0.0,
     const arma::uword n_threads = 1,
     bool update_items = true,
-    const arma::uword solver = 0, // BPR
-    const arma::uword link_function = 0, // arma::dot_PRODUCT
+    const arma::uword loss = 0, // BPR
+    const arma::uword kernel = 0, // IDENTITY
     arma::uword max_negative_samples = 50,
-    double margin = 0.1 ) {
+    double margin = 0.1,
+    const arma::uword optimizer = ADAGRAD
+  ) {
   const dMappedCSR x = extract_mapped_csr(x_r);
   const dMappedCSR user_features = extract_mapped_csr(user_features_r);
   const dMappedCSR item_features = extract_mapped_csr(item_features_r);
-  warp_solver<double>(x,
-                      W, H,
-                      user_features,
-                      item_features,
-                      rank, n_updates, learning_rate, gamma,       \
-                      lambda_user, lambda_item_positive, lambda_item_negative, \
-                      n_threads,
-                      update_items,
-                      solver, link_function,
-                     max_negative_samples, margin);
+  rankmf_solver<double>(
+    x,
+    W,
+    H,
+    W2_grad,
+    H2_grad,
+    user_features,
+    item_features,
+    rank, n_updates, learning_rate, gamma,
+    lambda_user, lambda_item_positive, lambda_item_negative,
+    n_threads,
+    update_items,
+    loss,
+    kernel,
+    max_negative_samples,
+    margin,
+    optimizer);
 }
