@@ -116,7 +116,7 @@ T GloveFit<T>::partial_fit(
     // arma::Col<float> w_j_f = arma::conv_to<arma::fvec>::from(this->w_j.col(x_icol_i));
     // arma::Col<float> w_i_f = arma::conv_to<arma::fvec>::from(this->w_i.col(x_irow_i));
 
-    cost_inner = arma::as_scalar(w_i_f.t() * w_j_f) +
+    cost_inner = arma::dot(w_i_f, w_j_f) +
         this->b_i[ x_irow_i ] +
         this->b_j[ x_icol_i ] -
         log( x_val[ i_iter_order ] );
