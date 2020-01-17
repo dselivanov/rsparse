@@ -139,10 +139,14 @@ template <typename T> void rankmf_solver(
       if (n_positive >= TRACK) {
         if (is_master()) {
           Rcpp::Rcout.precision(3);
-          Rcpp::Rcout << \
-            100 * (iter + 1.0) / n_updates << "%" << std::setw(10) << \
-              " AUC:"<< double(n_correct) / n_positive << std::setw(10) << \
-              " negative_oversampling:"<< double(n_negative) / (n_positive) << std::endl;
+          Rcpp::Rcout.width(10);
+          Rcpp::Rcout << currentDateTime();
+          Rcpp::Rcout.width(10);
+          Rcpp::Rcout << 100 * (iter + 1.0) / n_updates << "%";
+          Rcpp::Rcout.width(10);
+          Rcpp::Rcout << " AUC:"<< double(n_correct) / n_positive;
+          Rcpp::Rcout.width(10);
+          Rcpp::Rcout << " negative_oversampling:"<< double(n_negative) / (n_positive) << std::endl;
         }
         n_correct = n_positive = n_negative = 0;
       }

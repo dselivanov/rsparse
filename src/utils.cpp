@@ -1,4 +1,5 @@
 #include "rsparse.h"
+#include <time.h>
 
 // [[Rcpp::export]]
 Rcpp::NumericVector cpp_make_sparse_approximation(const Rcpp::S4 &mat_template,
@@ -94,4 +95,19 @@ bool is_master() {
   #else
   return true;
   #endif
+}
+
+
+// https://stackoverflow.com/a/10467633/1069256
+// Get current date/time, format is YYYY-MM-DD HH:mm:ss
+const std::string currentDateTime() {
+  time_t     now = time(0);
+  struct tm  tstruct;
+  char       buf[80];
+  tstruct = *localtime(&now);
+  // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+  // for more information about date/time format
+  strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
+
+  return buf;
 }
