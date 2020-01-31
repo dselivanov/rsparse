@@ -271,6 +271,36 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// rankmf_solver_float
+void rankmf_solver_float(const Rcpp::S4& x_r, Rcpp::S4& W, Rcpp::S4& H, Rcpp::S4& W2_grad, Rcpp::S4& H2_grad, const Rcpp::S4& user_features_r, const Rcpp::S4& item_features_r, const arma::uword rank, const arma::uword n_updates, float learning_rate, float gamma, float lambda_user, float lambda_item_positive, float lambda_item_negative, const arma::uword n_threads, bool update_items, const arma::uword loss, const arma::uword kernel, arma::uword max_negative_samples, float margin, const arma::uword optimizer);
+RcppExport SEXP _rsparse_rankmf_solver_float(SEXP x_rSEXP, SEXP WSEXP, SEXP HSEXP, SEXP W2_gradSEXP, SEXP H2_gradSEXP, SEXP user_features_rSEXP, SEXP item_features_rSEXP, SEXP rankSEXP, SEXP n_updatesSEXP, SEXP learning_rateSEXP, SEXP gammaSEXP, SEXP lambda_userSEXP, SEXP lambda_item_positiveSEXP, SEXP lambda_item_negativeSEXP, SEXP n_threadsSEXP, SEXP update_itemsSEXP, SEXP lossSEXP, SEXP kernelSEXP, SEXP max_negative_samplesSEXP, SEXP marginSEXP, SEXP optimizerSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type x_r(x_rSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4& >::type W(WSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4& >::type H(HSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4& >::type W2_grad(W2_gradSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4& >::type H2_grad(H2_gradSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type user_features_r(user_features_rSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type item_features_r(item_features_rSEXP);
+    Rcpp::traits::input_parameter< const arma::uword >::type rank(rankSEXP);
+    Rcpp::traits::input_parameter< const arma::uword >::type n_updates(n_updatesSEXP);
+    Rcpp::traits::input_parameter< float >::type learning_rate(learning_rateSEXP);
+    Rcpp::traits::input_parameter< float >::type gamma(gammaSEXP);
+    Rcpp::traits::input_parameter< float >::type lambda_user(lambda_userSEXP);
+    Rcpp::traits::input_parameter< float >::type lambda_item_positive(lambda_item_positiveSEXP);
+    Rcpp::traits::input_parameter< float >::type lambda_item_negative(lambda_item_negativeSEXP);
+    Rcpp::traits::input_parameter< const arma::uword >::type n_threads(n_threadsSEXP);
+    Rcpp::traits::input_parameter< bool >::type update_items(update_itemsSEXP);
+    Rcpp::traits::input_parameter< const arma::uword >::type loss(lossSEXP);
+    Rcpp::traits::input_parameter< const arma::uword >::type kernel(kernelSEXP);
+    Rcpp::traits::input_parameter< arma::uword >::type max_negative_samples(max_negative_samplesSEXP);
+    Rcpp::traits::input_parameter< float >::type margin(marginSEXP);
+    Rcpp::traits::input_parameter< const arma::uword >::type optimizer(optimizerSEXP);
+    rankmf_solver_float(x_r, W, H, W2_grad, H2_grad, user_features_r, item_features_r, rank, n_updates, learning_rate, gamma, lambda_user, lambda_item_positive, lambda_item_negative, n_threads, update_items, loss, kernel, max_negative_samples, margin, optimizer);
+    return R_NilValue;
+END_RCPP
+}
 // top_product
 Rcpp::IntegerMatrix top_product(const arma::mat& x, const arma::mat& y, unsigned k, unsigned n_threads, const Rcpp::S4& not_recommend_r, const Rcpp::IntegerVector& exclude);
 RcppExport SEXP _rsparse_top_product(SEXP xSEXP, SEXP ySEXP, SEXP kSEXP, SEXP n_threadsSEXP, SEXP not_recommend_rSEXP, SEXP excludeSEXP) {
@@ -348,6 +378,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_als_implicit_float", (DL_FUNC) &_rsparse_als_implicit_float, 8},
     {"_rsparse_als_loss_explicit", (DL_FUNC) &_rsparse_als_loss_explicit, 5},
     {"_rsparse_rankmf_solver_double", (DL_FUNC) &_rsparse_rankmf_solver_double, 21},
+    {"_rsparse_rankmf_solver_float", (DL_FUNC) &_rsparse_rankmf_solver_float, 21},
     {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 6},
     {"_rsparse_arma_kmeans", (DL_FUNC) &_rsparse_arma_kmeans, 6},
     {"_rsparse_omp_thread_count", (DL_FUNC) &_rsparse_omp_thread_count, 0},

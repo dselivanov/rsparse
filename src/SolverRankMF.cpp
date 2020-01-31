@@ -94,16 +94,16 @@ template <typename T> T get_grad_square_acc(const arma::Col<T> &grad, const T gr
   return(res);
 }
 
-template <typename T> void rankmf_solver(
-    const MappedCSR<T> &x,
+template <typename T, typename T2> void rankmf_solver(
+    const MappedCSR<T2> &x,
     // embeddings
     arma::Mat<T> &W, //user latent factors rank * n_user_features
     arma::Mat<T> &H, //item latent factors rank * n_item_features
     // accumulated squared gradients for Adagrad.RMSprop
     arma::Col<T> &W2_grad, //user latent factors n_user_features
     arma::Col<T> &H2_grad, //item latent factors n_item_features
-    const MappedCSR<T> &user_features,
-    const MappedCSR<T> &item_features,
+    const MappedCSR<T2> &user_features,
+    const MappedCSR<T2> &item_features,
     const arma::uword rank,
     const arma::uword n_updates,
     const T learning_rate,
@@ -117,7 +117,7 @@ template <typename T> void rankmf_solver(
     const arma::uword kernel = IDENTITY,
     arma::uword max_negative_samples = 50,
     const T margin = 0.1,
-    const arma::uword optimizer = ADAGRAD
+    const arma::uword optimizer = 0 //ADAGRAD
     ) {
 
 
@@ -153,20 +153,22 @@ template <typename T> void rankmf_solver(
 
       n_positive++;
       const arma::uword u = get_random_user(n_user);
-      const std::pair<arma::uvec, arma::Col<T>> user_features_nnz = user_features.get_row(u);
+      const std::pair<arma::uvec, arma::Col<T2>> user_features_nnz = user_features.get_row(u);
       const arma::uvec user_features_nnz_indices = user_features_nnz.first;
-      const arma::Col<T> w_u = W.cols(user_features_nnz_indices) * user_features_nnz.second;
+      // const arma::Col<T> w_u = W.cols(user_features_nnz_indices) * user_features_nnz.second;
+      const arma::Col<T> w_u = W.cols(user_features_nnz_indices) * arma::conv_to<arma::Col<T>>::from(user_features_nnz.second);
 
       const arma::uvec idx = positive_items(x, u);
       if (idx.is_empty()) continue; // user with no positive items
       auto id = get_positive_item_index(idx.size() - 1);
       const arma::uword i = idx[id];
-      const std::pair<arma::uvec, arma::Col<T>> item_features_pos = item_features.get_row(i);
+      const std::pair<arma::uvec, arma::Col<T2>> item_features_pos = item_features.get_row(i);
       const arma::uvec item_features_pos_nnz_indices = item_features_pos.first;
-      const arma::Col<T> h_i = H.cols(item_features_pos_nnz_indices) * item_features_pos.second;
+      // const arma::Col<T> h_i = H.cols(item_features_pos_nnz_indices) * item_features_pos.second;
+      const arma::Col<T> h_i = H.cols(item_features_pos_nnz_indices) * arma::conv_to<arma::Col<T>>::from(item_features_pos.second);
 
       arma::Col<T> h_j;
-      std::pair<arma::uvec, arma::Col<T>> item_features_neg;
+      std::pair<arma::uvec, arma::Col<T2>> item_features_neg;
       arma::uvec item_features_neg_nnz_indices;
 
       arma::uword j = 0, k = 0, correct_samples = 0;
@@ -183,7 +185,8 @@ template <typename T> void rankmf_solver(
           n_negative++;
           item_features_neg = item_features.get_row(j);
           item_features_neg_nnz_indices = item_features_neg.first;
-          h_j = H.cols(item_features_neg_nnz_indices) * item_features_neg.second;
+          // h_j = H.cols(item_features_neg_nnz_indices) * item_features_neg.second;
+          h_j = H.cols(item_features_neg_nnz_indices) * arma::conv_to<arma::Col<T>>::from(item_features_neg.second);
 
           r_ui = arma::dot(w_u, h_i);
           r_uj = arma::dot(w_u, h_j);
@@ -284,17 +287,76 @@ void rankmf_solver_double(
     const arma::uword kernel = 0, // IDENTITY
     arma::uword max_negative_samples = 50,
     double margin = 0.1,
-    const arma::uword optimizer = ADAGRAD
+    const arma::uword optimizer = 0 //ADAGRAD
   ) {
   const dMappedCSR x = extract_mapped_csr(x_r);
   const dMappedCSR user_features = extract_mapped_csr(user_features_r);
   const dMappedCSR item_features = extract_mapped_csr(item_features_r);
-  rankmf_solver<double>(
+  rankmf_solver<double, double>(
     x,
     W,
     H,
     W2_grad,
     H2_grad,
+    user_features,
+    item_features,
+    rank, n_updates, learning_rate, gamma,
+    lambda_user, lambda_item_positive, lambda_item_negative,
+    n_threads,
+    update_items,
+    loss,
+    kernel,
+    max_negative_samples,
+    margin,
+    optimizer);
+}
+
+
+// [[Rcpp::export]]
+void rankmf_solver_float(
+    const Rcpp::S4 &x_r,
+    Rcpp::S4 &W, //user latent factors rank * n_user_features
+    Rcpp::S4 &H, //item latent factors rank * n_item_features
+    Rcpp::S4 &W2_grad, //user accumulated squared gradients for Adagrad.RMSprop
+    Rcpp::S4 &H2_grad, //item accumulated squared gradients for Adagrad.RMSprop
+    const Rcpp::S4 &user_features_r,
+    const Rcpp::S4 &item_features_r,
+    const arma::uword rank,
+    const arma::uword n_updates,
+    float learning_rate = 0.01,
+    float gamma = 1,
+    float lambda_user = 0.0,
+    float lambda_item_positive = 0.0,
+    float lambda_item_negative = 0.0,
+    const arma::uword n_threads = 1,
+    bool update_items = true,
+    const arma::uword loss = 0, // BPR
+    const arma::uword kernel = 0, // IDENTITY
+    arma::uword max_negative_samples = 50,
+    float margin = 0.1,
+    const arma::uword optimizer = 0 //ADAGRAD
+) {
+  const dMappedCSR x = extract_mapped_csr(x_r);
+  const dMappedCSR user_features = extract_mapped_csr(user_features_r);
+  const dMappedCSR item_features = extract_mapped_csr(item_features_r);
+
+  Rcpp::IntegerMatrix W_data = W.slot("Data");
+  Rcpp::IntegerMatrix H_data = H.slot("Data");
+  arma::fmat W_float = arma::fmat(reinterpret_cast<float *>(&W_data[0]), W_data.nrow(), W_data.ncol(), false, true);
+  arma::fmat H_float = arma::fmat(reinterpret_cast<float *>(&H_data[0]), H_data.nrow(), H_data.ncol(), false, true);
+
+  Rcpp::IntegerVector W2_grad_data = W2_grad.slot("Data");
+  Rcpp::IntegerVector H2_grad_data = H2_grad.slot("Data");
+
+  arma::fvec W2_grad_float = arma::fvec(reinterpret_cast<float *>(&W2_grad_data[0]), W2_grad_data.length(), false, true);
+  arma::fvec H2_grad_float = arma::fvec(reinterpret_cast<float *>(&H2_grad_data[0]), H2_grad_data.length(), false, true);
+
+  rankmf_solver<float, double>(
+    x,
+    W_float,
+    H_float,
+    W2_grad_float,
+    H2_grad_float,
     user_features,
     item_features,
     rank, n_updates, learning_rate, gamma,

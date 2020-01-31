@@ -97,18 +97,34 @@ RankMF = R6::R6Class(
       n_item_features = ncol(private$item_features)
       n_user_features = ncol(user_features)
 
-      if (is.null(self$user_features_embeddings)) self$user_features_embeddings = matrix(rnorm(self$rank * n_user_features, 0, 1e-3), nrow = self$rank)
-      if (is.null(private$user_features_squared_grad)) private$user_features_squared_grad = rep(1.0, n_user_features)
+      rnorm_matrix = function(m, n, mean = 0, sd = 1) {
+        if (self$precision == "double") {
+          matrix(rnorm(m * n, mean, sd), nrow = m)
+        } else {
+          float::flrnorm(m, n, mean, sd)
+        }
+      }
+      ones = function(m) {
+        if (self$precision == "double") {
+          rep(1, m)
+        } else {
+          rep(fl(1), m)
+        }
+      }
 
-      if (is.null(self$item_features_embeddings)) self$item_features_embeddings = matrix(rnorm(self$rank * n_item_features, 0, 1e-3), nrow = self$rank)
-      if (is.null(private$item_features_squared_grad)) private$item_features_squared_grad = rep(1.0, n_item_features)
+      # rnorm_precision = if(self$precision == "float" float::flrnorm())
+      if (is.null(self$user_features_embeddings)) self$user_features_embeddings = rnorm_matrix(self$rank, n_user_features, 0, 1e-3)
+      if (is.null(private$user_features_squared_grad)) private$user_features_squared_grad = ones(n_user_features)
+
+      if (is.null(self$item_features_embeddings)) self$item_features_embeddings = rnorm_matrix(self$rank, n_item_features, 0, 1e-3)
+      if (is.null(private$item_features_squared_grad)) private$item_features_squared_grad = ones(n_item_features)
 
       # temporary disable BLAS threading to prevent thread contention with OpenMP
       n_threads_blas = RhpcBLASctl::blas_get_num_procs()
       RhpcBLASctl::blas_set_num_threads(1L)
       on.exit(RhpcBLASctl::blas_set_num_threads(n_threads_blas))
-
-      rankmf_solver_double(
+      SOLVER = if (self$precision == "double") rankmf_solver_double else rankmf_solver_float
+      SOLVER(
         x,
         self$user_features_embeddings,
         self$item_features_embeddings,
