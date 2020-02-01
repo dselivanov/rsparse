@@ -4,18 +4,36 @@
 \name{matmult}
 \alias{matmult}
 \alias{\%*\%,dgRMatrix,matrix-method}
+\alias{\%*\%,dgRMatrix,float32-method}
+\alias{\%*\%,float32,dgRMatrix-method}
 \alias{tcrossprod,dgRMatrix,matrix-method}
+\alias{tcrossprod,dgRMatrix,float32-method}
 \alias{\%*\%,matrix,dgCMatrix-method}
+\alias{\%*\%,float32,dgCMatrix-method}
+\alias{\%*\%,dgCMatrix,float32-method}
 \alias{crossprod,matrix,dgCMatrix-method}
+\alias{crossprod,float32,dgCMatrix-method}
 \title{Multithreaded Sparse-Dense Matrix Multiplication}
 \usage{
 \S4method{\%*\%}{dgRMatrix,matrix}(x, y)
 
+\S4method{\%*\%}{dgRMatrix,float32}(x, y)
+
+\S4method{\%*\%}{float32,dgRMatrix}(x, y)
+
 \S4method{tcrossprod}{dgRMatrix,matrix}(x, y)
+
+\S4method{tcrossprod}{dgRMatrix,float32}(x, y)
 
 \S4method{\%*\%}{matrix,dgCMatrix}(x, y)
 
+\S4method{\%*\%}{float32,dgCMatrix}(x, y)
+
+\S4method{\%*\%}{dgCMatrix,float32}(x, y)
+
 \S4method{crossprod}{matrix,dgCMatrix}(x, y)
+
+\S4method{crossprod}{float32,dgCMatrix}(x, y)
 }
 \arguments{
 \item{x, y}{dense \code{matrix} and sparse

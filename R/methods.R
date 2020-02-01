@@ -51,6 +51,18 @@ setMethod("%*%", signature(x="dgRMatrix", y="matrix"), function(x, y) {
 
 #' @rdname matmult
 #' @export
+setMethod("%*%", signature(x="dgRMatrix", y="float32"), function(x, y) {
+  x %*% float::dbl(y)
+})
+
+#' @rdname matmult
+#' @export
+setMethod("%*%", signature(x="float32", y="dgRMatrix"), function(x, y) {
+  float::dbl(x) %*% y
+})
+
+#' @rdname matmult
+#' @export
 setMethod("tcrossprod", signature(x="dgRMatrix", y="matrix"), function(x, y) {
   # restore on exit
   n_thread = RhpcBLASctl::blas_get_num_procs()
@@ -62,6 +74,12 @@ setMethod("tcrossprod", signature(x="dgRMatrix", y="matrix"), function(x, y) {
   check_dimensions_match(x, y, y_transposed = TRUE)
   res = csr_dense_tcrossprod(x, y, getOption("rsparse_omp_threads", 1L))
   set_dimnames(res, rownames(x), rownames(y))
+})
+
+#' @rdname matmult
+#' @export
+setMethod("tcrossprod", signature(x="dgRMatrix", y="float32"), function(x, y) {
+  tcrossprod(x, float::dbl(y))
 })
 
 #' @rdname matmult
@@ -82,6 +100,18 @@ setMethod("%*%", signature(x="matrix", y="dgCMatrix"), function(x, y) {
 
 #' @rdname matmult
 #' @export
+setMethod("%*%", signature(x="float32", y="dgCMatrix"), function(x, y) {
+  float::dbl(x) %*% y
+})
+
+#' @rdname matmult
+#' @export
+setMethod("%*%", signature(x="dgCMatrix", y="float32"), function(x, y) {
+  x %*% float::dbl(y)
+})
+
+#' @rdname matmult
+#' @export
 setMethod("crossprod", signature(x="matrix", y="dgCMatrix"), function(x, y) {
   # restore on exit
   n_thread = RhpcBLASctl::blas_get_num_procs()
@@ -95,6 +125,12 @@ setMethod("crossprod", signature(x="matrix", y="dgCMatrix"), function(x, y) {
   check_dimensions_match(x, y)
   res = dense_csc_prod(x, y, getOption("rsparse_omp_threads", 1L))
   set_dimnames(res, rownames(x), colnames(y))
+})
+
+#' @rdname matmult
+#' @export
+setMethod("crossprod", signature(x="float32", y="dgCMatrix"), function(x, y) {
+  crossprod(float::dbl(x), y)
 })
 
 get_indices_integer = function(i, max_i, index_names) {
