@@ -19,6 +19,7 @@ RankMF = R6::R6Class(
     gamma = NULL,
     precision = NULL,
     loss = NULL,
+    progress = NULL,
     max_negative_samples = NULL,
     item_features_embeddings = NULL,
     user_features_embeddings = NULL,
@@ -33,7 +34,9 @@ RankMF = R6::R6Class(
                           kernel = c("identity", "sigmoid"),
                           margin = 0.1,
                           max_negative_samples = 50L,
+                          progress = 10,
                           ...) {
+      self$progress = progress
       self$rank = rank
       self$learning_rate = learning_rate
 
@@ -145,7 +148,8 @@ RankMF = R6::R6Class(
         kernel = self$kernel,
         max_negative_samples = self$max_negative_samples,
         margin = self$margin,
-        self$optimizer
+        self$optimizer,
+        self$progress
       )
       item_embeddings = tcrossprod(private$item_features, self$item_features_embeddings)
       # transpose to have shape rank * n_items

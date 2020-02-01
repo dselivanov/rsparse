@@ -117,11 +117,17 @@ template <typename T, typename T2> void rankmf_solver(
     const arma::uword kernel = IDENTITY,
     arma::uword max_negative_samples = 50,
     const T margin = 0.1,
-    const arma::uword optimizer = 0 //ADAGRAD
+    const arma::uword optimizer = 0, //ADAGRAD
+    const arma::uword report_progress = 10
     ) {
 
 
-  const arma::uword TRACK = n_updates / n_threads / 10;
+  double TRACK;
+  if(report_progress <= 0 || report_progress > 100) {
+    TRACK = arma::datum::inf;
+  } else {
+    TRACK = (n_updates / n_threads / (100 /report_progress));
+  }
   const arma::uword n_user = x.n_rows;
   const arma::uword n_item = x.n_cols;
   max_negative_samples = std::min(max_negative_samples, n_item);
@@ -287,7 +293,8 @@ void rankmf_solver_double(
     const arma::uword kernel = 0, // IDENTITY
     arma::uword max_negative_samples = 50,
     double margin = 0.1,
-    const arma::uword optimizer = 0 //ADAGRAD
+    const arma::uword optimizer = 0, //ADAGRAD
+    const arma::uword report_progress = 10
   ) {
   const dMappedCSR x = extract_mapped_csr(x_r);
   const dMappedCSR user_features = extract_mapped_csr(user_features_r);
@@ -308,7 +315,8 @@ void rankmf_solver_double(
     kernel,
     max_negative_samples,
     margin,
-    optimizer);
+    optimizer,
+    report_progress);
 }
 
 
@@ -334,7 +342,8 @@ void rankmf_solver_float(
     const arma::uword kernel = 0, // IDENTITY
     arma::uword max_negative_samples = 50,
     float margin = 0.1,
-    const arma::uword optimizer = 0 //ADAGRAD
+    const arma::uword optimizer = 0, //ADAGRAD
+    const arma::uword report_progress = 10
 ) {
   const dMappedCSR x = extract_mapped_csr(x_r);
   const dMappedCSR user_features = extract_mapped_csr(user_features_r);
@@ -367,5 +376,6 @@ void rankmf_solver_float(
     kernel,
     max_negative_samples,
     margin,
-    optimizer);
+    optimizer,
+    report_progress);
 }
