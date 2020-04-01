@@ -1,20 +1,13 @@
-Resumbission
+# New release
 
-- fixed incorrect urls in the documentation as found by CRAN
+- fixed `dontetest` examples as requested by prof Brian D. Ripley
+- reworked documentation with new roxygen2, fixed broken urls
 
 # Test environments
 
-- local ubuntu 16.04, R 3.6.0
 - laptop OS X, R 3.6.0
-- win-builder (devel)
+- win-builder (devel, 4.0)
 
 # R CMD check results
 
-0 errors | 0 warning | 1 note
-
-> checking installed package size ... NOTE
-    installed size is  8.2Mb
-    sub-directories of 1Mb or more:
-      libs   7.5Mb
-
-Not sure I can do something about this - C++ pkg with Armadillo and float dependencies
+0 errors | 0 warning | 0 notes

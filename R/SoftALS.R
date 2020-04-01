@@ -23,7 +23,6 @@
 #' components represent left, right singular vectors and singular values.
 #' @export
 #' @examples
-#'\donttest{
 #' set.seed(42)
 #' data('movielens100k')
 #' k = 10
@@ -38,7 +37,6 @@
 #'   diag(x = svd_soft_svd$d) %*%
 #'   t(svd_soft_svd$v)
 #' all.equal(m_restored_svd, m_restored_soft_svd, tolerance = 1e-1)
-#'}
 soft_impute = function(x,
                        rank = 10L, lambda = 0,
                        n_iter = 100L, convergence_tol = 1e-3,

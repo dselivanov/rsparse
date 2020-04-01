@@ -1,3 +1,7 @@
+- 2020-04-01 - `v0.4.0`
+    - updated docs with roxygen2 7.1
+    - added `ScaleNormalize` transformer
+    - added sparse*float S4 methods
 - 2019-07-17 - `v0.3.3.2`
     - faster `find_top_product()` - avoid BLAS and openmp thread contention
     - correctly identify openmp on OSX

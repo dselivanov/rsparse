@@ -3,12 +3,14 @@
 \name{movielens100k}
 \alias{movielens100k}
 \title{MovieLens 100K Dataset}
-\format{A sparse column-compressed matrix (\code{Matrix::dgCMatrix}) with 943 rows and 1682 columns.
+\format{
+A sparse column-compressed matrix (\code{Matrix::dgCMatrix}) with 943 rows and 1682 columns.
 \enumerate{
   \item rows are users
   \item columns are movies
   \item values are ratings
-}}
+}
+}
 \source{
 \url{https://en.wikipedia.org/wiki/MovieLens#Datasets}
 }

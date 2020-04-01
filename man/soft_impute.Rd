@@ -5,11 +5,25 @@
 \alias{soft_svd}
 \title{SoftImpute/SoftSVD matrix factorization}
 \usage{
-soft_impute(x, rank = 10L, lambda = 0, n_iter = 100L,
-  convergence_tol = 0.001, init = NULL, final_svd = TRUE)
+soft_impute(
+  x,
+  rank = 10L,
+  lambda = 0,
+  n_iter = 100L,
+  convergence_tol = 0.001,
+  init = NULL,
+  final_svd = TRUE
+)
 
-soft_svd(x, rank = 10L, lambda = 0, n_iter = 100L,
-  convergence_tol = 0.001, init = NULL, final_svd = TRUE)
+soft_svd(
+  x,
+  rank = 10L,
+  lambda = 0,
+  n_iter = 100L,
+  convergence_tol = 0.001,
+  init = NULL,
+  final_svd = TRUE
+)
 }
 \arguments{
 \item{x}{sparse matrix. Both CSR \code{dgRMatrix} and CSC \code{dgCMatrix} are supported.
@@ -46,7 +60,6 @@ by "Matrix Completion and Low-Rank SVD via Fast Alternating Least Squares" -
 \url{https://arxiv.org/pdf/1410.2596.pdf}
 }
 \examples{
-\donttest{
 set.seed(42)
 data('movielens100k')
 k = 10
@@ -61,5 +74,4 @@ m_restored_soft_svd = svd_soft_svd$u \%*\%
   diag(x = svd_soft_svd$d) \%*\%
   t(svd_soft_svd$v)
 all.equal(m_restored_svd, m_restored_soft_svd, tolerance = 1e-1)
-}
 }

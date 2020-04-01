@@ -1,14 +1,14 @@
 Package: rsparse
 Type: Package
 Title: Statistical Learning on Sparse Matrices
-Version: 0.4
+Version: 0.4.0
 Authors@R: c(
-    person("Dmitriy", "Selivanov", role=c("aut", "cre", "cph"), email="selivanov.dmitriy@gmail.com", 
+    person("Dmitriy", "Selivanov", role=c("aut", "cre", "cph"), email="ds@rexy.ai", 
     comment = c(ORCID = "0000-0001-5413-1506")),
     person("Drew", "Schmidt", role="ctb", comment="configure script for BLAS, LAPACK detection"), 
     person("Wei-Chen", "Chen", role="ctb", comment="configure script and work on linking to float package")
     )
-Maintainer: Dmitriy Selivanov <selivanov.dmitriy@gmail.com>
+Maintainer: Dmitriy Selivanov <ds@rexy.ai>
 Description: Implements many algorithms for statistical learning on 
   sparse matrices - matrix factorizations, matrix completion, 
   elastic net regressions, factorization machines. 
@@ -42,8 +42,7 @@ ByteCompile: true
 Depends: R (>= 3.6.0), methods
 Imports: 
     Matrix (>= 1.2), 
-    Rcpp (>= 0.11), 
-    mlapi (>= 0.1.0), 
+    Rcpp (>= 0.11),
     data.table (>= 1.10.0),
     float (>= 0.2-2),
     RhpcBLASctl,
@@ -55,7 +54,7 @@ Suggests:
     testthat, 
     covr
 StagedInstall: TRUE
-URL: https://github.com/dselivanov/rsparse
-BugReports: https://github.com/dselivanov/rsparse/issues
-RoxygenNote: 6.1.1
+URL: https://github.com/rexyai/rsparse
+BugReports: https://github.com/rexyai/rsparse/issues
+RoxygenNote: 7.1.0
 NeedsCompilation: yes
