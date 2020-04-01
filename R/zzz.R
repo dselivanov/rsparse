@@ -5,7 +5,6 @@
 #' @import Rcpp
 #' @import float
 #' @importFrom RhpcBLASctl get_num_cores
-#' @importFrom mlapi mlapiDecomposition
 #' @useDynLib rsparse, .registration = TRUE
 
 

@@ -25,17 +25,17 @@ test_that("FTRL coefficients", {
 test_that("FTRL dump immutable", {
   ftrl = FTRL$new(learning_rate = 0.01, learning_rate_decay = 0.1, lambda = 20, l1_ratio = 1, dropout = 0)
   ftrl$partial_fit(x, y, nthread = 1)
-  dump_1 = ftrl$dump()
+  dump_1 = ftrl$.__enclos_env__$private$dump()
   # make sure dump_1 cloned during dump
   ftrl$partial_fit(x, y, nthread = 1)
-  dump_2 = ftrl$dump()
+  dump_2 = ftrl$.__enclos_env__$private$dump()
   expect_true(any(dump_1$z != dump_2$z))
   expect_true(any(dump_1$n != dump_2$n))
 
   ftrl2 = FTRL$new()
-  ftrl2$load(dump_2)
+  ftrl2$.__enclos_env__$private$load(dump_2)
   ftrl2$partial_fit(x, y, nthread = 1)
-  dump_3 = ftrl2$dump()
+  dump_3 = ftrl2$.__enclos_env__$private$dump()
   # make sure dump_2 cloned internally and not modified by `partial_fit()` call
   expect_true(any(dump_2$n != dump_3$n))
 })
