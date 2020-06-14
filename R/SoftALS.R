@@ -158,8 +158,11 @@ soft_als = function(x,
     } else if(target == "svd") {
       B_hat = solve_iter_als_svd(tx, svd_new, lambda, "u")
     }
-    Bsvd = svd(B_hat)
+
+    logger$trace(sprintf("running svd on item embeddings  %s", paste(dim(B_hat), collapse = "*")))
+    Bsvd = svd_tall_skinny(B_hat)
     rm(B_hat)
+
     svd_new$v = Bsvd$u
     svd_new$d = Bsvd$d
     # not sure why this line is required
@@ -175,7 +178,8 @@ soft_als = function(x,
     loss =  attr(A_hat, "loss")
     if(is.null(loss)) loss = NA_real_
 
-    Asvd = svd(A_hat)
+    logger$trace(sprintf("running svd on user embeddings  %s", paste(dim(A_hat), collapse = "*")))
+    Asvd = svd_tall_skinny(A_hat)
     rm(A_hat)
 
     svd_new$u = Asvd$u
@@ -238,4 +242,16 @@ soft_als = function(x,
                    v = tcrossprod(svd_new$v, m_svd$v)[, seq_len(n_nonzero_singular_values)])
   }
   svd_new
+}
+
+# faster SVD for tall and skinny matrix
+# https://image.slidesharecdn.com/nqvq4hvkrfslgqjzv7lm-signature-3cf9294a7bfebfdfcce57e9cc1bcdd5388b43a4e16ef2b29e8c2cab313ecbd3d-poli-150629181710-lva1-app6892/95/advanced-data-science-with-apache-sparkreza-zadeh-stanford-27-638.jpg?cb=1435601886
+# https://image.slidesharecdn.com/nqvq4hvkrfslgqjzv7lm-signature-3cf9294a7bfebfdfcce57e9cc1bcdd5388b43a4e16ef2b29e8c2cab313ecbd3d-poli-150629181710-lva1-app6892/95/advanced-data-science-with-apache-sparkreza-zadeh-stanford-28-638.jpg?cb=1435601886
+svd_tall_skinny = function(x) {
+  xtx = crossprod(x)
+  svd_xtx = svd(xtx)
+  d = sqrt(svd_xtx$d)
+  dvt = d * t(svd_xtx$v)
+  u = x %*% solve(dvt)
+  list(d = d, u = u, v = svd_xtx$v)
 }
