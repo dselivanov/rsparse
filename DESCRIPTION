@@ -56,5 +56,5 @@ Suggests:
 StagedInstall: TRUE
 URL: https://github.com/rexyai/rsparse
 BugReports: https://github.com/rexyai/rsparse/issues
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 NeedsCompilation: yes

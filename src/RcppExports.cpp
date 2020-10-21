@@ -360,6 +360,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// convert_indptr_to_rows
+Rcpp::IntegerVector convert_indptr_to_rows(Rcpp::IntegerVector indptr);
+RcppExport SEXP _rsparse_convert_indptr_to_rows(SEXP indptrSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
+    rcpp_result_gen = Rcpp::wrap(convert_indptr_to_rows(indptr));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_get_ftrl_weights", (DL_FUNC) &_rsparse_get_ftrl_weights, 1},
@@ -385,6 +396,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_arma_kmeans", (DL_FUNC) &_rsparse_arma_kmeans, 6},
     {"_rsparse_omp_thread_count", (DL_FUNC) &_rsparse_omp_thread_count, 0},
     {"_rsparse_cpp_make_sparse_approximation", (DL_FUNC) &_rsparse_cpp_make_sparse_approximation, 5},
+    {"_rsparse_convert_indptr_to_rows", (DL_FUNC) &_rsparse_convert_indptr_to_rows, 1},
     {NULL, NULL, 0}
 };
 

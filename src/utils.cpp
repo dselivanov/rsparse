@@ -75,6 +75,19 @@ dMappedCSC extract_mapped_csc(Rcpp::S4 input) {
   return dMappedCSC(nrows, ncols, values.length(), (arma::uword *)row_indices.begin(), (arma::uword *)col_ptrs.begin(), (double *)values.begin());
 }
 
+// [[Rcpp::export]]
+Rcpp::IntegerVector convert_indptr_to_rows(Rcpp::IntegerVector indptr)
+{
+  /* Note: the output will have numeration starting at 1  */
+  if (indptr.size() <= 1) return Rcpp::IntegerVector();
+  std::vector<int> res;
+  for (size_t ix = 1; ix < indptr.size(); ix++) {
+    if (indptr[ix] > indptr[ix-1])
+      res.push_back(ix);
+  }
+  return Rcpp::wrap(res);
+}
+
 // returns number of available threads
 // omp_get_num_threads() for some reason doesn't work on all systems
 // check following link

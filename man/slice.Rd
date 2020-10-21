@@ -40,4 +40,6 @@ m = rsparsematrix(20, 20, 0.1)
 m = as(m, "RsparseMatrix")
 inherits(m[1:2, ], "RsparseMatrix")
 inherits(m[1:2, 3:4], "RsparseMatrix")
+inherits(m[1, , drop=TRUE], "sparseVector")
+inherits(m[1, 1, drop=TRUE], "numeric")
 }

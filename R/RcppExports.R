@@ -93,3 +93,7 @@ cpp_make_sparse_approximation <- function(mat_template, X, Y, sparse_matrix_type
     .Call(`_rsparse_cpp_make_sparse_approximation`, mat_template, X, Y, sparse_matrix_type, n_threads)
 }
 
+convert_indptr_to_rows <- function(indptr) {
+    .Call(`_rsparse_convert_indptr_to_rows`, indptr)
+}
+
