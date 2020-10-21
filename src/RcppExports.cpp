@@ -361,13 +361,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // convert_indptr_to_rows
-Rcpp::IntegerVector convert_indptr_to_rows(Rcpp::IntegerVector indptr);
-RcppExport SEXP _rsparse_convert_indptr_to_rows(SEXP indptrSEXP) {
+Rcpp::IntegerVector convert_indptr_to_rows(Rcpp::IntegerVector indptr, int n);
+RcppExport SEXP _rsparse_convert_indptr_to_rows(SEXP indptrSEXP, SEXP nSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
-    rcpp_result_gen = Rcpp::wrap(convert_indptr_to_rows(indptr));
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(convert_indptr_to_rows(indptr, n));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -396,7 +397,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_arma_kmeans", (DL_FUNC) &_rsparse_arma_kmeans, 6},
     {"_rsparse_omp_thread_count", (DL_FUNC) &_rsparse_omp_thread_count, 0},
     {"_rsparse_cpp_make_sparse_approximation", (DL_FUNC) &_rsparse_cpp_make_sparse_approximation, 5},
-    {"_rsparse_convert_indptr_to_rows", (DL_FUNC) &_rsparse_convert_indptr_to_rows, 1},
+    {"_rsparse_convert_indptr_to_rows", (DL_FUNC) &_rsparse_convert_indptr_to_rows, 2},
     {NULL, NULL, 0}
 };
 

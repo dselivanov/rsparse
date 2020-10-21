@@ -225,7 +225,7 @@ subset_csr = function(x, i, j, drop = TRUE) {
     } else if (n_row == 1L) {
       res = Matrix::sparseVector(res@x, res@j+1L, length=n_col)
     } else {
-      res = Matrix::sparseVector(res@x, convert_indptr_to_rows(res@p), length=n_row)
+      res = Matrix::sparseVector(res@x, convert_indptr_to_rows(res@p, NROW(res@x)), length=n_row)
     }
   }
   res

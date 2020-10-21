@@ -76,16 +76,17 @@ dMappedCSC extract_mapped_csc(Rcpp::S4 input) {
 }
 
 // [[Rcpp::export]]
-Rcpp::IntegerVector convert_indptr_to_rows(Rcpp::IntegerVector indptr)
+Rcpp::IntegerVector convert_indptr_to_rows(Rcpp::IntegerVector indptr, int n)
 {
   /* Note: the output will have numeration starting at 1  */
-  if (indptr.size() <= 1) return Rcpp::IntegerVector();
-  std::vector<int> res;
+  Rcpp::IntegerVector res(n, 0);
+  if (n == 0) return res;
+  int curr = 0;
   for (size_t ix = 1; ix < indptr.size(); ix++) {
     if (indptr[ix] > indptr[ix-1])
-      res.push_back(ix);
+      res[curr++] = ix;
   }
-  return Rcpp::wrap(res);
+  return res;
 }
 
 // returns number of available threads
