@@ -112,8 +112,10 @@ WRMF = R6::R6Class(
       # strore item_ids in order to use them in predict method
       private$item_ids = colnames(c_ui)
 
-      logger$trace("check items in input are not negative")
-      stopifnot(all(c_ui@x >= 0))
+      if ((private$feedback != "explicit") || private$non_negative) {
+        logger$trace("check items in input are not negative")
+        stopifnot(all(c_ui@x >= 0))
+      }
 
       logger$trace("making another matrix for convenient traverse by users - transposing input matrix")
       c_iu = t(c_ui)
