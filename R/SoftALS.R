@@ -253,5 +253,5 @@ svd_tall_skinny = function(x) {
   d = sqrt(svd_xtx$d)
   dvt = d * t(svd_xtx$v)
   u = x %*% solve(dvt)
-  list(d = d, u = u, v = svd_xtx$v)
+  list(d = d, u = as.matrix(u), v = as.matrix(svd_xtx$v))
 }
