@@ -339,9 +339,23 @@ WRMF = R6::R6Class(
     als_implicit_fun = NULL,
     #------------------------------------------------------------
     solver_explicit_feedback = function(R, X) {
-      # FIXME - consider to use private XtX
-      XtX = tcrossprod(X) + diag(x = private$lambda, nrow = private$rank, ncol = private$rank)
-      solve(XtX, as(X %*% R, "matrix"))
+      res = vector("list", ncol(R))
+      ridge = diag(x = private$lambda, nrow = private$rank, ncol = private$rank)
+
+      for (i in seq_len(ncol(R))) {
+        # find non-zero ratings
+        p1 = R@p[[i]]
+        p2 = R@p[[i + 1L]]
+        j = p1 + seq_len(p2 - p1)
+        R_nnz = R@x[j]
+        # and corresponding indices
+        ind_nnz = R@i[j] + 1L
+
+        X_nnz = X[, ind_nnz, drop = F]
+        XtX = tcrossprod(X_nnz) + ridge
+        res[[i]] = solve(XtX, X_nnz %*% R_nnz)
+      }
+      do.call(cbind, res)
     }
   )
 )
