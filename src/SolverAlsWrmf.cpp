@@ -131,11 +131,13 @@ double als_loss_explicit(const Rcpp::S4 &m_csc_r, arma::mat& X, arma::mat& Y, do
   #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE) reduction(+:loss)
   #endif
   for(size_t i = 0; i < nc; i++) {
-    int p1 = mat.col_ptrs[i];
-    int p2 = mat.col_ptrs[i + 1];
+    arma::colvec y_i = Y.col(i);
+    auto p1 = mat.col_ptrs[i];
+    auto p2 = mat.col_ptrs[i + 1];
+    double diff = 0;
     for(int pp = p1; pp < p2; pp++) {
-      size_t ind = mat.row_indices[pp];
-      double diff = mat.values[pp] - as_scalar(Y.col(i).t() * X.col(ind));
+      auto j = mat.row_indices[pp];
+      diff = mat.values[pp] - arma::dot(y_i, X.col(j));
       loss += diff * diff;
     }
   }
