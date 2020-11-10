@@ -14,7 +14,7 @@ test_that("test WRMF core", {
                        stringsAsFactors = FALSE)
   p_expl = expand.grid(solver = "cholesky",
                        feedback = c("explicit"),
-                       lambda = c(0, 1000),
+                       lambda = c(0.1, 1000),
                        nnmf = c(TRUE, FALSE), stringsAsFactors = FALSE)
   params = rbind(p_impl, p_expl)
   set.seed(1)
