@@ -143,6 +143,14 @@ Rcpp::List copy_csr_arbitrary(Rcpp::IntegerVector indptr,
       break;
     }
   }
+  std::unordered_map<int, std::vector<int>> indices_rep;
+  if (has_duplicates) {
+    for (int col = 0; col < (int)cols_take.size(); col++) {
+      if (n_repeats[cols_take[col]] > 1) {
+        indices_rep[cols_take[col]].push_back(col);
+      }
+    }
+  }
 
   bool cols_are_sorted = !has_duplicates;
   if (!has_duplicates) {
@@ -170,14 +178,14 @@ Rcpp::List copy_csr_arbitrary(Rcpp::IntegerVector indptr,
     for (int ix = indptr[row]; ix < indptr[row+1]; ix++) {
       auto match = new_mapping.find(indices[ix]);
       if (match != new_mapping.end()) {
-        new_indices.push_back(match->second);
-        new_values.push_back(values[ix]);
         if (has_duplicates && n_repeats[indices[ix]] > 1) {
-          rep = n_repeats[indices[ix]];
-          for (int r = 1; r < rep; r++) {
-            new_indices.push_back(new_indices.back()-1);
+          for (const auto &el : indices_rep[indices[ix]]) {
+            new_indices.push_back(el);
             new_values.push_back(values[ix]);
           }
+        } else {
+          new_indices.push_back(match->second);
+          new_values.push_back(values[ix]);
         }
       }
     }
@@ -189,8 +197,8 @@ Rcpp::List copy_csr_arbitrary(Rcpp::IntegerVector indptr,
         temp_int.resize(size_this);
         temp_double.resize(size_this);
       }
-      std::iota(argsort_cols.begin(), argsort_cols.end(), new_indptr[row_ix]);
-      std::sort(argsort_cols.begin(), argsort_cols.end(),
+      std::iota(argsort_cols.begin(), argsort_cols.begin() + size_this, new_indptr[row_ix]);
+      std::sort(argsort_cols.begin(), argsort_cols.begin() + size_this,
                 [&new_indices](const int a, const int b){return new_indices[a] < new_indices[b];});
       for (int col = 0; col < size_this; col++) {
         temp_int[col] = new_indices[argsort_cols[col]];

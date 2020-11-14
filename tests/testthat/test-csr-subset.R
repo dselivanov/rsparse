@@ -4,6 +4,7 @@ context("RsparseMatrix subsets")
 
 nc = 500L
 nr = 1000L
+set.seed(123)
 m = Matrix::rsparsematrix(nrow = nr, ncol = nc, density = 0.1)
 colnames(m) = as.character(seq_len(nc))
 rownames(m) = as.character(seq_len(nr))
@@ -39,6 +40,10 @@ test_that("RsparseMatrix subset repeated", {
                as(m_base[c(2,2,2,1,1,3), c(3,3,4,4,1,1,1)], "RsparseMatrix"))
   expect_equal(m[as.character(c(2,2,2,1,1,3)), as.character(c(3,3,4,4,1,1,1))],
                as(m_base[c(2,2,2,1,1,3), c(3,3,4,4,1,1,1)], "RsparseMatrix"))
+  expect_equal(m[c(5,2,1,7,4,1,5), c(5,2,1,7,4,1,10,100,5)],
+               as(m_base[c(5,2,1,7,4,1,5), c(5,2,1,7,4,1,10,100,5)], "RsparseMatrix"))
+  expect_equal(m[as.character(c(5,2,1,7,4,1,5)), as.character( c(5,2,1,7,4,1,10,100,5))],
+               as(m_base[c(5,2,1,7,4,1,5),  c(5,2,1,7,4,1,10,100,5)], "RsparseMatrix"))
 })
 
 test_that("RsparseMatrix subset cols", {
