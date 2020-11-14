@@ -4,7 +4,7 @@ context("RsparseMatrix subsets")
 
 nc = 500L
 nr = 1000L
-m = Matrix::rsparsematrix(nrow = nr, ncol = nc, density = 0.01)
+m = Matrix::rsparsematrix(nrow = nr, ncol = nc, density = 0.1)
 colnames(m) = as.character(seq_len(nc))
 rownames(m) = as.character(seq_len(nr))
 m = as(m, "RsparseMatrix")

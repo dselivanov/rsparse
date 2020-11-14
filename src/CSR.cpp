@@ -133,6 +133,26 @@ Rcpp::List copy_csr_arbitrary(Rcpp::IntegerVector indptr,
   std::unordered_map<int, int> new_mapping;
   for (int col = 0; col < (int)cols_take.size(); col++)
     new_mapping[cols_take[col]] = col;
+  std::unordered_map<int, int> n_repeats;
+  for (auto el : cols_take)
+    n_repeats[el]++;
+  bool has_duplicates = false;
+  for (auto &el : n_repeats) {
+    if (el.second > 1) {
+      has_duplicates = true;
+      break;
+    }
+  }
+
+  bool cols_are_sorted = !has_duplicates;
+  if (!has_duplicates) {
+    for (size_t ix = 1; ix < cols_take.size(); ix++) {
+      if (cols_take[ix] < cols_take[ix-1]) {
+        cols_are_sorted = false;
+        break;
+      }
+    }
+  }
 
   Rcpp::IntegerVector new_indptr = Rcpp::IntegerVector(rows_take.size() + 1);
   std::vector<int> new_indices;
@@ -144,6 +164,7 @@ Rcpp::List copy_csr_arbitrary(Rcpp::IntegerVector indptr,
 
   int size_this = 0;
   int row = 0;
+  int rep = 0;
   for (size_t row_ix = 0; row_ix < rows_take.size(); row_ix++) {
     row = rows_take[row_ix];
     for (int ix = indptr[row]; ix < indptr[row+1]; ix++) {
@@ -151,10 +172,17 @@ Rcpp::List copy_csr_arbitrary(Rcpp::IntegerVector indptr,
       if (match != new_mapping.end()) {
         new_indices.push_back(match->second);
         new_values.push_back(values[ix]);
+        if (has_duplicates && n_repeats[indices[ix]] > 1) {
+          rep = n_repeats[indices[ix]];
+          for (int r = 1; r < rep; r++) {
+            new_indices.push_back(new_indices.back()-1);
+            new_values.push_back(values[ix]);
+          }
+        }
       }
     }
     new_indptr[row_ix+1] = new_indices.size();
-    if (new_indptr[row_ix+1] > new_indptr[row_ix]) {
+    if (!cols_are_sorted && new_indptr[row_ix+1] > new_indptr[row_ix]) {
       size_this = new_indptr[row_ix+1] - new_indptr[row_ix];
       if (argsort_cols.size() < (size_t)size_this) {
         argsort_cols.resize(size_this);
