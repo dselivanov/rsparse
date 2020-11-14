@@ -93,3 +93,11 @@ cpp_make_sparse_approximation <- function(mat_template, X, Y, sparse_matrix_type
     .Call(`_rsparse_cpp_make_sparse_approximation`, mat_template, X, Y, sparse_matrix_type, n_threads)
 }
 
+check_is_seq <- function(indices) {
+    .Call(`_rsparse_check_is_seq`, indices)
+}
+
+copy_csr_rows <- function(indptr, indices, values, rows_take) {
+    .Call(`_rsparse_copy_csr_rows`, indptr, indices, values, rows_take)
+}
+
