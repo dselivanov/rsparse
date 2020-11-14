@@ -176,6 +176,7 @@ subset_csr = function(x, i, j, drop = TRUE) {
 
   all_j = FALSE
   i_is_seq = FALSE
+  j_is_seq = FALSE
   if(missing(i)) {
     i = seq_len(nrow(x))
     i_is_seq = TRUE
@@ -192,6 +193,9 @@ subset_csr = function(x, i, j, drop = TRUE) {
     n_col = ncol(x)
   } else {
     j = get_indices_integer(j, ncol(x), col_names)
+    j_is_seq = check_is_seq(j)
+    j_min = min(j) - 1L
+    j_max = max(j) - 1L
     n_col = length(j)
   }
 
@@ -214,27 +218,28 @@ subset_csr = function(x, i, j, drop = TRUE) {
       j1 = x@p[[ i[[k]] ]]
       j2 = x@p[[ i[[k]] + 1L ]]
       if(j2 > j1) {
-        if (!all_j) {
           j_seq = seq.int(j1, j2 - 1L) + 1L
 
-          # indices should start with 1
-          jj = x@j[j_seq] + 1L
-          # FIXME may be it will make sense to replace with fastmatch::fmatch
-          keep = match(jj, j, nomatch = 0L)
-          # keep only those which are in requested columns
-          which_keep = keep > 0L
-          keep = keep[which_keep]
+          if (!j_is_seq) {
+            # indices should start with 1
+            jj = x@j[j_seq] + 1L
 
-          # indices starting with 0
-          col_indices[[k]] = keep - 1L
+            # FIXME may be it will make sense to replace with fastmatch::fmatch
+            keep = match(jj, j, nomatch = 0L)
+            # keep only those which are in requested columns
+            which_keep = keep > 0L
+            keep = keep[which_keep]
 
-          x_values[[k]] = x@x[j_seq][which_keep]
-        } else {
-          j1 = j1 + 1L
-          j2 = j2 + 1L
-          col_indices[[k]] = x@j[j1:j2]
-          x_values[[k]] = x@x[j1:j2]
-        }
+            # indices starting with 0
+            col_indices[[k]] = keep - 1L
+
+            x_values[[k]] = x@x[j_seq][which_keep]
+          } else {
+            jj = x@j[j_seq]
+            which_keep = (jj >= j_min) & (jj <= j_max)
+            col_indices[[k]] = jj[which_keep] - j_min
+            x_values[[k]] = x@x[j_seq][which_keep]
+          }
       }
     }
 
