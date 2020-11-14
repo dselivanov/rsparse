@@ -174,20 +174,10 @@ subset_csr = function(x, i, j, drop = TRUE) {
   row_names = rownames(x)
   col_names = colnames(x)
 
+  all_i = FALSE
   all_j = FALSE
   i_is_seq = FALSE
   j_is_seq = FALSE
-  if(missing(i)) {
-    i = seq_len(nrow(x))
-    i_is_seq = TRUE
-    n_row = nrow(x)
-  } else {
-    # convert integer/numeric/logical/character indices to integer indices
-    # also takes care of negative indices
-    i = get_indices_integer(i, nrow(x), row_names)
-    i_is_seq = check_is_seq(i)
-    n_row = length(i)
-  }
   if(missing(j)) {
     all_j = TRUE
     n_col = ncol(x)
@@ -198,13 +188,34 @@ subset_csr = function(x, i, j, drop = TRUE) {
         all_j = TRUE
     } else {
       j_is_seq = check_is_seq(j)
-      j_min = min(j) - 1L
-      j_max = max(j) - 1L
     }
     n_col = length(j)
   }
+  if(missing(i)) {
+    i = seq_len(nrow(x))
+    all_i = TRUE
+    i_is_seq = TRUE
+    n_row = nrow(x)
+  } else {
+    # convert integer/numeric/logical/character indices to integer indices
+    # also takes care of negative indices
+    i = get_indices_integer(i, nrow(x), row_names)
+    i_is_seq = check_is_seq(i)
+    n_row = length(i)
 
-  if (i_is_seq && all_j) {
+    if (all_j && i_is_seq && length(i) == nrow(x) && i[1L] == 1L && i[length(i)] == nrow(x)) {
+      if (all(i == seq(1L, nrow(x))))
+        all_i = TRUE
+    }
+  }
+
+  if (all_i && all_j) {
+    return(x)
+  } else if (length(x@x) == 0L) {
+    indptr = integer(n_row + 1)
+    col_indices = integer()
+    x_values = numeric()
+  } else if (i_is_seq && all_j) {
     first = x@p[i[1L]] + 1L
     last = x@p[i[n_row] + 1L] + 1L
     indptr = x@p[seq(i[1L], i[n_row]+1L)] - x@p[i[1L]]
@@ -215,43 +226,18 @@ subset_csr = function(x, i, j, drop = TRUE) {
     indptr = temp$indptr
     col_indices = temp$indices
     x_values = temp$values
+  } else if (j_is_seq) {
+    temp = copy_csr_rows_col_seq(x@p, x@j, x@x, i-1L, j-1L)
+    indptr = temp$indptr
+    col_indices = temp$indices
+    x_values = temp$values
   } else {
-    col_indices = lapply(seq_len(n_row), function(x) integer())
-    x_values = lapply(seq_len(n_row), function(x) numeric())
-
-    for(k in seq_len(n_row) ) {
-      j1 = x@p[[ i[[k]] ]]
-      j2 = x@p[[ i[[k]] + 1L ]]
-      if(j2 > j1) {
-          j_seq = seq.int(j1, j2 - 1L) + 1L
-
-          if (!j_is_seq) {
-            # indices should start with 1
-            jj = x@j[j_seq] + 1L
-            # FIXME may be it will make sense to replace with fastmatch::fmatch
-            keep = match(jj, j, nomatch = 0L)
-            # keep only those which are in requested columns
-            which_keep = keep > 0L
-            keep = keep[which_keep]
-            ord = order(keep)
-
-            # indices starting with 0
-            col_indices[[k]] = keep[ord] - 1L
-
-            x_values[[k]] = x@x[j_seq][which_keep][ord]
-          } else {
-            jj = x@j[j_seq]
-            which_keep = (jj >= j_min) & (jj <= j_max)
-            col_indices[[k]] = jj[which_keep] - j_min
-            x_values[[k]] = x@x[j_seq][which_keep]
-          }
-      }
-    }
-
-    indptr = c(0L, cumsum(lengths(x_values)))
-    col_indices = do.call(c, col_indices)
-    x_values = do.call(c, x_values)
+    temp = copy_csr_arbitrary(x@p, x@j, x@x, i-1L, j-1L)
+    indptr = temp$indptr
+    col_indices = temp$indices
+    x_values = temp$values
   }
+
   res = new("dgRMatrix")
   res@p = indptr
   res@j = col_indices

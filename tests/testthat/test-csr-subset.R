@@ -9,6 +9,7 @@ colnames(m) = as.character(seq_len(nc))
 rownames(m) = as.character(seq_len(nr))
 m = as(m, "RsparseMatrix")
 m_csc = as(m, "CsparseMatrix")
+m_base = as.matrix(m)
 
 test_that("RsparseMatrix subset cols and rows", {
   expect_equal(m, m[, ])
@@ -18,6 +19,26 @@ test_that("RsparseMatrix subset cols and rows", {
   expect_equal(m[as.character(1:10), 1:100], as(m_csc[as.character(1:10), 1:100], "RsparseMatrix"))
   expect_equal(m["10", "20", drop = FALSE], as(m_csc["10", "20", drop = FALSE], "RsparseMatrix"))
   expect_equal(m["10", "20", drop = TRUE], m_csc["10", "20", drop = TRUE])
+})
+
+test_that("RsparseMatrix subset non sequential", {
+  expect_equal(m, m[, ])
+  expect_equal(m, m[])
+  expect_equal(m, m[, , ])
+  expect_equal(m[c(5,2,1,7,4), c(5,2,1,7,4,10,100)],
+               as(m_base[c(5,2,1,7,4), c(5,2,1,7,4,10,100)], "RsparseMatrix"))
+  expect_equal(m[as.character(c(5,2,1,7,4)), as.character(c(5,2,1,7,4,10,100))],
+               as(m_base[c(5,2,1,7,4), c(5,2,1,7,4,10,100)], "RsparseMatrix"))
+})
+
+test_that("RsparseMatrix subset repeated", {
+  expect_equal(m, m[, ])
+  expect_equal(m, m[])
+  expect_equal(m, m[, , ])
+  expect_equal(m[c(2,2,2,1,1,3), c(3,3,4,4,1,1,1)],
+               as(m_base[c(2,2,2,1,1,3), c(3,3,4,4,1,1,1)], "RsparseMatrix"))
+  expect_equal(m[as.character(c(2,2,2,1,1,3)), as.character(c(3,3,4,4,1,1,1))],
+               as(m_base[c(2,2,2,1,1,3), c(3,3,4,4,1,1,1)], "RsparseMatrix"))
 })
 
 test_that("RsparseMatrix subset cols", {
