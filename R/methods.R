@@ -193,9 +193,14 @@ subset_csr = function(x, i, j, drop = TRUE) {
     n_col = ncol(x)
   } else {
     j = get_indices_integer(j, ncol(x), col_names)
-    j_is_seq = check_is_seq(j)
-    j_min = min(j) - 1L
-    j_max = max(j) - 1L
+    if (length(j) == ncol(x) && j[1L] == 1L && j[length(j)] == ncol(x)) {
+      if (all(j == seq(1L, ncol(x))))
+        all_j = TRUE
+    } else {
+      j_is_seq = check_is_seq(j)
+      j_min = min(j) - 1L
+      j_max = max(j) - 1L
+    }
     n_col = length(j)
   }
 
@@ -223,17 +228,17 @@ subset_csr = function(x, i, j, drop = TRUE) {
           if (!j_is_seq) {
             # indices should start with 1
             jj = x@j[j_seq] + 1L
-
             # FIXME may be it will make sense to replace with fastmatch::fmatch
             keep = match(jj, j, nomatch = 0L)
             # keep only those which are in requested columns
             which_keep = keep > 0L
             keep = keep[which_keep]
+            ord = order(keep)
 
             # indices starting with 0
-            col_indices[[k]] = keep - 1L
+            col_indices[[k]] = keep[ord] - 1L
 
-            x_values[[k]] = x@x[j_seq][which_keep]
+            x_values[[k]] = x@x[j_seq][which_keep][ord]
           } else {
             jj = x@j[j_seq]
             which_keep = (jj >= j_min) & (jj <= j_max)
