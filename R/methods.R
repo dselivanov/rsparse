@@ -180,6 +180,7 @@ subset_csr = function(x, i, j, drop = TRUE) {
   j_is_seq = FALSE
   if(missing(j)) {
     all_j = TRUE
+    j = seq_len(ncol(x))
     n_col = ncol(x)
   } else {
     j = get_indices_integer(j, ncol(x), col_names)

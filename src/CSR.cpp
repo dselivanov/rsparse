@@ -6,7 +6,7 @@
 bool check_is_seq(Rcpp::IntegerVector indices)
 {
   if (indices.size() < 2)
-    return false;
+    return true;
   int n_els = indices.size();
   if ((indices[n_els-1] - indices[0]) != n_els - 1)
     return false;
@@ -152,13 +152,11 @@ Rcpp::List copy_csr_arbitrary(Rcpp::IntegerVector indptr,
     }
   }
 
-  bool cols_are_sorted = !has_duplicates;
-  if (!has_duplicates) {
-    for (size_t ix = 1; ix < cols_take.size(); ix++) {
-      if (cols_take[ix] < cols_take[ix-1]) {
-        cols_are_sorted = false;
-        break;
-      }
+  bool cols_are_sorted = true;
+  for (size_t ix = 1; ix < cols_take.size(); ix++) {
+    if (cols_take[ix] < cols_take[ix-1]) {
+      cols_are_sorted = false;
+      break;
     }
   }
 
