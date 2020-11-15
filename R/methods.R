@@ -178,7 +178,7 @@ subset_csr = function(x, i, j, drop = TRUE) {
   all_j = FALSE
   i_is_seq = FALSE
   j_is_seq = FALSE
-  if(missing(j)) {
+  if (missing(j)) {
     all_j = TRUE
     j = seq_len(ncol(x))
     n_col = ncol(x)
@@ -192,7 +192,7 @@ subset_csr = function(x, i, j, drop = TRUE) {
     }
     n_col = length(j)
   }
-  if(missing(i)) {
+  if (missing(i)) {
     i = seq_len(nrow(x))
     all_i = TRUE
     i_is_seq = TRUE
@@ -208,6 +208,17 @@ subset_csr = function(x, i, j, drop = TRUE) {
       if (all(i == seq(1L, nrow(x))))
         all_i = TRUE
     }
+  }
+
+  if (!NROW(i) || !NROW(j)) {
+    res = new("dgRMatrix")
+    res@p = integer(NROW(i) + 1L)
+    res@Dim = c(NROW(i), NROW(j))
+
+    row_names = if(is.null(row_names) || !NROW(row_names) || !NROW(i)) NULL else row_names[i]
+    col_names = if(is.null(col_names) || !NROW(col_names) || !NROW(j)) NULL else col_names[j]
+    res@Dimnames = list(row_names, col_names)
+    return(res)
   }
 
   if (all_i && all_j) {
@@ -245,8 +256,8 @@ subset_csr = function(x, i, j, drop = TRUE) {
   res@x = x_values
   res@Dim = c(n_row, n_col)
 
-  row_names = if(is.null(row_names)) NULL else row_names[i]
-  col_names = if(is.null(col_names)) NULL else col_names[j]
+  row_names = if(is.null(row_names) || !NROW(row_names)) NULL else row_names[i]
+  col_names = if(is.null(col_names) || !NCOL(col_names)) NULL else col_names[j]
   res@Dimnames = list(row_names, col_names)
 
   if(isTRUE(drop) && (n_row == 1L || n_col == 1L))

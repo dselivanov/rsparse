@@ -47,7 +47,7 @@ Rcpp::List copy_csr_rows(Rcpp::IntegerVector indptr,
   double *ptr_new_values = new_values.begin();
 
   size_t curr = 0;
-  for (size_t ix = 0; ix < rows_take.size(); ix++) {
+  for (int ix = 0; ix < (int)rows_take.size(); ix++) {
     row = rows_take[ix];
     n_copy = ptr_indptr[row+1] - ptr_indptr[row];
     ptr_new_indptr[ix+1] = ptr_new_indptr[ix] + n_copy;
@@ -85,7 +85,7 @@ Rcpp::List copy_csr_rows_col_seq(Rcpp::IntegerVector indptr,
   int *ptr_new_indptr = new_indptr.begin();
 
   size_t total_size = 0;
-  for (size_t row = 0; row < rows_take.size(); row++) {
+  for (int row = 0; row < (int)rows_take.size(); row++) {
     for (int ix = ptr_indptr[rows_take[row]]; ix < ptr_indptr[rows_take[row]+1]; ix++) {
       total_size += (ptr_indices[ix] >= min_col) && (ptr_indices[ix] <= max_col);
     }
@@ -106,7 +106,7 @@ Rcpp::List copy_csr_rows_col_seq(Rcpp::IntegerVector indptr,
   double *ptr_new_values = new_values.begin();
 
   int curr = 0;
-  for (size_t row = 0; row < rows_take.size(); row++) {
+  for (int row = 0; row < (int)rows_take.size(); row++) {
     for (int ix = ptr_indptr[rows_take[row]]; ix < ptr_indptr[rows_take[row]+1]; ix++) {
       if ((ptr_indices[ix] >= min_col) && (ptr_indices[ix] <= max_col)) {
         ptr_new_indices[curr] = ptr_indices[ix] - min_col;
@@ -129,7 +129,6 @@ Rcpp::List copy_csr_arbitrary(Rcpp::IntegerVector indptr,
                               Rcpp::IntegerVector rows_take,
                               Rcpp::IntegerVector cols_take)
 {
-  size_t total_size = 0;
   std::unordered_map<int, int> new_mapping;
   for (int col = 0; col < (int)cols_take.size(); col++)
     new_mapping[cols_take[col]] = col;
@@ -153,7 +152,7 @@ Rcpp::List copy_csr_arbitrary(Rcpp::IntegerVector indptr,
   }
 
   bool cols_are_sorted = true;
-  for (size_t ix = 1; ix < cols_take.size(); ix++) {
+  for (int ix = 1; ix < (int)cols_take.size(); ix++) {
     if (cols_take[ix] < cols_take[ix-1]) {
       cols_are_sorted = false;
       break;
@@ -170,8 +169,7 @@ Rcpp::List copy_csr_arbitrary(Rcpp::IntegerVector indptr,
 
   int size_this = 0;
   int row = 0;
-  int rep = 0;
-  for (size_t row_ix = 0; row_ix < rows_take.size(); row_ix++) {
+  for (int row_ix = 0; row_ix < (int)rows_take.size(); row_ix++) {
     row = rows_take[row_ix];
     for (int ix = indptr[row]; ix < indptr[row+1]; ix++) {
       auto match = new_mapping.find(indices[ix]);

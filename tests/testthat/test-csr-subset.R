@@ -46,6 +46,27 @@ test_that("RsparseMatrix subset repeated", {
                as(m_base[c(5,2,1,7,4,1,5),  c(5,2,1,7,4,1,10,100,5)], "RsparseMatrix"))
 })
 
+test_that("RsparseMatrix subset empty", {
+  expect_equal(m[3:10, integer()],
+               as(m_base[3:10, integer()], "RsparseMatrix"))
+  expect_equal(m[c(2,2,2,1,1,3), integer()],
+               as(m_base[c(2,2,2,1,1,3), integer()], "RsparseMatrix"))
+  expect_equal(m[, integer()],
+               as(m_base[, integer()], "RsparseMatrix"))
+
+  expect_equal(m[character(), ],
+               as(m_base[integer(), ], "RsparseMatrix"))
+  expect_equal(m[character(), as.character(c(3,3,4,4,1,1,1))],
+               as(m_base[integer(), c(3,3,4,4,1,1,1)], "RsparseMatrix"))
+  expect_equal(m[character(), 3:10],
+               as(m_base[integer(), 3:10], "RsparseMatrix"))
+
+  expect_equal(m[integer(), integer()],
+               as(m_base[integer(), integer()], "RsparseMatrix"))
+  expect_equal(m[character(), character()],
+               as(m_base[character(),  character()], "RsparseMatrix"))
+})
+
 test_that("RsparseMatrix subset cols", {
   expect_true(inherits(m[, 2L], 'numeric'))
   expect_true(inherits(m[, 2L, drop = FALSE], 'RsparseMatrix'))
