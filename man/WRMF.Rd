@@ -2,11 +2,11 @@
 % Please edit documentation in R/model_WRMF.R
 \name{WRMF}
 \alias{WRMF}
-\title{Weighted Regularized Matrix Facrtorization for collaborative filtering}
+\title{Weighted Regularized Matrix Factorization for collaborative filtering}
 \description{
-Creates matrix factorization model which could be solved with Alternating Least Squares (Weighted ALS for implicit feedback).
+Creates a matrix factorization model which is solved through Alternating Least Squares (Weighted ALS for implicit feedback).
 For implicit feedback see "Collaborative Filtering for Implicit Feedback Datasets" (Hu, Koren, Volinsky).
-For explicit feedback model is classic model for rating matrix decomposition with MSE error (without biases at the moment).
+For explicit feedback it corresponds to the classic model for rating matrix decomposition with MSE error (without biases at the moment).
 These two algorithms are proven to work well in recommender systems.
 }
 \examples{
@@ -20,6 +20,9 @@ preds = model$predict(cv, k = 10, not_recommend = cv)
 }
 \references{
 \itemize{
+  \item{Hu, Yifan, Yehuda Koren, and Chris Volinsky.
+        "Collaborative filtering for implicit feedback datasets."
+        2008 Eighth IEEE International Conference on Data Mining. Ieee, 2008.}
   \item{\url{https://math.stackexchange.com/questions/1072451/analytic-solution-for-matrix-factorization-using-alternating-least-squares/1073170#1073170}}
   \item{\url{http://activisiongamescience.github.io/2016/01/11/Implicit-Recommender-Systems-Biased-Matrix-Factorization/}}
   \item{\url{http://datamusing.info/blog/2015/01/07/implicit-feedback-and-collaborative-filtering/}}
@@ -83,7 +86,8 @@ be applied to user-item interaction matrix before running matrix factorization
 For example we may want to normalize each row of user-item matrix to have 1 norm.
 Or apply \code{log1p()} to discount large counts.
 This corresponds to the "confidence" function from
-"Collaborative Filtering for Implicit Feedback Datasets" paper.}
+"Collaborative Filtering for Implicit Feedback Datasets" paper.
+Note that it will not automatically add +1 to the weights of the positive entries.}
 
 \item{\code{feedback}}{\code{character} - feedback type - one of \code{c("implicit", "explicit")}}
 
