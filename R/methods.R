@@ -135,8 +135,14 @@ setMethod("crossprod", signature(x="float32", y="dgCMatrix"), function(x, y) {
 
 get_indices_integer = function(i, max_i, index_names) {
   if(is.numeric(i)) i = as.integer(i)
-  if(is.logical(i)) i = which(i)
   if(is.character(i)) i = match(i, index_names)
+  if(is.logical(i)) {
+    if (length(i) != max_i) {
+      i = seq(1L, max_i)[i]
+    } else {
+      i = which(i)
+    }
+  }
   i[i < 0] = max_i + i[i < 0] + 1L
   if(anyNA(i) || any(i >  max_i, na.rm = TRUE))
     stop("some of row subset indices are not present in matrix")
@@ -215,8 +221,8 @@ subset_csr = function(x, i, j, drop = TRUE) {
     res@p = integer(NROW(i) + 1L)
     res@Dim = c(NROW(i), NROW(j))
 
-    row_names = if(is.null(row_names) || !NROW(row_names) || !NROW(i)) NULL else row_names[i]
-    col_names = if(is.null(col_names) || !NROW(col_names) || !NROW(j)) NULL else col_names[j]
+    row_names = if(is.null(row_names) || !NROW(row_names)) NULL else row_names[i]
+    col_names = if(is.null(col_names) || !NROW(col_names)) NULL else col_names[j]
     res@Dimnames = list(row_names, col_names)
     return(res)
   }
@@ -229,7 +235,7 @@ subset_csr = function(x, i, j, drop = TRUE) {
     x_values = numeric()
   } else if (i_is_seq && all_j) {
     first = x@p[i[1L]] + 1L
-    last = x@p[i[n_row] + 1L] + 1L
+    last = x@p[i[n_row] + 1L]
     indptr = x@p[seq(i[1L], i[n_row]+1L)] - x@p[i[1L]]
     col_indices = x@j[first:last]
     x_values = x@x[first:last]
