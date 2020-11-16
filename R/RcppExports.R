@@ -85,6 +85,10 @@ arma_kmeans <- function(x, k, seed_mode, n_iter, verbose, result) {
     .Call(`_rsparse_arma_kmeans`, x, k, seed_mode, n_iter, verbose, result)
 }
 
+c_nnlm <- function(x, y, max_iter, rel_tol) {
+    .Call(`_rsparse_c_nnlm`, x, y, max_iter, rel_tol)
+}
+
 omp_thread_count <- function() {
     .Call(`_rsparse_omp_thread_count`)
 }

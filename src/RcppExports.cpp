@@ -335,6 +335,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// c_nnlm
+arma::mat c_nnlm(const arma::mat& x, const arma::mat& y, uint max_iter, double rel_tol);
+RcppExport SEXP _rsparse_c_nnlm(SEXP xSEXP, SEXP ySEXP, SEXP max_iterSEXP, SEXP rel_tolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< uint >::type max_iter(max_iterSEXP);
+    Rcpp::traits::input_parameter< double >::type rel_tol(rel_tolSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_nnlm(x, y, max_iter, rel_tol));
+    return rcpp_result_gen;
+END_RCPP
+}
 // omp_thread_count
 int omp_thread_count();
 RcppExport SEXP _rsparse_omp_thread_count() {
@@ -383,6 +396,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_rankmf_solver_float", (DL_FUNC) &_rsparse_rankmf_solver_float, 22},
     {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 6},
     {"_rsparse_arma_kmeans", (DL_FUNC) &_rsparse_arma_kmeans, 6},
+    {"_rsparse_c_nnlm", (DL_FUNC) &_rsparse_c_nnlm, 4},
     {"_rsparse_omp_thread_count", (DL_FUNC) &_rsparse_omp_thread_count, 0},
     {"_rsparse_cpp_make_sparse_approximation", (DL_FUNC) &_rsparse_cpp_make_sparse_approximation, 5},
     {NULL, NULL, 0}
