@@ -143,7 +143,8 @@ get_indices_integer = function(i, max_i, index_names) {
       i = which(i)
     }
   }
-  i[i < 0] = max_i + i[i < 0] + 1L
+  if (any(i < 0))
+    i = seq(1L, max_i)[i]
   if(anyNA(i) || any(i >  max_i, na.rm = TRUE))
     stop("some of row subset indices are not present in matrix")
   as.integer(i)
