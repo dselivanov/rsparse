@@ -99,6 +99,8 @@ T als_implicit_cpp(const dMappedCSC& Conf,
 
       if(lambda >= 0)
         loss += accu(square( 1 - (Y.col(i).t() * X_nnz) ) * confidence);
+    } else {
+      Y.col(i).zeros();
     }
   }
 

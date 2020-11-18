@@ -22,12 +22,11 @@ void scd_ls_update(arma::subview_col<T> Hj,
       T current = Hj(k);
       auto update = current - mu(k) / WtW_diag.at(k);
       if(update < 0) update = 0;
-
+      Hj(k) = update;
       if (update != current) {
         mu += (update - current) * WtW.col(k);
         auto current_err = std::abs(current - update) / (std::abs(current) + TINY_NUM);
         if (current_err > rel_err) rel_err = current_err;
-        Hj(k) = update;
       }
     }
     if (rel_err <= rel_tol) break;
