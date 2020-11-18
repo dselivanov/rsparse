@@ -1,10 +1,11 @@
 Package: rsparse
 Type: Package
 Title: Statistical Learning on Sparse Matrices
-Version: 0.4.0
+Version: 0.5.0
 Authors@R: c(
     person("Dmitriy", "Selivanov", role=c("aut", "cre", "cph"), email="ds@rexy.ai", 
     comment = c(ORCID = "0000-0001-5413-1506")),
+    person("David", "Cortes", role="ctb"),
     person("Drew", "Schmidt", role="ctb", comment="configure script for BLAS, LAPACK detection"), 
     person("Wei-Chen", "Chen", role="ctb", comment="configure script and work on linking to float package")
     )
@@ -56,5 +57,5 @@ Suggests:
 StagedInstall: TRUE
 URL: https://github.com/rexyai/rsparse
 BugReports: https://github.com/rexyai/rsparse/issues
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 NeedsCompilation: yes
