@@ -2,20 +2,24 @@
 #include "nnls.hpp"
 
 template <class T>
-arma::Col<T> chol_solver(const arma::Mat<T> &XtX,
-                      const arma::Mat<T> &X_nnz,
-                      const arma::Col<T> &confidence,
-                      bool non_negative = false) {
+arma::Col<T> scd_nnls_solver(const arma::Mat<T> &XtX,
+                         const arma::Mat<T> &X_nnz,
+                         const arma::Col<T> &confidence) {
   const arma::Mat<T> inv = XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
   const arma::Mat<T> rhs = X_nnz * confidence;
   arma::Col<T> res;
+  auto res_m = c_nnls<T>(inv, rhs, 10000, 1e-3);
+  res = res_m.col(0);
+  return(res);
+}
 
-  if (non_negative) {
-    auto res_m = c_nnls<T>(inv, rhs, 10000, 1e-3);
-    res = res_m.col(0);
-  } else {
-    res = solve(inv, rhs, arma::solve_opts::fast );
-  }
+template <class T>
+arma::Col<T> chol_solver(const arma::Mat<T> &XtX,
+                      const arma::Mat<T> &X_nnz,
+                      const arma::Col<T> &confidence) {
+  const arma::Mat<T> inv = XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
+  const arma::Mat<T> rhs = X_nnz * confidence;
+  arma::Col<T> res = solve(inv, rhs, arma::solve_opts::fast );
   return(res);
 }
 
@@ -83,10 +87,16 @@ T als_implicit_cpp(const dMappedCSC& Conf,
       auto idx = arma::uvec(&Conf.row_indices[p1], p2 - p1, false, true);
       const arma::Col<T> confidence = arma::conv_to< arma::Col<T> >::from(arma::vec(&Conf.values[p1], p2 - p1));
       const arma::Mat<T> X_nnz = X.cols(idx);
-      if(solver == CHOLESKY)
-        Y.col(i) = chol_solver<T>(XtX, X_nnz, confidence, non_negative);
-      else if(solver == CONJUGATE_GRADIENT)
-        Y.col(i) = cg_solver<T>(XtX, X_nnz, confidence, Y.col(i), cg_steps);
+
+      if (non_negative) {
+        Y.col(i) = scd_nnls_solver<T>(XtX, X_nnz, confidence);
+      } else {
+        if(solver == CHOLESKY)
+          Y.col(i) = chol_solver<T>(XtX, X_nnz, confidence);
+        else if(solver == CONJUGATE_GRADIENT)
+          Y.col(i) = cg_solver<T>(XtX, X_nnz, confidence, Y.col(i), cg_steps);
+      }
+
       if(lambda >= 0)
         loss += accu(square( 1 - (Y.col(i).t() * X_nnz) ) * confidence);
     }
