@@ -1,12 +1,22 @@
 #include "rsparse.h"
+#include "nnls.hpp"
 
 template <class T>
 arma::Col<T> chol_solver(const arma::Mat<T> &XtX,
                       const arma::Mat<T> &X_nnz,
-                      const arma::Col<T> &confidence) {
-  arma::Mat<T> inv = XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
-  arma::Mat<T> rhs = X_nnz * confidence;
-  return solve(inv, rhs, arma::solve_opts::fast );
+                      const arma::Col<T> &confidence,
+                      bool non_negative = false) {
+  const arma::Mat<T> inv = XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
+  const arma::Mat<T> rhs = X_nnz * confidence;
+  arma::Col<T> res;
+
+  if (non_negative) {
+    auto res_m = c_nnls<T>(inv, rhs, 10000, 1e-3);
+    res = res_m.col(0);
+  } else {
+    res = solve(inv, rhs, arma::solve_opts::fast );
+  }
+  return(res);
 }
 
 template <class T>
@@ -44,7 +54,11 @@ T als_implicit_cpp(const dMappedCSC& Conf,
                     const arma::Mat<T>& XtX,
                     double lambda,
                     unsigned n_threads,
-                    unsigned solver, unsigned cg_steps = 3) {
+                    unsigned solver,
+                    unsigned cg_steps = 3,
+                    bool non_negative = false) {
+
+  if (non_negative) solver = CHOLESKY;
 
   if(solver != CHOLESKY && solver != CONJUGATE_GRADIENT)
     Rcpp::stop("Unknown solver code %d", solver);
@@ -70,7 +84,7 @@ T als_implicit_cpp(const dMappedCSC& Conf,
       const arma::Col<T> confidence = arma::conv_to< arma::Col<T> >::from(arma::vec(&Conf.values[p1], p2 - p1));
       const arma::Mat<T> X_nnz = X.cols(idx);
       if(solver == CHOLESKY)
-        Y.col(i) = chol_solver<T>(XtX, X_nnz, confidence);
+        Y.col(i) = chol_solver<T>(XtX, X_nnz, confidence, non_negative);
       else if(solver == CONJUGATE_GRADIENT)
         Y.col(i) = cg_solver<T>(XtX, X_nnz, confidence, Y.col(i), cg_steps);
       if(lambda >= 0)
@@ -91,9 +105,11 @@ double als_implicit_double(const Rcpp::S4 &m_csc_r,
                     const arma::mat& XtX,
                     double lambda,
                     unsigned n_threads,
-                    unsigned solver, unsigned cg_steps = 3) {
+                    unsigned solver,
+                    unsigned cg_steps = 3,
+                    bool non_negative = false) {
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
-  return (double)als_implicit_cpp<double>(Conf, X, Y, XtX, lambda, n_threads, solver, cg_steps);
+  return (double)als_implicit_cpp<double>(Conf, X, Y, XtX, lambda, n_threads, solver, cg_steps, non_negative);
 }
 
 // [[Rcpp::export]]
@@ -103,7 +119,9 @@ double als_implicit_float(const Rcpp::S4 &m_csc_r,
                     Rcpp::S4 &XtXR,
                     double lambda,
                     unsigned n_threads,
-                    unsigned solver, unsigned cg_steps = 3) {
+                    unsigned solver,
+                    unsigned cg_steps = 3,
+                    bool non_negative = false) {
   //#ifdef SINGLE_PRECISION_LAPACK_AVAILABLE
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
   Rcpp::IntegerMatrix XRM = XR.slot("Data");
@@ -115,7 +133,7 @@ double als_implicit_float(const Rcpp::S4 &m_csc_r,
   arma::fmat X = arma::fmat(x_ptr, XRM.nrow(), XRM.ncol(), false, true);
   arma::fmat Y = arma::fmat(y_ptr, YRM.nrow(), YRM.ncol(), false, true);
   arma::fmat XtX = arma::fmat(xtx_ptr, XtXRM.nrow(), XtXRM.ncol(), false, true);
-  return (double)als_implicit_cpp<float>(Conf, X, Y, XtX, lambda, n_threads, solver, cg_steps);
+  return (double)als_implicit_cpp<float>(Conf, X, Y, XtX, lambda, n_threads, solver, cg_steps, non_negative);
   //#else
   //return -1.0;
   //#endif

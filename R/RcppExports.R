@@ -57,12 +57,12 @@ dense_csc_prod <- function(x_r, y_csc_r, num_threads = 1L) {
     .Call(`_rsparse_dense_csc_prod`, x_r, y_csc_r, num_threads)
 }
 
-als_implicit_double <- function(m_csc_r, X, Y, XtX, lambda, n_threads, solver, cg_steps = 3L) {
-    .Call(`_rsparse_als_implicit_double`, m_csc_r, X, Y, XtX, lambda, n_threads, solver, cg_steps)
+als_implicit_double <- function(m_csc_r, X, Y, XtX, lambda, n_threads, solver, cg_steps = 3L, non_negative = FALSE) {
+    .Call(`_rsparse_als_implicit_double`, m_csc_r, X, Y, XtX, lambda, n_threads, solver, cg_steps, non_negative)
 }
 
-als_implicit_float <- function(m_csc_r, XR, YR, XtXR, lambda, n_threads, solver, cg_steps = 3L) {
-    .Call(`_rsparse_als_implicit_float`, m_csc_r, XR, YR, XtXR, lambda, n_threads, solver, cg_steps)
+als_implicit_float <- function(m_csc_r, XR, YR, XtXR, lambda, n_threads, solver, cg_steps = 3L, non_negative = FALSE) {
+    .Call(`_rsparse_als_implicit_float`, m_csc_r, XR, YR, XtXR, lambda, n_threads, solver, cg_steps, non_negative)
 }
 
 als_loss_explicit <- function(m_csc_r, X, Y, lambda, n_threads) {
@@ -85,8 +85,8 @@ arma_kmeans <- function(x, k, seed_mode, n_iter, verbose, result) {
     .Call(`_rsparse_arma_kmeans`, x, k, seed_mode, n_iter, verbose, result)
 }
 
-c_nnlm <- function(x, y, max_iter, rel_tol) {
-    .Call(`_rsparse_c_nnlm`, x, y, max_iter, rel_tol)
+c_nnls_double <- function(x, y, max_iter, rel_tol) {
+    .Call(`_rsparse_c_nnls_double`, x, y, max_iter, rel_tol)
 }
 
 omp_thread_count <- function() {

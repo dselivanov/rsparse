@@ -160,13 +160,15 @@ WRMF = R6::R6Class(
         stopifnot(ncol(private$U) == ncol(c_iu))
         if (private$feedback == "implicit") {
           # private$U will be modified in place
-          loss = private$als_implicit_fun(c_iu, self$components, private$U, private$XtX, n_threads = getOption("rsparse_omp_threads", 1L),
-                                          lambda = private$lambda, solver = private$solver_code, cg_steps = private$cg_steps)
+          loss = private$als_implicit_fun(c_iu, self$components, private$U, private$XtX,
+                                          n_threads = getOption("rsparse_omp_threads", 1L),
+                                          lambda = private$lambda,
+                                          solver = private$solver_code,
+                                          cg_steps = private$cg_steps,
+                                          non_negative = private$non_negative)
         } else if (private$feedback == "explicit") {
           private$U = private$solver_explicit_feedback(c_iu, self$components)
         }
-        # if need non-negative matrix factorization - just set all negative values to zero
-        if (private$non_negative) private$U[private$U < 0] = 0
 
         logger$trace("iter %d by user", i)
         stopifnot(ncol(self$components) == ncol(c_ui))
@@ -177,13 +179,17 @@ WRMF = R6::R6Class(
 
         if (private$feedback == "implicit") {
           # self$components will be modified in place
-          loss = private$als_implicit_fun(c_ui, private$U, self$components, YtY, n_threads = getOption("rsparse_omp_threads", 1L),
-                                          lambda = private$lambda, private$solver_code, private$cg_steps)
+          loss = private$als_implicit_fun(c_ui, private$U,
+                                          self$components,
+                                          YtY,
+                                          n_threads = getOption("rsparse_omp_threads", 1L),
+                                          lambda = private$lambda,
+                                          private$solver_code,
+                                          private$cg_steps,
+                                          private$non_negative)
         } else if (private$feedback == "explicit") {
           self$components = private$solver_explicit_feedback(c_ui, private$U)
         }
-        # if need non-negative matrix factorization - just set all negative values to zero
-        if (private$non_negative) self$components[self$components < 0] = 0
 
         #------------------------------------------------------------------------
         # calculate some metrics if needed in order to diagnose convergence
@@ -263,15 +269,19 @@ WRMF = R6::R6Class(
         } else {
           res = float(0, nrow = private$rank, ncol = nrow(x))
         }
-        private$als_implicit_fun(t(x), self$components, res, private$XtX, n_threads = getOption("rsparse_omp_threads", 1L),
+        private$als_implicit_fun(t(x),
+                                 self$components,
+                                 res,
+                                 private$XtX,
+                                 n_threads = getOption("rsparse_omp_threads", 1L),
                                  lambda = private$lambda,
-                                 private$solver_code, private$cg_steps)
+                                 private$solver_code,
+                                 private$cg_steps,
+                                 private$non_negative)
       } else if (private$feedback == "explicit")
         res = private$solver_explicit_feedback(t(x), self$components)
       else
         stop(sprintf("don't know how to work with feedback = '%s'", private$feedback))
-      if (private$non_negative)
-        res[res < 0] = 0
       res = t(res)
 
       if (private$precision == "double")
@@ -353,7 +363,12 @@ WRMF = R6::R6Class(
 
         X_nnz = X[, ind_nnz, drop = F]
         XtX = tcrossprod(X_nnz) + ridge
-        res[[i]] = solve(XtX, X_nnz %*% R_nnz)
+        if (private$non_negative) {
+          res[[i]] = c_nnls_double(XtX, X_nnz %*% R_nnz, 10000L, 1e-3)
+        } else {
+          res[[i]] = solve(XtX, X_nnz %*% R_nnz)
+        }
+
       }
       do.call(cbind, res)
     }
