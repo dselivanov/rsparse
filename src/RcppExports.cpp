@@ -6,6 +6,61 @@
 
 using namespace Rcpp;
 
+// check_is_seq
+bool check_is_seq(Rcpp::IntegerVector indices);
+RcppExport SEXP _rsparse_check_is_seq(SEXP indicesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
+    rcpp_result_gen = Rcpp::wrap(check_is_seq(indices));
+    return rcpp_result_gen;
+END_RCPP
+}
+// copy_csr_rows
+Rcpp::List copy_csr_rows(Rcpp::IntegerVector indptr, Rcpp::IntegerVector indices, Rcpp::NumericVector values, Rcpp::IntegerVector rows_take);
+RcppExport SEXP _rsparse_copy_csr_rows(SEXP indptrSEXP, SEXP indicesSEXP, SEXP valuesSEXP, SEXP rows_takeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type rows_take(rows_takeSEXP);
+    rcpp_result_gen = Rcpp::wrap(copy_csr_rows(indptr, indices, values, rows_take));
+    return rcpp_result_gen;
+END_RCPP
+}
+// copy_csr_rows_col_seq
+Rcpp::List copy_csr_rows_col_seq(Rcpp::IntegerVector indptr, Rcpp::IntegerVector indices, Rcpp::NumericVector values, Rcpp::IntegerVector rows_take, Rcpp::IntegerVector cols_take);
+RcppExport SEXP _rsparse_copy_csr_rows_col_seq(SEXP indptrSEXP, SEXP indicesSEXP, SEXP valuesSEXP, SEXP rows_takeSEXP, SEXP cols_takeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type rows_take(rows_takeSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type cols_take(cols_takeSEXP);
+    rcpp_result_gen = Rcpp::wrap(copy_csr_rows_col_seq(indptr, indices, values, rows_take, cols_take));
+    return rcpp_result_gen;
+END_RCPP
+}
+// copy_csr_arbitrary
+Rcpp::List copy_csr_arbitrary(Rcpp::IntegerVector indptr, Rcpp::IntegerVector indices, Rcpp::NumericVector values, Rcpp::IntegerVector rows_take, Rcpp::IntegerVector cols_take);
+RcppExport SEXP _rsparse_copy_csr_arbitrary(SEXP indptrSEXP, SEXP indicesSEXP, SEXP valuesSEXP, SEXP rows_takeSEXP, SEXP cols_takeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type rows_take(rows_takeSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type cols_take(cols_takeSEXP);
+    rcpp_result_gen = Rcpp::wrap(copy_csr_arbitrary(indptr, indices, values, rows_take, cols_take));
+    return rcpp_result_gen;
+END_RCPP
+}
 // get_ftrl_weights
 NumericVector get_ftrl_weights(const List& R_model);
 RcppExport SEXP _rsparse_get_ftrl_weights(SEXP R_modelSEXP) {
@@ -377,6 +432,10 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_rsparse_check_is_seq", (DL_FUNC) &_rsparse_check_is_seq, 1},
+    {"_rsparse_copy_csr_rows", (DL_FUNC) &_rsparse_copy_csr_rows, 4},
+    {"_rsparse_copy_csr_rows_col_seq", (DL_FUNC) &_rsparse_copy_csr_rows_col_seq, 5},
+    {"_rsparse_copy_csr_arbitrary", (DL_FUNC) &_rsparse_copy_csr_arbitrary, 5},
     {"_rsparse_get_ftrl_weights", (DL_FUNC) &_rsparse_get_ftrl_weights, 1},
     {"_rsparse_ftrl_partial_fit", (DL_FUNC) &_rsparse_ftrl_partial_fit, 6},
     {"_rsparse_fm_create_param", (DL_FUNC) &_rsparse_fm_create_param, 12},

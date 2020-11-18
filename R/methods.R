@@ -135,12 +135,19 @@ setMethod("crossprod", signature(x="float32", y="dgCMatrix"), function(x, y) {
 
 get_indices_integer = function(i, max_i, index_names) {
   if(is.numeric(i)) i = as.integer(i)
-  if(is.logical(i)) i = which(i)
   if(is.character(i)) i = match(i, index_names)
-  i[i < 0] = max_i + i[i < 0] + 1L
+  if(is.logical(i)) {
+    if (length(i) != max_i) {
+      i = seq(1L, max_i)[i]
+    } else {
+      i = which(i)
+    }
+  }
+  if (any(i < 0))
+    i = seq(1L, max_i)[i]
   if(anyNA(i) || any(i >  max_i, na.rm = TRUE))
     stop("some of row subset indices are not present in matrix")
-  i
+  as.integer(i)
 }
 
 #' CSR Matrices Slicing
@@ -174,46 +181,90 @@ subset_csr = function(x, i, j, drop = TRUE) {
   row_names = rownames(x)
   col_names = colnames(x)
 
-  if(missing(i)) i = seq_len(nrow(x))
-  if(missing(j)) j = seq_len(ncol(x))
-  # convert integer/numeric/logical/character indices to integer indices
-  # also takes care of negatice indices
-  i = get_indices_integer(i, nrow(x), row_names)
-  j = get_indices_integer(j, ncol(x), col_names)
+  all_i = FALSE
+  all_j = FALSE
+  i_is_seq = FALSE
+  j_is_seq = FALSE
+  if (missing(j)) {
+    all_j = TRUE
+    j = seq_len(ncol(x))
+    n_col = ncol(x)
+  } else {
+    j = get_indices_integer(j, ncol(x), col_names)
+    if (length(j) == ncol(x) && j[1L] == 1L && j[length(j)] == ncol(x)) {
+      if (all(j == seq(1L, ncol(x))))
+        all_j = TRUE
+    } else {
+      j_is_seq = check_is_seq(j)
+    }
+    n_col = length(j)
+  }
+  if (missing(i)) {
+    i = seq_len(nrow(x))
+    all_i = TRUE
+    i_is_seq = TRUE
+    n_row = nrow(x)
+  } else {
+    # convert integer/numeric/logical/character indices to integer indices
+    # also takes care of negative indices
+    i = get_indices_integer(i, nrow(x), row_names)
+    i_is_seq = check_is_seq(i)
+    n_row = length(i)
 
-  n_row = length(i)
-  n_col = length(j)
-  col_indices = lapply(seq_len(n_row), function(x) integer())
-  x_values = lapply(seq_len(n_row), function(x) numeric())
-
-  for(k in seq_len(n_row) ) {
-    j1 = x@p[[ i[[k]] ]]
-    j2 = x@p[[ i[[k]] + 1L ]]
-    if(j2 > j1) {
-      j_seq = seq.int(j1, j2 - 1L) + 1L
-
-      # indices should start with 1
-      jj = x@j[j_seq] + 1L
-      # FIXME may be it will make sense to replace with fastmatch::fmatch
-      keep = match(jj, j, nomatch = 0L)
-      # keep only those which are in requested columns
-      which_keep = keep > 0L
-      keep = keep[which_keep]
-
-      # indices starting with 0
-      col_indices[[k]] = keep - 1L
-
-      x_values[[k]] = x@x[j_seq][which_keep]
+    if (all_j && i_is_seq && length(i) == nrow(x) && i[1L] == 1L && i[length(i)] == nrow(x)) {
+      if (all(i == seq(1L, nrow(x))))
+        all_i = TRUE
     }
   }
+
+  if (!NROW(i) || !NROW(j)) {
+    res = new("dgRMatrix")
+    res@p = integer(NROW(i) + 1L)
+    res@Dim = c(NROW(i), NROW(j))
+
+    row_names = if(is.null(row_names) || !NROW(row_names)) NULL else row_names[i]
+    col_names = if(is.null(col_names) || !NROW(col_names)) NULL else col_names[j]
+    res@Dimnames = list(row_names, col_names)
+    return(res)
+  }
+
+  if (all_i && all_j) {
+    return(x)
+  } else if (length(x@x) == 0L) {
+    indptr = integer(n_row + 1)
+    col_indices = integer()
+    x_values = numeric()
+  } else if (i_is_seq && all_j) {
+    first = x@p[i[1L]] + 1L
+    last = x@p[i[n_row] + 1L]
+    indptr = x@p[seq(i[1L], i[n_row]+1L)] - x@p[i[1L]]
+    col_indices = x@j[first:last]
+    x_values = x@x[first:last]
+  } else if (!i_is_seq && all_j) {
+    temp = copy_csr_rows(x@p, x@j, x@x, i-1L)
+    indptr = temp$indptr
+    col_indices = temp$indices
+    x_values = temp$values
+  } else if (j_is_seq) {
+    temp = copy_csr_rows_col_seq(x@p, x@j, x@x, i-1L, j-1L)
+    indptr = temp$indptr
+    col_indices = temp$indices
+    x_values = temp$values
+  } else {
+    temp = copy_csr_arbitrary(x@p, x@j, x@x, i-1L, j-1L)
+    indptr = temp$indptr
+    col_indices = temp$indices
+    x_values = temp$values
+  }
+
   res = new("dgRMatrix")
-  res@p = c(0L, cumsum(lengths(x_values)))
-  res@j = do.call(c, col_indices)
-  res@x = do.call(c, x_values)
+  res@p = indptr
+  res@j = col_indices
+  res@x = x_values
   res@Dim = c(n_row, n_col)
 
-  row_names = if(is.null(row_names)) NULL else row_names[i]
-  col_names = if(is.null(col_names)) NULL else col_names[j]
+  row_names = if(is.null(row_names) || !NROW(row_names)) NULL else row_names[i]
+  col_names = if(is.null(col_names) || !NCOL(col_names)) NULL else col_names[j]
   res@Dimnames = list(row_names, col_names)
 
   if(isTRUE(drop) && (n_row == 1L || n_col == 1L))
