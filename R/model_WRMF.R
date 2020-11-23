@@ -333,7 +333,7 @@ WRMF = R6::R6Class(
         x = t(x)
         if (private$add_biases) {
           x_orig = deep_copy(x@x)
-          x@x = x_orig
+          x@x = deep_copy(x@x)
         } else {
           x_orig = numeric(0L)
         }
