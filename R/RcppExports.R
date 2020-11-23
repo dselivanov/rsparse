@@ -81,6 +81,14 @@ als_implicit_float <- function(m_csc_r, XR, YR, XtXR, lambda, n_threads, solver,
     .Call(`_rsparse_als_implicit_float`, m_csc_r, XR, YR, XtXR, lambda, n_threads, solver, cg_steps, non_negative)
 }
 
+als_explicit_double <- function(m_csc_r, X, Y, lambda, n_threads, solver, cg_steps = 3L, non_negative = FALSE) {
+    .Call(`_rsparse_als_explicit_double`, m_csc_r, X, Y, lambda, n_threads, solver, cg_steps, non_negative)
+}
+
+als_explicit_float <- function(m_csc_r, XR, YR, lambda, n_threads, solver, cg_steps = 3L, non_negative = FALSE) {
+    .Call(`_rsparse_als_explicit_float`, m_csc_r, XR, YR, lambda, n_threads, solver, cg_steps, non_negative)
+}
+
 als_loss_explicit <- function(m_csc_r, X, Y, lambda, n_threads) {
     .Call(`_rsparse_als_loss_explicit`, m_csc_r, X, Y, lambda, n_threads)
 }

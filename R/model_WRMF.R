@@ -76,14 +76,12 @@ WRMF = R6::R6Class(
       private$precision = match.arg(precision)
 
       private$als_implicit_fun = if (private$precision == "float") als_implicit_float else als_implicit_double
+      private$als_explicit_fun = if (private$precision == "float") als_explicit_float else als_explicit_double
 
       private$feedback = match.arg(feedback)
 
       if (private$feedback == "explicit" && private$precision == "float")
         stop("Explicit solver doesn't support single precision at the moment (but in principle can support).")
-
-      if (solver == "conjugate_gradient" && private$feedback == "explicit")
-        logger$warn("only 'cholesky' is available for 'explicit' feedback")
 
       if (solver == "cholesky") private$solver_code = 0L
       if (solver == "conjugate_gradient") private$solver_code = 1L
@@ -104,7 +102,7 @@ WRMF = R6::R6Class(
     #' @param n_iter max number of ALS iterations
     #' @param convergence_tol convergence tolerance checked between iterations
     #' @param ... not used at the moment
-    fit_transform = function(x, n_iter = 10L, convergence_tol = 0.005, ...) {
+    fit_transform = function(x, n_iter = 10L, convergence_tol = ifelse(private$feedback == "implicit", 0.005, 0.001), ...) {
       if (private$feedback == "implicit" ) {
         logger$trace("WRMF$fit_transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
         RhpcBLASctl::blas_set_num_threads(1)
@@ -124,6 +122,10 @@ WRMF = R6::R6Class(
       if ((private$feedback != "explicit") || private$non_negative) {
         logger$trace("check items in input are not negative")
         stopifnot(all(c_ui@x >= 0))
+      }
+      if (private$feedback == "explicit" && !private$non_negative) {
+        self$glob_mean = mean(c_ui@x)
+        c_ui@x = c_ui@x - self$glob_mean
       }
 
       logger$trace("making another matrix for convenient traverse by users - transposing input matrix")
@@ -178,7 +180,12 @@ WRMF = R6::R6Class(
                                           cg_steps = private$cg_steps,
                                           non_negative = private$non_negative)
         } else if (private$feedback == "explicit") {
-          private$U = private$solver_explicit_feedback(c_iu, self$components)
+          loss = private$als_explicit_fun(c_iu, self$components, private$U,
+                                          n_threads = getOption("rsparse_omp_threads", 1L),
+                                          lambda = private$lambda,
+                                          solver = private$solver_code,
+                                          cg_steps = private$cg_steps,
+                                          non_negative = private$non_negative)
         }
 
         logger$trace("iter %d by user", i)
@@ -199,19 +206,20 @@ WRMF = R6::R6Class(
                                           private$cg_steps,
                                           private$non_negative)
         } else if (private$feedback == "explicit") {
-          self$components = private$solver_explicit_feedback(c_ui, private$U)
+          loss = private$als_explicit_fun(c_ui, private$U,
+                                          self$components,
+                                          n_threads = getOption("rsparse_omp_threads", 1L),
+                                          lambda = private$lambda,
+                                          private$solver_code,
+                                          private$cg_steps,
+                                          private$non_negative)
         }
 
-        #------------------------------------------------------------------------
-        # calculate some metrics if needed in order to diagnose convergence
-        #------------------------------------------------------------------------
-        if (private$feedback == "explicit")
-          loss = als_loss_explicit(c_ui, private$U, self$components, private$lambda, getOption("rsparse_omp_threads", 1L));
-
         #update XtX
-        private$XtX = tcrossprod(self$components) +
-          # make float diagonal matrix - if first component is double - result will be automatically casted to double
-          fl(diag(x = private$lambda, nrow = private$rank, ncol = private$rank))
+        if (private$feedback == "implicit")
+          private$XtX = tcrossprod(self$components) +
+            # make float diagonal matrix - if first component is double - result will be automatically casted to double
+            fl(diag(x = private$lambda, nrow = private$rank, ncol = private$rank))
 
         j = 1L
         trace_scors_string = ""
@@ -289,9 +297,23 @@ WRMF = R6::R6Class(
                                  private$solver_code,
                                  private$cg_steps,
                                  private$non_negative)
-      } else if (private$feedback == "explicit")
-        res = private$solver_explicit_feedback(t(x), self$components)
-      else
+      } else if (private$feedback == "explicit") {
+        if (!private$non_negative)
+          x@x = x@x - self$glob_mean
+        if (private$precision == "double") {
+          res = matrix(0, nrow = private$rank, ncol = nrow(x))
+        } else {
+          res = float(0, nrow = private$rank, ncol = nrow(x))
+        }
+        private$als_explicit_fun(t(x),
+                                 self$components,
+                                 res,
+                                 n_threads = getOption("rsparse_omp_threads", 1L),
+                                 lambda = private$lambda,
+                                 private$solver_code,
+                                 private$cg_steps,
+                                 private$non_negative)
+      } else
         stop(sprintf("don't know how to work with feedback = '%s'", private$feedback))
       res = t(res)
 
@@ -300,8 +322,10 @@ WRMF = R6::R6Class(
       else
         setattr(res@Data, "dimnames", list(rownames(x), NULL))
       res
-    }
+    },
+    glob_mean = 0.
   ),
+  #### private -----
   private = list(
     # FIXME - not used anymore - consider to remove
     add_scorers = function(x_train, x_cv, specs = list("map10" = "map@10"), ...) {
@@ -358,30 +382,6 @@ WRMF = R6::R6Class(
     precision = NULL,
     XtX = NULL,
     als_implicit_fun = NULL,
-    #------------------------------------------------------------
-    solver_explicit_feedback = function(R, X) {
-      res = vector("list", ncol(R))
-      ridge = diag(x = private$lambda, nrow = private$rank, ncol = private$rank)
-
-      for (i in seq_len(ncol(R))) {
-        # find non-zero ratings
-        p1 = R@p[[i]]
-        p2 = R@p[[i + 1L]]
-        j = p1 + seq_len(p2 - p1)
-        R_nnz = R@x[j]
-        # and corresponding indices
-        ind_nnz = R@i[j] + 1L
-
-        X_nnz = X[, ind_nnz, drop = F]
-        XtX = tcrossprod(X_nnz) + ridge
-        if (private$non_negative) {
-          res[[i]] = c_nnls_double(XtX, X_nnz %*% R_nnz, 10000L, 1e-3)
-        } else {
-          res[[i]] = solve(XtX, X_nnz %*% R_nnz)
-        }
-
-      }
-      do.call(cbind, res)
-    }
+    als_explicit_fun = NULL
   )
 )

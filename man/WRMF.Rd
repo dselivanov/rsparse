@@ -122,7 +122,12 @@ consumes less RAM. BUT \code{float} matrices are not "base" objects. Use careful
 \subsection{Method \code{fit_transform()}}{
 fits the model
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{WRMF$fit_transform(x, n_iter = 10L, convergence_tol = 0.005, ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{WRMF$fit_transform(
+  x,
+  n_iter = 10L,
+  convergence_tol = ifelse(private$feedback == "implicit", 0.005, 0.001),
+  ...
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
