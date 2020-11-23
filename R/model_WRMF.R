@@ -322,8 +322,7 @@ WRMF = R6::R6Class(
       else
         setattr(res@Data, "dimnames", list(rownames(x), NULL))
       res
-    },
-    glob_mean = 0.
+    }
   ),
   #### private -----
   private = list(

@@ -6,6 +6,8 @@ MatrixFactorizationRecommender = R6::R6Class(
   public = list(
     #' @field components item embeddings
     components = NULL,
+    #' @field glob_mean global mean (for centering values in explicit feedback)
+    glob_mean = 0.,
     #' @description recommends items for users
     #' @param x user-item interactions matrix (usually sparse - `Matrix::sparseMatrix`).Users are
     #' rows and items are columns

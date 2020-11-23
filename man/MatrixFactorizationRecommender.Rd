@@ -11,6 +11,8 @@ All matrix factorization recommenders inherit from this class
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
 \item{\code{components}}{item embeddings}
+
+\item{\code{glob_mean}}{global mean (for centering values in explicit feedback)}
 }
 \if{html}{\out{</div>}}
 }
