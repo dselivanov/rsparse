@@ -15,6 +15,11 @@
 #'   \item{\url{http://danielnee.com/2016/09/collaborative-filtering-using-alternating-least-squares/}}
 #'   \item{\url{http://www.benfrederickson.com/matrix-factorization/}}
 #'   \item{\url{http://www.benfrederickson.com/fast-implicit-matrix-factorization/}}
+#'   \item{Franc, Vojtech, Vaclav Hlavac, and Mirko Navara.
+#'         "Sequential coordinate-wise algorithm for the
+#'         non-negative least squares problem."
+#'         International Conference on Computer Analysis of Images
+#'         and Patterns. Springer, Berlin, Heidelberg, 2005.}
 #' }
 #' @export
 #' @examples
@@ -143,6 +148,8 @@ WRMF = R6::R6Class(
           )
         else
           self$components = flrnorm(private$rank, n_item)
+        if (private$non_negative)
+          self$components = abs(self$components)
       } else {
         stopifnot(is.matrix(self$components) || is.float(self$components))
         stopifnot(ncol(self$components) == n_item)
