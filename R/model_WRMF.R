@@ -137,6 +137,7 @@ WRMF = R6::R6Class(
         c_ui@x = c_ui@x - self$glob_mean
       }
       if (private$add_biases) {
+        c_ui@x = deep_copy(c_ui@x)
         c_ui_orig = deep_copy(c_ui@x)
       }
       else {
