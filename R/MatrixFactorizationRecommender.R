@@ -71,6 +71,8 @@ MatrixFactorizationRecommender = R6::R6Class(
         data.table::setattr(predicted_item_ids, "dimnames", list(uids, NULL))
         data.table::setattr(indices, "ids", predicted_item_ids)
       }
+      if (self$glob_mean != 0.)
+        attr(indices, "scores") = attr(indices, "scores") + self$glob_mean
       indices
     },
     get_similar_items = function(item_id, k = ncol(self$components), ... ) {
