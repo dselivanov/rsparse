@@ -6,7 +6,7 @@
 \description{
 Creates a matrix factorization model which is solved through Alternating Least Squares (Weighted ALS for implicit feedback).
 For implicit feedback see "Collaborative Filtering for Implicit Feedback Datasets" (Hu, Koren, Volinsky).
-For explicit feedback it corresponds to the classic model for rating matrix decomposition with MSE error (without biases at the moment).
+For explicit feedback it corresponds to the classic model for rating matrix decomposition with MSE error.
 These two algorithms are proven to work well in recommender systems.
 }
 \examples{
@@ -68,6 +68,7 @@ creates WRMF model
   init = NULL,
   preprocess = identity,
   feedback = c("implicit", "explicit"),
+  add_biases = ifelse(feedback[1] == "explicit", TRUE, FALSE),
   non_negative = FALSE,
   solver = c("conjugate_gradient", "cholesky"),
   cg_steps = 3L,
@@ -96,7 +97,11 @@ Note that it will not automatically add +1 to the weights of the positive entrie
 
 \item{\code{feedback}}{\code{character} - feedback type - one of \code{c("implicit", "explicit")}}
 
-\item{\code{non_negative}}{logical, whether to perform non-negative factorization}
+\item{\code{add_biases}}{\code{logical} - whether to add user and item biases in the explicit feedback
+models. These will be treated as additional components, so the actual rank will be reduced
+by 2. The biases will be taken as the first and last components.}
+
+\item{\code{non_negative}}{\code{logical}, whether to perform non-negative factorization}
 
 \item{\code{solver}}{\code{character} - solver for "implicit feedback" problem.
 One of \code{c("conjugate_gradient", "cholesky")}.

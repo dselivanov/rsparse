@@ -284,53 +284,55 @@ BEGIN_RCPP
 END_RCPP
 }
 // als_explicit_double
-double als_explicit_double(const Rcpp::S4& m_csc_r, arma::mat& X, arma::mat& Y, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps, bool non_negative);
-RcppExport SEXP _rsparse_als_explicit_double(SEXP m_csc_rSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP, SEXP non_negativeSEXP) {
+double als_explicit_double(const Rcpp::S4& m_csc_r, arma::Col<double>& m_values_orig, arma::mat& X, arma::mat& Y, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps, bool calc_user_bias, bool calc_item_bias, bool non_negative);
+RcppExport SEXP _rsparse_als_explicit_double(SEXP m_csc_rSEXP, SEXP m_values_origSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP, SEXP calc_user_biasSEXP, SEXP calc_item_biasSEXP, SEXP non_negativeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csc_r(m_csc_rSEXP);
+    Rcpp::traits::input_parameter< arma::Col<double>& >::type m_values_orig(m_values_origSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type Y(YSEXP);
     Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
     Rcpp::traits::input_parameter< unsigned >::type n_threads(n_threadsSEXP);
     Rcpp::traits::input_parameter< unsigned >::type solver(solverSEXP);
     Rcpp::traits::input_parameter< unsigned >::type cg_steps(cg_stepsSEXP);
+    Rcpp::traits::input_parameter< bool >::type calc_user_bias(calc_user_biasSEXP);
+    Rcpp::traits::input_parameter< bool >::type calc_item_bias(calc_item_biasSEXP);
     Rcpp::traits::input_parameter< bool >::type non_negative(non_negativeSEXP);
-    rcpp_result_gen = Rcpp::wrap(als_explicit_double(m_csc_r, X, Y, lambda, n_threads, solver, cg_steps, non_negative));
+    rcpp_result_gen = Rcpp::wrap(als_explicit_double(m_csc_r, m_values_orig, X, Y, lambda, n_threads, solver, cg_steps, calc_user_bias, calc_item_bias, non_negative));
     return rcpp_result_gen;
 END_RCPP
 }
 // als_explicit_float
-double als_explicit_float(const Rcpp::S4& m_csc_r, Rcpp::S4& XR, Rcpp::S4& YR, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps, bool non_negative);
-RcppExport SEXP _rsparse_als_explicit_float(SEXP m_csc_rSEXP, SEXP XRSEXP, SEXP YRSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP, SEXP non_negativeSEXP) {
+double als_explicit_float(const Rcpp::S4& m_csc_r, arma::Col<double>& m_values_orig, Rcpp::S4& XR, Rcpp::S4& YR, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps, bool calc_user_bias, bool calc_item_bias, bool non_negative);
+RcppExport SEXP _rsparse_als_explicit_float(SEXP m_csc_rSEXP, SEXP m_values_origSEXP, SEXP XRSEXP, SEXP YRSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP, SEXP calc_user_biasSEXP, SEXP calc_item_biasSEXP, SEXP non_negativeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csc_r(m_csc_rSEXP);
+    Rcpp::traits::input_parameter< arma::Col<double>& >::type m_values_orig(m_values_origSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4& >::type XR(XRSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4& >::type YR(YRSEXP);
     Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
     Rcpp::traits::input_parameter< unsigned >::type n_threads(n_threadsSEXP);
     Rcpp::traits::input_parameter< unsigned >::type solver(solverSEXP);
     Rcpp::traits::input_parameter< unsigned >::type cg_steps(cg_stepsSEXP);
+    Rcpp::traits::input_parameter< bool >::type calc_user_bias(calc_user_biasSEXP);
+    Rcpp::traits::input_parameter< bool >::type calc_item_bias(calc_item_biasSEXP);
     Rcpp::traits::input_parameter< bool >::type non_negative(non_negativeSEXP);
-    rcpp_result_gen = Rcpp::wrap(als_explicit_float(m_csc_r, XR, YR, lambda, n_threads, solver, cg_steps, non_negative));
+    rcpp_result_gen = Rcpp::wrap(als_explicit_float(m_csc_r, m_values_orig, XR, YR, lambda, n_threads, solver, cg_steps, calc_user_bias, calc_item_bias, non_negative));
     return rcpp_result_gen;
 END_RCPP
 }
-// als_loss_explicit
-double als_loss_explicit(const Rcpp::S4& m_csc_r, arma::mat& X, arma::mat& Y, double lambda, unsigned n_threads);
-RcppExport SEXP _rsparse_als_loss_explicit(SEXP m_csc_rSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP) {
+// deep_copy
+SEXP deep_copy(SEXP x);
+RcppExport SEXP _rsparse_deep_copy(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csc_r(m_csc_rSEXP);
-    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< arma::mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
-    Rcpp::traits::input_parameter< unsigned >::type n_threads(n_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(als_loss_explicit(m_csc_r, X, Y, lambda, n_threads));
+    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(deep_copy(x));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -488,9 +490,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_dense_csc_prod", (DL_FUNC) &_rsparse_dense_csc_prod, 3},
     {"_rsparse_als_implicit_double", (DL_FUNC) &_rsparse_als_implicit_double, 9},
     {"_rsparse_als_implicit_float", (DL_FUNC) &_rsparse_als_implicit_float, 9},
-    {"_rsparse_als_explicit_double", (DL_FUNC) &_rsparse_als_explicit_double, 8},
-    {"_rsparse_als_explicit_float", (DL_FUNC) &_rsparse_als_explicit_float, 8},
-    {"_rsparse_als_loss_explicit", (DL_FUNC) &_rsparse_als_loss_explicit, 5},
+    {"_rsparse_als_explicit_double", (DL_FUNC) &_rsparse_als_explicit_double, 11},
+    {"_rsparse_als_explicit_float", (DL_FUNC) &_rsparse_als_explicit_float, 11},
+    {"_rsparse_deep_copy", (DL_FUNC) &_rsparse_deep_copy, 1},
     {"_rsparse_rankmf_solver_double", (DL_FUNC) &_rsparse_rankmf_solver_double, 22},
     {"_rsparse_rankmf_solver_float", (DL_FUNC) &_rsparse_rankmf_solver_float, 22},
     {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 6},

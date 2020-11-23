@@ -1,5 +1,6 @@
 #include "rsparse.h"
 #include "nnls.hpp"
+#include <string.h>
 
 template <class T>
 arma::Col<T> scd_nnls_solver(const arma::Mat<T> &XtX,
@@ -162,13 +163,44 @@ T als_implicit_cpp(const dMappedCSC& Conf,
 
 template <class T>
 T als_explicit_cpp(const dMappedCSC& Conf,
-                   arma::Mat<T>& X,
-                   arma::Mat<T>& Y,
+                   const arma::Col<double> Conf_orig,
+                   arma::Mat<T>& X_,
+                   arma::Mat<T>& Y_,
                    double lambda,
                    unsigned n_threads,
                    unsigned solver,
                    unsigned cg_steps = 3,
+                   bool calc_user_bias = false,
+                   bool calc_item_bias = false,
                    bool non_negative = false) {
+  /* Note about biases: for user factors, the first column will be set to all ones
+   * to match with the item biases, and the calculated user biases will be in the
+   * last column. For item factors, the last column will be set to all ones to
+   * mach with the user biases, and the calculated item biases will be in the
+   * first column.
+   */
+  arma::Mat<T> X;
+  arma::Mat<T> Y;
+  if (calc_user_bias) {
+    Y_.row(0).ones();
+    for (auto col = 0; col < Conf.n_cols; col++) {
+      for (auto ix = Conf.col_ptrs[col]; ix < Conf.col_ptrs[col+1]; ix++)
+        Conf.values[ix] = Conf_orig[ix] - X_.at(0, Conf.row_indices[ix]);
+    }
+    X = X_(arma::span(1, X_.n_rows-1), arma::span::all);
+    Y = Y_(arma::span(1, X_.n_rows-1), arma::span::all);
+  } else if (calc_item_bias) {
+    Y_.row(Y_.n_rows-1).ones();
+    for (auto col = 0; col < Conf.n_cols; col++) {
+      for (auto ix = Conf.col_ptrs[col]; ix < Conf.col_ptrs[col+1]; ix++)
+        Conf.values[ix] = Conf_orig[ix] - X_.at(X_.n_rows-1, Conf.row_indices[ix]);
+    }
+    X = X_(arma::span(0, X_.n_rows-2), arma::span::all);
+    Y = Y_(arma::span(0, X_.n_rows-2), arma::span::all);
+  } else {
+    Y = arma::Mat<T>(Y_.memptr(), Y_.n_rows, Y_.n_cols, false, false);
+    X = arma::Mat<T>(X_.memptr(), X_.n_rows, X_.n_cols, false, false);
+  }
 
   if (non_negative) solver = CHOLESKY;
 
@@ -203,6 +235,14 @@ T als_explicit_cpp(const dMappedCSC& Conf,
     } else {
       Y.col(i).zeros();
     }
+  }
+
+  if (calc_user_bias) {
+    X_(arma::span(1, X_.n_rows-1), arma::span::all) = X;
+    Y_(arma::span(1, X_.n_rows-1), arma::span::all) = Y;
+  } else if (calc_item_bias) {
+    X_(arma::span(0, X_.n_rows-2), arma::span::all) = X;
+    Y_(arma::span(0, X_.n_rows-2), arma::span::all) = Y;
   }
 
   if(lambda > 0)
@@ -254,25 +294,35 @@ double als_implicit_float(const Rcpp::S4 &m_csc_r,
 
 // [[Rcpp::export]]
 double als_explicit_double(const Rcpp::S4 &m_csc_r,
+                           arma::Col<double>& m_values_orig,
                            arma::mat& X,
                            arma::mat& Y,
                            double lambda,
                            unsigned n_threads,
                            unsigned solver,
                            unsigned cg_steps = 3,
+                           bool calc_user_bias = false,
+                           bool calc_item_bias = false,
                            bool non_negative = false) {
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
-  return (double)als_explicit_cpp<double>(Conf, X, Y, lambda, n_threads, solver, cg_steps, non_negative);
+  return (double)als_explicit_cpp<double>(Conf, m_values_orig,
+                                          X, Y, lambda, n_threads,
+                                          solver, cg_steps,
+                                          calc_user_bias, calc_item_bias,
+                                          non_negative);
 }
 
 // [[Rcpp::export]]
 double als_explicit_float(const Rcpp::S4 &m_csc_r,
+                          arma::Col<double>& m_values_orig,
                           Rcpp::S4 &XR,
                           Rcpp::S4 & YR,
                           double lambda,
                           unsigned n_threads,
                           unsigned solver,
                           unsigned cg_steps = 3,
+                          bool calc_user_bias = false,
+                          bool calc_item_bias = false,
                           bool non_negative = false) {
   //#ifdef SINGLE_PRECISION_LAPACK_AVAILABLE
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
@@ -282,30 +332,19 @@ double als_explicit_float(const Rcpp::S4 &m_csc_r,
   float * y_ptr = reinterpret_cast<float *>(&YRM[0]);
   arma::fmat X = arma::fmat(x_ptr, XRM.nrow(), XRM.ncol(), false, true);
   arma::fmat Y = arma::fmat(y_ptr, YRM.nrow(), YRM.ncol(), false, true);
-  return (double)als_explicit_cpp<float>(Conf, X, Y, lambda, n_threads, solver, cg_steps, non_negative);
+  return (double)als_explicit_cpp<float>(Conf, m_values_orig,
+                                         X, Y, lambda, n_threads,
+                                         solver, cg_steps,
+                                         calc_user_bias, calc_item_bias,
+                                         non_negative);
 }
 
-
 // [[Rcpp::export]]
-double als_loss_explicit(const Rcpp::S4 &m_csc_r, arma::mat& X, arma::mat& Y, double lambda, unsigned n_threads) {
-  dMappedCSC mat = extract_mapped_csc(m_csc_r);
-  size_t nc = mat.n_cols;
-  double loss = 0;
-  #ifdef _OPENMP
-  #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE) reduction(+:loss)
-  #endif
-  for(size_t i = 0; i < nc; i++) {
-    arma::colvec y_i = Y.col(i);
-    auto p1 = mat.col_ptrs[i];
-    auto p2 = mat.col_ptrs[i + 1];
-    double diff = 0;
-    for(int pp = p1; pp < p2; pp++) {
-      auto j = mat.row_indices[pp];
-      diff = mat.values[pp] - arma::dot(y_i, X.col(j));
-      loss += diff * diff;
-    }
-  }
-  if(lambda > 0)
-    loss += lambda * (accu(square(X)) + accu(square(Y)));
-  return loss / mat.nnz;
+SEXP deep_copy(SEXP x)
+{
+  SEXP out = PROTECT(Rf_allocVector(REALSXP, Rf_xlength(x)));
+  if (Rf_xlength(x))
+    memcpy(REAL(out), REAL(x), (size_t)Rf_xlength(x)*sizeof(double));
+  UNPROTECT(1);
+  return out;
 }

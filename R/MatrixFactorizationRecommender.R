@@ -115,6 +115,8 @@ MatrixFactorizationRecommender = R6::R6Class(
     },
     # L2 normalized components
     components_ = NULL,
-    components_l2 = NULL
+    components_l2 = NULL,
+    # biases
+    add_biases = FALSE
   )
 )

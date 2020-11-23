@@ -1,7 +1,7 @@
 #' @title Weighted Regularized Matrix Factorization for collaborative filtering
 #' @description Creates a matrix factorization model which is solved through Alternating Least Squares (Weighted ALS for implicit feedback).
 #' For implicit feedback see "Collaborative Filtering for Implicit Feedback Datasets" (Hu, Koren, Volinsky).
-#' For explicit feedback it corresponds to the classic model for rating matrix decomposition with MSE error (without biases at the moment).
+#' For explicit feedback it corresponds to the classic model for rating matrix decomposition with MSE error.
 #' These two algorithms are proven to work well in recommender systems.
 #' @references
 #' \itemize{
@@ -48,7 +48,10 @@ WRMF = R6::R6Class(
     #' "Collaborative Filtering for Implicit Feedback Datasets" paper.
     #' Note that it will not automatically add +1 to the weights of the positive entries.
     #' @param feedback \code{character} - feedback type - one of \code{c("implicit", "explicit")}
-    #' @param non_negative logical, whether to perform non-negative factorization
+    #' @param add_biases \code{logical} - whether to add user and item biases in the explicit feedback
+    #' models. These will be treated as additional components, so the actual rank will be reduced
+    #' by 2. The biases will be taken as the first and last components.
+    #' @param non_negative \code{logical}, whether to perform non-negative factorization
     #' @param solver \code{character} - solver for "implicit feedback" problem.
     #' One of \code{c("conjugate_gradient", "cholesky")}.
     #' Usually approximate \code{"conjugate_gradient"} is significantly faster and solution is
@@ -65,6 +68,7 @@ WRMF = R6::R6Class(
                           init = NULL,
                           preprocess = identity,
                           feedback = c("implicit", "explicit"),
+                          add_biases = ifelse(feedback[1] == "explicit", TRUE, FALSE),
                           non_negative = FALSE,
                           solver = c("conjugate_gradient", "cholesky"),
                           cg_steps = 3L,
@@ -80,8 +84,12 @@ WRMF = R6::R6Class(
 
       private$feedback = match.arg(feedback)
 
-      if (private$feedback == "explicit" && private$precision == "float")
-        stop("Explicit solver doesn't support single precision at the moment (but in principle can support).")
+      if (add_biases && private$feedback == "implicit") {
+        warning("Biases are only supported for explicit feedback")
+        add_biases = FALSE
+      }
+      if (add_biases && rank < 2L)
+        stop("Rank must be >= 2 to accommodate biases.")
 
       if (solver == "cholesky") private$solver_code = 0L
       if (solver == "conjugate_gradient") private$solver_code = 1L
@@ -95,6 +103,7 @@ WRMF = R6::R6Class(
       private$preprocess = preprocess
 
       private$scorers = new.env(hash = TRUE, parent = emptyenv())
+      private$add_biases = as.logical(add_biases)[1L]
       private$non_negative = non_negative
     },
     #' @description fits the model
@@ -127,9 +136,20 @@ WRMF = R6::R6Class(
         self$glob_mean = mean(c_ui@x)
         c_ui@x = c_ui@x - self$glob_mean
       }
+      if (private$add_biases) {
+        c_ui_orig = deep_copy(c_ui@x)
+      }
+      else {
+        c_ui_orig = numeric(0L)
+      }
 
       logger$trace("making another matrix for convenient traverse by users - transposing input matrix")
       c_iu = t(c_ui)
+      if (private$add_biases) {
+        c_iu_orig = deep_copy(c_iu@x)
+      } else {
+        c_iu_orig = numeric(0L)
+      }
 
       # init
       n_user = nrow(c_ui)
@@ -180,11 +200,13 @@ WRMF = R6::R6Class(
                                           cg_steps = private$cg_steps,
                                           non_negative = private$non_negative)
         } else if (private$feedback == "explicit") {
-          loss = private$als_explicit_fun(c_iu, self$components, private$U,
+          loss = private$als_explicit_fun(c_iu, c_iu_orig, self$components, private$U,
                                           n_threads = getOption("rsparse_omp_threads", 1L),
                                           lambda = private$lambda,
                                           solver = private$solver_code,
                                           cg_steps = private$cg_steps,
+                                          calc_item_bias = private$add_biases,
+                                          calc_user_bias = FALSE,
                                           non_negative = private$non_negative)
         }
 
@@ -206,13 +228,15 @@ WRMF = R6::R6Class(
                                           private$cg_steps,
                                           private$non_negative)
         } else if (private$feedback == "explicit") {
-          loss = private$als_explicit_fun(c_ui, private$U,
+          loss = private$als_explicit_fun(c_ui, c_ui_orig, private$U,
                                           self$components,
                                           n_threads = getOption("rsparse_omp_threads", 1L),
                                           lambda = private$lambda,
                                           private$solver_code,
-                                          private$cg_steps,
-                                          private$non_negative)
+                                          cg_steps = private$cg_steps,
+                                          calc_item_bias = FALSE,
+                                          calc_user_bias = private$add_biases,
+                                          non_negative = private$non_negative)
         }
 
         #update XtX
@@ -305,14 +329,23 @@ WRMF = R6::R6Class(
         } else {
           res = float(0, nrow = private$rank, ncol = nrow(x))
         }
-        private$als_explicit_fun(t(x),
+        x = t(x)
+        if (private$add_biases) {
+          x_orig = deep_copy(x@x)
+          x@x = x_orig
+        } else {
+          x_orig = numeric(0L)
+        }
+        private$als_explicit_fun(x, x_orig,
                                  self$components,
                                  res,
                                  n_threads = getOption("rsparse_omp_threads", 1L),
                                  lambda = private$lambda,
-                                 private$solver_code,
-                                 private$cg_steps,
-                                 private$non_negative)
+                                 solver = private$solver_code,
+                                 cg_steps = private$cg_steps,
+                                 calc_user_bias = private$add_biases,
+                                 calc_item_bias = FALSE,
+                                 non_negative = private$non_negative)
       } else
         stop(sprintf("don't know how to work with feedback = '%s'", private$feedback))
       res = t(res)

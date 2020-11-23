@@ -81,16 +81,16 @@ als_implicit_float <- function(m_csc_r, XR, YR, XtXR, lambda, n_threads, solver,
     .Call(`_rsparse_als_implicit_float`, m_csc_r, XR, YR, XtXR, lambda, n_threads, solver, cg_steps, non_negative)
 }
 
-als_explicit_double <- function(m_csc_r, X, Y, lambda, n_threads, solver, cg_steps = 3L, non_negative = FALSE) {
-    .Call(`_rsparse_als_explicit_double`, m_csc_r, X, Y, lambda, n_threads, solver, cg_steps, non_negative)
+als_explicit_double <- function(m_csc_r, m_values_orig, X, Y, lambda, n_threads, solver, cg_steps = 3L, calc_user_bias = FALSE, calc_item_bias = FALSE, non_negative = FALSE) {
+    .Call(`_rsparse_als_explicit_double`, m_csc_r, m_values_orig, X, Y, lambda, n_threads, solver, cg_steps, calc_user_bias, calc_item_bias, non_negative)
 }
 
-als_explicit_float <- function(m_csc_r, XR, YR, lambda, n_threads, solver, cg_steps = 3L, non_negative = FALSE) {
-    .Call(`_rsparse_als_explicit_float`, m_csc_r, XR, YR, lambda, n_threads, solver, cg_steps, non_negative)
+als_explicit_float <- function(m_csc_r, m_values_orig, XR, YR, lambda, n_threads, solver, cg_steps = 3L, calc_user_bias = FALSE, calc_item_bias = FALSE, non_negative = FALSE) {
+    .Call(`_rsparse_als_explicit_float`, m_csc_r, m_values_orig, XR, YR, lambda, n_threads, solver, cg_steps, calc_user_bias, calc_item_bias, non_negative)
 }
 
-als_loss_explicit <- function(m_csc_r, X, Y, lambda, n_threads) {
-    .Call(`_rsparse_als_loss_explicit`, m_csc_r, X, Y, lambda, n_threads)
+deep_copy <- function(x) {
+    .Call(`_rsparse_deep_copy`, x)
 }
 
 rankmf_solver_double <- function(x_r, W, H, W2_grad, H2_grad, user_features_r, item_features_r, rank, n_updates, learning_rate = 0.01, gamma = 1, lambda_user = 0.0, lambda_item_positive = 0.0, lambda_item_negative = 0.0, n_threads = 1L, update_items = TRUE, loss = 0L, kernel = 0L, max_negative_samples = 50L, margin = 0.1, optimizer = 0L, report_progress = 10L) {
