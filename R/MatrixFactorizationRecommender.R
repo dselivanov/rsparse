@@ -60,7 +60,7 @@ MatrixFactorizationRecommender = R6::R6Class(
         not_recommend = as(not_recommend, "RsparseMatrix")
 
       uids = rownames(user_embeddings)
-      indices = find_top_product(user_embeddings, item_embeddings, k, not_recommend, items_exclude)
+      indices = find_top_product(user_embeddings, item_embeddings, k, not_recommend, items_exclude, self$glob_mean)
 
       data.table::setattr(indices, "dimnames", list(uids, NULL))
       data.table::setattr(indices, "ids", NULL)
@@ -71,8 +71,6 @@ MatrixFactorizationRecommender = R6::R6Class(
         data.table::setattr(predicted_item_ids, "dimnames", list(uids, NULL))
         data.table::setattr(indices, "ids", predicted_item_ids)
       }
-      if (self$glob_mean != 0.)
-        attr(indices, "scores") = attr(indices, "scores") + self$glob_mean
       indices
     },
     get_similar_items = function(item_id, k = ncol(self$components), ... ) {

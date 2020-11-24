@@ -399,8 +399,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // top_product
-Rcpp::IntegerMatrix top_product(const arma::mat& x, const arma::mat& y, unsigned k, unsigned n_threads, const Rcpp::S4& not_recommend_r, const Rcpp::IntegerVector& exclude);
-RcppExport SEXP _rsparse_top_product(SEXP xSEXP, SEXP ySEXP, SEXP kSEXP, SEXP n_threadsSEXP, SEXP not_recommend_rSEXP, SEXP excludeSEXP) {
+Rcpp::IntegerMatrix top_product(const arma::mat& x, const arma::mat& y, unsigned k, unsigned n_threads, const Rcpp::S4& not_recommend_r, const Rcpp::IntegerVector& exclude, const double glob_mean);
+RcppExport SEXP _rsparse_top_product(SEXP xSEXP, SEXP ySEXP, SEXP kSEXP, SEXP n_threadsSEXP, SEXP not_recommend_rSEXP, SEXP excludeSEXP, SEXP glob_meanSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -410,7 +410,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< unsigned >::type n_threads(n_threadsSEXP);
     Rcpp::traits::input_parameter< const Rcpp::S4& >::type not_recommend_r(not_recommend_rSEXP);
     Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type exclude(excludeSEXP);
-    rcpp_result_gen = Rcpp::wrap(top_product(x, y, k, n_threads, not_recommend_r, exclude));
+    Rcpp::traits::input_parameter< const double >::type glob_mean(glob_meanSEXP);
+    rcpp_result_gen = Rcpp::wrap(top_product(x, y, k, n_threads, not_recommend_r, exclude, glob_mean));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -495,7 +496,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_deep_copy", (DL_FUNC) &_rsparse_deep_copy, 1},
     {"_rsparse_rankmf_solver_double", (DL_FUNC) &_rsparse_rankmf_solver_double, 22},
     {"_rsparse_rankmf_solver_float", (DL_FUNC) &_rsparse_rankmf_solver_float, 22},
-    {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 6},
+    {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 7},
     {"_rsparse_arma_kmeans", (DL_FUNC) &_rsparse_arma_kmeans, 6},
     {"_rsparse_c_nnls_double", (DL_FUNC) &_rsparse_c_nnls_double, 4},
     {"_rsparse_omp_thread_count", (DL_FUNC) &_rsparse_omp_thread_count, 0},

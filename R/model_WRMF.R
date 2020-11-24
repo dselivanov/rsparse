@@ -307,12 +307,13 @@ WRMF = R6::R6Class(
       x = as(x, "CsparseMatrix")
       x = private$preprocess(x)
 
+      if (private$precision == "double") {
+        res = matrix(0, nrow = private$rank, ncol = nrow(x))
+      } else {
+        res = float(0, nrow = private$rank, ncol = nrow(x))
+      }
+
       if (private$feedback == "implicit") {
-        if (private$precision == "double") {
-          res = matrix(0, nrow = private$rank, ncol = nrow(x))
-        } else {
-          res = float(0, nrow = private$rank, ncol = nrow(x))
-        }
         private$als_implicit_fun(t(x),
                                  self$components,
                                  res,
@@ -323,20 +324,15 @@ WRMF = R6::R6Class(
                                  private$cg_steps,
                                  private$non_negative)
       } else if (private$feedback == "explicit") {
+        x_use = t(x)
         if (!private$non_negative)
-          x@x = x@x - self$glob_mean
-        if (private$precision == "double") {
-          res = matrix(0, nrow = private$rank, ncol = nrow(x))
-        } else {
-          res = float(0, nrow = private$rank, ncol = nrow(x))
-        }
-        x = t(x)
+          x_use@x = x_use@x - self$glob_mean
         if (private$add_biases) {
-          x_orig = deep_copy(x@x)
+          x_orig = deep_copy(x_use@x)
         } else {
           x_orig = numeric(0L)
         }
-        private$als_explicit_fun(x, x_orig,
+        private$als_explicit_fun(x_use, x_orig,
                                  self$components,
                                  res,
                                  n_threads = getOption("rsparse_omp_threads", 1L),
