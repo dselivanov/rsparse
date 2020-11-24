@@ -28,7 +28,7 @@ train_test_split = function(x, test_proportion = 0.5) {
 }
 
 
-find_top_product = function(x, y, k, not_recommend = NULL, exclude = integer(0), n_threads = getOption("rsparse_omp_threads", 1L)) {
+find_top_product = function(x, y, k, not_recommend = NULL, exclude = integer(0), n_threads = getOption("rsparse_omp_threads", 1L), glob_mean = 0.) {
   n_threads_blas = RhpcBLASctl::blas_get_num_procs()
   # set num threads to 1 in order to avoid thread contention between BLAS and openmp threads in `top_product()`
   RhpcBLASctl::blas_set_num_threads(1L)
@@ -49,5 +49,5 @@ find_top_product = function(x, y, k, not_recommend = NULL, exclude = integer(0),
     stopifnot(ncol(y) == ncol(not_recommend))
     not_recommend = as(not_recommend, "RsparseMatrix")
   }
-  top_product(x, y, k, n_threads, not_recommend, exclude)
+  top_product(x, y, k, n_threads, not_recommend, exclude, glob_mean)
 }

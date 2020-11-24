@@ -101,8 +101,8 @@ rankmf_solver_float <- function(x_r, W, H, W2_grad, H2_grad, user_features_r, it
     invisible(.Call(`_rsparse_rankmf_solver_float`, x_r, W, H, W2_grad, H2_grad, user_features_r, item_features_r, rank, n_updates, learning_rate, gamma, lambda_user, lambda_item_positive, lambda_item_negative, n_threads, update_items, loss, kernel, max_negative_samples, margin, optimizer, report_progress))
 }
 
-top_product <- function(x, y, k, n_threads, not_recommend_r, exclude) {
-    .Call(`_rsparse_top_product`, x, y, k, n_threads, not_recommend_r, exclude)
+top_product <- function(x, y, k, n_threads, not_recommend_r, exclude, glob_mean = 0.) {
+    .Call(`_rsparse_top_product`, x, y, k, n_threads, not_recommend_r, exclude, glob_mean)
 }
 
 arma_kmeans <- function(x, k, seed_mode, n_iter, verbose, result) {
