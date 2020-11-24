@@ -56,8 +56,8 @@ template <class T>
 arma::Col<T> scd_nnls_solver_explicit(const arma::Mat<T> &X_nnz,
                                       const arma::Col<T> &confidence,
                                       T regularization) {
-  const arma::Mat<T> inv = X_nnz * X_nnz.t()
-                            + regularization * arma::Mat<T>(X_nnz.n_rows, X_nnz.n_rows, arma::fill::eye);
+  arma::Mat<T> inv = X_nnz * X_nnz.t();
+  inv.diag() += regularization;
   const arma::Mat<T> rhs = X_nnz * confidence;
   arma::Col<T> res;
   auto res_m = c_nnls<T>(inv, rhs, 10000, 1e-3);
@@ -69,8 +69,9 @@ template <class T>
 arma::Col<T> chol_solver_explicit(const arma::Mat<T> &X_nnz,
                                   const arma::Col<T> &confidence,
                                   T regularization) {
-  const arma::Mat<T> inv = X_nnz * X_nnz.t()
-                            + regularization * arma::Mat<T>(X_nnz.n_rows, X_nnz.n_rows, arma::fill::eye);
+  arma::Mat<T> inv = X_nnz * X_nnz.t();
+  inv.diag() += regularization;
+
   const arma::Mat<T> rhs = X_nnz * confidence;
   arma::Col<T> res = solve(inv, rhs, arma::solve_opts::fast );
   return(res);
@@ -85,13 +86,13 @@ arma::Col<T> cg_solver_explicit(const arma::Mat<T> &X_nnz,
   arma::Col<T> x = x_old;
 
   arma::Mat<T> Ap;
-  arma::Col<T> r = X_nnz * confidence - ((X_nnz * (X_nnz.t() * x)) + x*regularization);
+  arma::Col<T> r = X_nnz * confidence - ((X_nnz * (X_nnz.t() * x)) + x * regularization);
   arma::Col<T> p = r;
   double rsold, rsnew, alpha;
   rsold = as_scalar(r.t() * r);
 
   for(int k = 0; k < n_iter; k++) {
-    Ap = (X_nnz * (X_nnz.t() * p)) + p*regularization;
+    Ap = (X_nnz * (X_nnz.t() * p)) + p * regularization;
     alpha =  rsold / as_scalar(p.t() * Ap);
     x += alpha * p;
     r -= alpha * Ap;
@@ -118,13 +119,6 @@ T als_implicit_cpp(const dMappedCSC& Conf,
 
   if(solver != CHOLESKY && solver != CONJUGATE_GRADIENT)
     Rcpp::stop("Unknown solver code %d", solver);
-
-  // arma::Mat<T> XtX = X * X.t();
-  // if(lambda > 0) {
-  //   arma::Col<T> lambda_vec(X.n_rows);
-  //   lambda_vec.fill(lambda);
-  //   XtX += diagmat(lambda_vec);
-  // }
 
   T loss = 0;
   size_t nc = Conf.n_cols;
@@ -184,8 +178,8 @@ T als_explicit_cpp(const dMappedCSC& Conf,
   if (calc_user_bias) {
     Y_.row(0).ones();
     for (auto col = 0; col < Conf.n_cols; col++) {
-      for (auto ix = Conf.col_ptrs[col]; ix < Conf.col_ptrs[col+1]; ix++)
-        Conf.values[ix] = Conf_orig[ix] - X_.at(0, Conf.row_indices[ix]);
+      for (auto ix = Conf.col_ptrs[col]; ix < Conf.col_ptrs[col + 1]; ix++)
+        Conf.values[ix] = Conf_orig.at(ix) - X_.at(0, Conf.row_indices[ix]);
     }
     X = X_(arma::span(1, X_.n_rows-1), arma::span::all);
     Y = Y_(arma::span(1, X_.n_rows-1), arma::span::all);
@@ -209,9 +203,9 @@ T als_explicit_cpp(const dMappedCSC& Conf,
 
   T loss = 0;
   size_t nc = Conf.n_cols;
-#ifdef _OPENMP
-#pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE) reduction(+:loss)
-#endif
+  #ifdef _OPENMP
+  #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE) reduction(+:loss)
+  #endif
   for(size_t i = 0; i < nc; i++) {
     arma::uword p1 = Conf.col_ptrs[i];
     arma::uword p2 = Conf.col_ptrs[i + 1];
@@ -238,11 +232,11 @@ T als_explicit_cpp(const dMappedCSC& Conf,
   }
 
   if (calc_user_bias) {
-    X_(arma::span(1, X_.n_rows-1), arma::span::all) = X;
-    Y_(arma::span(1, X_.n_rows-1), arma::span::all) = Y;
+    X_(arma::span(1, X_.n_rows - 1), arma::span::all) = X;
+    Y_(arma::span(1, X_.n_rows - 1), arma::span::all) = Y;
   } else if (calc_item_bias) {
-    X_(arma::span(0, X_.n_rows-2), arma::span::all) = X;
-    Y_(arma::span(0, X_.n_rows-2), arma::span::all) = Y;
+    X_(arma::span(0, X_.n_rows - 2), arma::span::all) = X;
+    Y_(arma::span(0, X_.n_rows - 2), arma::span::all) = Y;
   }
 
   if(lambda > 0)
@@ -268,14 +262,13 @@ double als_implicit_double(const Rcpp::S4 &m_csc_r,
 // [[Rcpp::export]]
 double als_implicit_float(const Rcpp::S4 &m_csc_r,
                     Rcpp::S4 &XR,
-                    Rcpp::S4 & YR,
+                    Rcpp::S4 &YR,
                     Rcpp::S4 &XtXR,
                     double lambda,
                     unsigned n_threads,
                     unsigned solver,
                     unsigned cg_steps = 3,
                     bool non_negative = false) {
-  //#ifdef SINGLE_PRECISION_LAPACK_AVAILABLE
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
   Rcpp::IntegerMatrix XRM = XR.slot("Data");
   Rcpp::IntegerMatrix YRM = YR.slot("Data");
