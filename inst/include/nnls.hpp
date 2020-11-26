@@ -1,13 +1,11 @@
 #include <armadillo>
 
 #define TINY_NUM 1e-16
-#define NNLM_REL_TOL 1e-8
-#define MAX_ITER 500
 
 template <class T>
 arma::Col<T> scd_ls_update(const arma::Mat<T> &WtW,
                    arma::Col<T> &mu,
-                   uint max_iter,
+                   arma::uword max_iter,
                    double rel_tol,
                    const arma::Col<T> &initial) {
   // Problem:  Aj = W * Hj
@@ -38,7 +36,7 @@ arma::Col<T> scd_ls_update(const arma::Mat<T> &WtW,
 template <class T>
 arma::Mat<T> c_nnls(const arma::Mat<T> &x,
                     const arma::Mat<T> &y,
-                    uint max_iter,
+                    arma::uword max_iter,
                     double rel_tol) {
   arma::Mat<T> H(x.n_cols, y.n_cols, arma::fill::randu);
   arma::Mat<T> Wt = x.t();
