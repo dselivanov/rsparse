@@ -66,33 +66,49 @@ WRMF = R6::R6Class(
                           precision = c("double", "float"),
                           ...) {
       stopifnot(is.null(init) || is.matrix(init))
-      self$components = init
       solver = match.arg(solver)
-      private$precision = match.arg(precision)
-
-      private$als_implicit_fun = if (private$precision == "float") als_implicit_float else als_implicit_double
-
-      private$feedback = match.arg(feedback)
-
-      if (private$feedback == "explicit" && private$precision == "float")
-        stop("Explicit solver doesn't support single precision at the moment (but in principle can support).")
-
-      if (solver == "conjugate_gradient" && private$feedback == "explicit")
-        logger$warn("only 'cholesky' is available for 'explicit' feedback")
+      precision = match.arg(precision)
+      feedback = match.arg(feedback)
 
       if (solver == "cholesky") private$solver_code = 0L
       if (solver == "conjugate_gradient") private$solver_code = 1L
 
+      if (feedback == "explicit" && precision == "float")
+        stop("Explicit solver doesn't support single precision at the moment (but in principle can support).")
+
+      private$precision = match.arg(precision)
+      private$feedback = feedback
+      private$lambda = as.numeric(lambda)
+
       stopifnot(is.integer(cg_steps) && length(cg_steps) == 1)
       private$cg_steps = cg_steps
 
-      private$lambda = as.numeric(lambda)
+      private$non_negative = non_negative
+
+      n_threads = getOption("rsparse_omp_threads", 1L)
+      private$solver = function(x, X, Y, XtX) {
+        if (feedback == "implicit") {
+          solver_implicit(
+            x, X, Y, XtX,
+            lambda = private$lambda,
+            n_threads = n_threads,
+            solver_code = private$solver_code,
+            cg_steps = private$cg_steps,
+            non_negative = private$non_negative,
+            precision = private$precision)
+        } else {
+          solver_explicit(x, X, Y, private$lambda, private$non_negative)
+        }
+      }
+
+      if (solver == "conjugate_gradient" && feedback == "explicit")
+        logger$warn("only 'cholesky' is available for 'explicit' feedback")
+
+      self$components = init
       private$rank = as.integer(rank)
+
       stopifnot(is.function(preprocess))
       private$preprocess = preprocess
-
-      private$scorers = new.env(hash = TRUE, parent = emptyenv())
-      private$non_negative = non_negative
     },
     #' @description fits the model
     #' @param x input matrix (preferably matrix  in CSC format -`CsparseMatrix`
@@ -102,26 +118,22 @@ WRMF = R6::R6Class(
     fit_transform = function(x, n_iter = 10L, convergence_tol = 0.005, ...) {
       if (private$feedback == "implicit" ) {
         logger$trace("WRMF$fit_transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
+        blas_threads_keep = RhpcBLASctl::blas_get_num_procs()
         RhpcBLASctl::blas_set_num_threads(1)
         on.exit({
-          n_physical_cores = RhpcBLASctl::get_num_cores()
-          logger$trace("WRMF$fit_transform(): on exit `RhpcBLASctl::blas_set_num_threads(%d)` (=number of physical cores)", n_physical_cores)
-          RhpcBLASctl::blas_set_num_threads(n_physical_cores)
+          logger$trace("WRMF$fit_transform(): on exit `RhpcBLASctl::blas_set_num_threads(%d)", blas_threads_keep)
+          RhpcBLASctl::blas_set_num_threads(blas_threads_keep)
         })
       }
 
-      logger$trace("convert input to %s if needed", private$internal_matrix_formats$sparse)
       c_ui = as(x, "CsparseMatrix")
       c_ui = private$preprocess(c_ui)
-      # strore item_ids in order to use them in predict method
+      # store item_ids in order to use them in predict method
       private$item_ids = colnames(c_ui)
 
       if ((private$feedback != "explicit") || private$non_negative) {
-        logger$trace("check items in input are not negative")
         stopifnot(all(c_ui@x >= 0))
       }
-
-      logger$trace("making another matrix for convenient traverse by users - transposing input matrix")
       c_iu = t(c_ui)
 
       # init
@@ -130,9 +142,13 @@ WRMF = R6::R6Class(
 
       logger$trace("initializing U")
       if (private$precision == "double")
-        private$U = matrix(0.0, ncol = n_user, nrow = private$rank)
+        private$U = matrix(
+          rnorm(n_user * private$rank, 0, 0.01),
+          ncol = n_user,
+          nrow = private$rank
+        )
       else
-        private$U = flrunif(private$rank, n_user, 0, 0)
+        private$U = flrnorm(private$rank, n_user, 0, 0.01)
 
       if (is.null(self$components)) {
         if (private$precision == "double")
@@ -142,97 +158,40 @@ WRMF = R6::R6Class(
             nrow = private$rank
           )
         else
-          self$components = flrnorm(private$rank, n_item)
+          self$components = flrnorm(private$rank, n_item, 0, 0.01)
       } else {
         stopifnot(is.matrix(self$components) || is.float(self$components))
         stopifnot(ncol(self$components) == n_item)
         stopifnot(nrow(self$components) == private$rank)
       }
 
+      stopifnot(ncol(private$U) == ncol(c_iu))
+      stopifnot(ncol(self$components) == ncol(c_ui))
 
-      private$XtX = tcrossprod(self$components) +
-        # make float diagonal matrix - if first component is double - result will be automatically casted to double
-        fl(diag(x = private$lambda, nrow = private$rank, ncol = private$rank))
-
-      logger$info("starting factorization with %d threads", getOption("rsparse_omp_threads", 1L))
-      trace_lst = vector("list", n_iter)
+      logger$info("starting factorization")
       loss_prev_iter = Inf
+
       # iterate
       for (i in seq_len(n_iter)) {
-
-        logger$trace("iter %d by item", i)
-        stopifnot(ncol(private$U) == ncol(c_iu))
-        if (private$feedback == "implicit") {
-          # private$U will be modified in place
-          loss = private$als_implicit_fun(c_iu, self$components, private$U, private$XtX,
-                                          n_threads = getOption("rsparse_omp_threads", 1L),
-                                          lambda = private$lambda,
-                                          solver = private$solver_code,
-                                          cg_steps = private$cg_steps,
-                                          non_negative = private$non_negative)
-        } else if (private$feedback == "explicit") {
-          private$U = private$solver_explicit_feedback(c_iu, self$components)
-        }
-
-        logger$trace("iter %d by user", i)
-        stopifnot(ncol(self$components) == ncol(c_ui))
-
+        # solve for items
         YtY = tcrossprod(private$U) +
-          # make float diagonal matrix - if first component is double - result will be automatically casted to double
           fl(diag(x = private$lambda, nrow = private$rank, ncol = private$rank))
+        self$components = private$solver(c_ui, private$U, self$components, YtY)
+        loss = attr(self$components, "loss")
 
-        if (private$feedback == "implicit") {
-          # self$components will be modified in place
-          loss = private$als_implicit_fun(c_ui, private$U,
-                                          self$components,
-                                          YtY,
-                                          n_threads = getOption("rsparse_omp_threads", 1L),
-                                          lambda = private$lambda,
-                                          private$solver_code,
-                                          private$cg_steps,
-                                          private$non_negative)
-        } else if (private$feedback == "explicit") {
-          self$components = private$solver_explicit_feedback(c_ui, private$U)
-        }
-
-        #------------------------------------------------------------------------
-        # calculate some metrics if needed in order to diagnose convergence
-        #------------------------------------------------------------------------
-        if (private$feedback == "explicit")
-          loss = als_loss_explicit(c_ui, private$U, self$components, private$lambda, getOption("rsparse_omp_threads", 1L));
-
-        #update XtX
+        # solve for users
         private$XtX = tcrossprod(self$components) +
-          # make float diagonal matrix - if first component is double - result will be automatically casted to double
           fl(diag(x = private$lambda, nrow = private$rank, ncol = private$rank))
+        private$U = private$solver(c_iu, self$components, private$U, private$XtX)
+        loss = attr(private$U, "loss")
 
-        j = 1L
-        trace_scors_string = ""
-        trace_iter = NULL
-        # check if we have scorers
-        if (length(private$scorers) > 0) {
-          trace_iter = vector("list", length(names(private$scorers)))
-          max_k = max(vapply(private$scorers, function(x) as.integer(x[["k"]]), -1L))
-          preds = do.call(function(...) self$predict(x = private$cv_data$train, k = max_k, ...),  private$scorers_ellipsis)
-          for (sc in names(private$scorers)) {
-            scorer = private$scorers[[sc]]
-            # preds = do.call(function(...) self$predict(x = private$cv_data$train, k = scorer[["k"]], ...),  private$scorers_ellipsis)
-            score = scorer$scorer_function(preds, ...)
-            trace_scors_string = sprintf("%s score %s = %f", trace_scors_string, sc, score)
-            trace_iter[[j]] = list(iter = i, scorer = sc, value = score)
-            j = j + 1L
-          }
-          trace_iter = data.table::rbindlist(trace_iter)
-        }
-
-        trace_lst[[i]] = data.table::rbindlist(list(trace_iter, list(iter = i, scorer = "loss", value = loss)))
-        logger$info("iter %d loss = %.4f %s", i, loss, trace_scors_string)
+        logger$info("iter %d loss = %.4f", i, loss)
         if (loss_prev_iter / loss - 1 < convergence_tol) {
           logger$info("Converged after %d iterations", i)
           break
         }
+
         loss_prev_iter = loss
-        #------------------------------------------------------------------------
       }
 
       if (private$precision == "double")
@@ -242,7 +201,7 @@ WRMF = R6::R6Class(
 
       res = t(private$U)
       private$U = NULL
-      setattr(res, "trace", rbindlist(trace_lst))
+
       if (private$precision == "double")
         setattr(res, "dimnames", list(rownames(x), NULL))
       else
@@ -257,80 +216,35 @@ WRMF = R6::R6Class(
       stopifnot(ncol(x) == ncol(self$components))
       if (private$feedback == "implicit" ) {
         logger$trace("WRMF$transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
+        blas_threads_keep = RhpcBLASctl::blas_get_num_procs()
         RhpcBLASctl::blas_set_num_threads(1)
         on.exit({
-          n_physical_cores = RhpcBLASctl::get_num_cores()
-          logger$trace("WRMF$transform(): on exit `RhpcBLASctl::blas_set_num_threads(%d)` (=number of physical cores)", n_physical_cores)
-          RhpcBLASctl::blas_set_num_threads(n_physical_cores)
+          logger$trace("WRMF$transform(): on exit `RhpcBLASctl::blas_set_num_threads(%d)", blas_threads_keep)
+          RhpcBLASctl::blas_set_num_threads(blas_threads_keep)
         })
       }
+
       x = as(x, "CsparseMatrix")
       x = private$preprocess(x)
 
-      if (private$feedback == "implicit") {
-        if (private$precision == "double") {
-          res = matrix(0, nrow = private$rank, ncol = nrow(x))
-        } else {
-          res = float(0, nrow = private$rank, ncol = nrow(x))
-        }
-        private$als_implicit_fun(t(x),
-                                 self$components,
-                                 res,
-                                 private$XtX,
-                                 n_threads = getOption("rsparse_omp_threads", 1L),
-                                 lambda = private$lambda,
-                                 private$solver_code,
-                                 private$cg_steps,
-                                 private$non_negative)
-      } else if (private$feedback == "explicit")
-        res = private$solver_explicit_feedback(t(x), self$components)
-      else
-        stop(sprintf("don't know how to work with feedback = '%s'", private$feedback))
+      if (private$precision == "double") {
+        res = matrix(0, nrow = private$rank, ncol = nrow(x))
+      } else {
+        res = float(0, nrow = private$rank, ncol = nrow(x))
+      }
+
+      loss = private$solver(t(x), self$components, res, private$XtX)
       res = t(res)
 
       if (private$precision == "double")
         setattr(res, "dimnames", list(rownames(x), NULL))
       else
         setattr(res@Data, "dimnames", list(rownames(x), NULL))
+
       res
     }
   ),
   private = list(
-    # FIXME - not used anymore - consider to remove
-    add_scorers = function(x_train, x_cv, specs = list("map10" = "map@10"), ...) {
-      stopifnot(data.table::uniqueN(names(specs)) == length(specs))
-      private$cv_data = list(train = x_train, cv = x_cv)
-      private$scorers_ellipsis = list(...)
-      for (scorer_name in names(specs)) {
-        # check scorer exists
-        if (exists(scorer_name, where = private$scorers, inherits = FALSE))
-          stop(sprintf("scorer with name '%s' already exists", scorer_name))
-
-        metric = specs[[scorer_name]]
-        scorer_placeholder = list("scorer_function" = NULL, "k" = NULL)
-
-        if (length(grep(pattern = "(ndcg|map)\\@[[:digit:]]+", x = metric)) != 1 )
-          stop(sprintf("don't know how add '%s' metric. Only 'loss', 'map@k', 'ndcg@k' are supported", metric))
-
-        scorer_conf = strsplit(metric, "@", T)[[1]]
-        scorer_placeholder[["k"]] = as.integer(tail(scorer_conf, 1))
-
-        scorer_fun = scorer_conf[[1]]
-        if (scorer_fun == "map")
-          scorer_placeholder[["scorer_function"]] =
-          function(predictions, ...) mean(ap_k(predictions, private$cv_data$cv, ...), na.rm = T)
-        if (scorer_fun == "ndcg")
-          scorer_placeholder[["scorer_function"]] =
-          function(predictions, ...) mean(ndcg_k(predictions, private$cv_data$cv, ...), na.rm = T)
-
-        private$scorers[[scorer_name]] = scorer_placeholder
-      }
-    },
-    remove_scorer = function(scorer_name) {
-      if (!exists(scorer_name, where = private$scorers))
-        stop(sprintf("can't find scorer '%s'", scorer_name))
-      rm(list = scorer_name, envir = private$scorers)
-    },
     solver_code = NULL,
     cg_steps = NULL,
     scorers = NULL,
@@ -351,30 +265,52 @@ WRMF = R6::R6Class(
     precision = NULL,
     XtX = NULL,
     als_implicit_fun = NULL,
-    #------------------------------------------------------------
-    solver_explicit_feedback = function(R, X) {
-      res = vector("list", ncol(R))
-      ridge = diag(x = private$lambda, nrow = private$rank, ncol = private$rank)
-
-      for (i in seq_len(ncol(R))) {
-        # find non-zero ratings
-        p1 = R@p[[i]]
-        p2 = R@p[[i + 1L]]
-        j = p1 + seq_len(p2 - p1)
-        R_nnz = R@x[j]
-        # and corresponding indices
-        ind_nnz = R@i[j] + 1L
-
-        X_nnz = X[, ind_nnz, drop = F]
-        XtX = tcrossprod(X_nnz) + ridge
-        if (private$non_negative) {
-          res[[i]] = c_nnls_double(XtX, X_nnz %*% R_nnz, 10000L, 1e-3)
-        } else {
-          res[[i]] = solve(XtX, X_nnz %*% R_nnz)
-        }
-
-      }
-      do.call(cbind, res)
-    }
+    solver = NULL
   )
 )
+
+solver_explicit = function(x, X, Y, lambda = 0, non_negative = FALSE) {
+  res = vector("list", ncol(x))
+  ridge = diag(x = lambda, nrow = nrow(X), ncol = nrow(X))
+  for (i in seq_len(ncol(x))) {
+    # find non-zero ratings
+    p1 = x@p[[i]]
+    p2 = x@p[[i + 1L]]
+    j = p1 + seq_len(p2 - p1)
+    x_nnz = x@x[j]
+    # and corresponding indices
+    ind_nnz = x@i[j] + 1L
+
+    X_nnz = X[, ind_nnz, drop = F]
+    XtX = tcrossprod(X_nnz) + ridge
+    if (non_negative) {
+      res[[i]] = c_nnls_double(XtX, X_nnz %*% x_nnz, 10000L, 1e-3)
+    } else {
+      res[[i]] = solve(XtX, X_nnz %*% x_nnz)
+    }
+  }
+  res = do.call(cbind, res)
+  loss = als_loss_explicit(x, X, res, lambda, getOption("rsparse_omp_threads", 1L))
+  data.table::setattr(res, "loss", loss)
+  res
+}
+
+solver_implicit = function(
+  x, X, Y, XtX,
+  lambda,
+  n_threads,
+  solver_code,
+  cg_steps,
+  non_negative,
+  precision) {
+
+  solver = ifelse(precision == "float",
+         als_implicit_float,
+         als_implicit_double)
+
+  # Y is modified in-place
+  loss = solver(x, X, Y, XtX, lambda, n_threads, solver_code, cg_steps, non_negative)
+  res = Y
+  data.table::setattr(res, "loss", loss)
+  res
+}

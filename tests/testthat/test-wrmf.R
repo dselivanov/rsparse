@@ -33,8 +33,6 @@ test_that("test WRMF core", {
     # check dimensions
     expect_equal(dim(user_emb), c(nrow(train), rank))
     expect_equal(rownames(user_emb), rownames(train))
-    fit_trace = attr(user_emb, "trace")
-    expect_gte(fit_trace$value[[1]], fit_trace$value[[2]])
     expect_equal(colnames(model$components), colnames(train))
 
     preds = model$predict(cv, k = K)
@@ -70,21 +68,3 @@ test_that("test WRMF FLOAT", {
   }
 }
 )
-
-test_that("test WRMF extra", {
-  lambda = 0.1
-  rank = 8
-  nnmf = FALSE
-  solver = "cholesky"
-  n_iter = 10
-  cv_split = rsparse:::train_test_split(cv)
-  for(feedback in c("explicit", "implicit")) {
-    model = WRMF$new(rank = rank,  lambda = lambda, feedback = feedback, non_negative = nnmf, solver = solver)
-    user_emb = model$fit_transform(train, n_iter = n_iter, convergence_tol = 0.05)
-    fit_trace = attr(user_emb, "trace")
-    setDT(fit_trace)
-    # should converge for less than 10 iter
-    expect_lte(max(fit_trace$iter), n_iter)
-  }
-
-})
