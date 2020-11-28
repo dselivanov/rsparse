@@ -184,6 +184,29 @@ WRMF = R6::R6Class(
         # make float diagonal matrix - if first component is double - result will be automatically casted to double
         fl(diag(x = private$lambda, nrow = private$rank, ncol = private$rank))
 
+      if (private$add_biases) {
+        logger$info("initializing biases")
+        if (private$precision == "double") {
+          user_bias = numeric(n_user)
+          item_bias = numeric(n_item)
+          initialize_biases_double(c_ui, c_iu,
+                                   user_bias,
+                                   item_bias,
+                                   private$lambda)
+          self$components[private$rank, ] = item_bias
+          private$U[1L, ] = user_bias
+        } else {
+          user_bias = float(n_user)
+          item_bias = float(n_item)
+          initialize_biases_float(c_ui, c_iu,
+                                  user_bias,
+                                  item_bias,
+                                  private$lambda)
+          self$components[private$rank, ] = item_bias
+          private$U[1L, ] = user_bias
+        }
+      }
+
       logger$info("starting factorization with %d threads", getOption("rsparse_omp_threads", 1L))
       trace_lst = vector("list", n_iter)
       loss_prev_iter = Inf

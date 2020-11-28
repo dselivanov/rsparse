@@ -252,7 +252,6 @@ T als_explicit_cpp(const dMappedCSC& Conf,
   return loss / static_cast<T>(Conf.nnz);
 }
 
-
 // [[Rcpp::export]]
 double als_implicit_double(const Rcpp::S4 &m_csc_r,
                     arma::mat& X,
@@ -338,6 +337,66 @@ double als_explicit_float(const Rcpp::S4 &m_csc_r,
                                          solver, cg_steps,
                                          calc_user_bias, calc_item_bias,
                                          non_negative);
+}
+
+template <class T>
+void initialize_biases(const dMappedCSC& ConfCSC,
+                       const dMappedCSC& ConfCSR,
+                       arma::Col<T>& user_bias,
+                       arma::Col<T>& item_bias,
+                       T lambda)
+{
+  for (int iter = 0; iter < 5; iter++) {
+    item_bias.zeros();
+    for (int col = 0; col < ConfCSC.n_cols; col++) {
+      for (int ix = ConfCSC.col_ptrs[col]; ix < ConfCSC.col_ptrs[col+1]; ix++) {
+        item_bias[col] += ConfCSC.values[ix] - user_bias[ConfCSC.row_indices[ix]];
+      }
+      item_bias[col] /= lambda + static_cast<T>(ConfCSC.col_ptrs[col+1] - ConfCSC.col_ptrs[col]);
+    }
+
+    user_bias.zeros();
+    for (int row = 0; row < ConfCSR.n_cols; row++) {
+      for (int ix = ConfCSR.col_ptrs[row]; ix < ConfCSR.col_ptrs[row+1]; ix++) {
+        user_bias[row] += ConfCSR.values[ix] - item_bias[ConfCSR.row_indices[ix]];
+      }
+      user_bias[row] /= lambda + static_cast<T>(ConfCSR.col_ptrs[row+1] - ConfCSR.col_ptrs[row]);
+    }
+  }
+}
+
+// [[Rcpp::export]]
+void initialize_biases_double(const Rcpp::S4 &m_csc_r,
+                              const Rcpp::S4 &m_csr_r,
+                              arma::Col<double>& user_bias,
+                              arma::Col<double>& item_bias,
+                              double lambda)
+{
+  const dMappedCSC ConfCSC = extract_mapped_csc(m_csc_r);
+  const dMappedCSC ConfCSR = extract_mapped_csc(m_csr_r);
+  initialize_biases<double>(ConfCSC, ConfCSR,
+                            user_bias, item_bias,
+                            lambda);
+}
+
+// [[Rcpp::export]]
+void initialize_biases_float(const Rcpp::S4 &m_csc_r,
+                             const Rcpp::S4 &m_csr_r,
+                             Rcpp::S4& user_bias,
+                             Rcpp::S4& item_bias,
+                             double lambda)
+{
+  const dMappedCSC ConfCSC = extract_mapped_csc(m_csc_r);
+  const dMappedCSC ConfCSR = extract_mapped_csc(m_csr_r);
+  Rcpp::IntegerVector user_bias_ = user_bias.slot("Data");
+  Rcpp::IntegerVector item_bias_ = item_bias.slot("Data");
+  float * user_bias_ptr = reinterpret_cast<float *>(&user_bias_[0]);
+  float * item_bias_ptr = reinterpret_cast<float *>(&item_bias_[0]);
+  arma::Col<float> user_bias_arma = arma::Col<float>(user_bias_ptr, user_bias_.size(), false, true);
+  arma::Col<float> item_bias_arma = arma::Col<float>(item_bias_ptr, item_bias_.size(), false, true);
+  initialize_biases<float>(ConfCSC, ConfCSR,
+                           user_bias_arma, item_bias_arma,
+                           lambda);
 }
 
 // [[Rcpp::export]]

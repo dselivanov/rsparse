@@ -325,6 +325,34 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// initialize_biases_double
+void initialize_biases_double(const Rcpp::S4& m_csc_r, const Rcpp::S4& m_csr_r, arma::Col<double>& user_bias, arma::Col<double>& item_bias, double lambda);
+RcppExport SEXP _rsparse_initialize_biases_double(SEXP m_csc_rSEXP, SEXP m_csr_rSEXP, SEXP user_biasSEXP, SEXP item_biasSEXP, SEXP lambdaSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csc_r(m_csc_rSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csr_r(m_csr_rSEXP);
+    Rcpp::traits::input_parameter< arma::Col<double>& >::type user_bias(user_biasSEXP);
+    Rcpp::traits::input_parameter< arma::Col<double>& >::type item_bias(item_biasSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    initialize_biases_double(m_csc_r, m_csr_r, user_bias, item_bias, lambda);
+    return R_NilValue;
+END_RCPP
+}
+// initialize_biases_float
+void initialize_biases_float(const Rcpp::S4& m_csc_r, const Rcpp::S4& m_csr_r, Rcpp::S4& user_bias, Rcpp::S4& item_bias, double lambda);
+RcppExport SEXP _rsparse_initialize_biases_float(SEXP m_csc_rSEXP, SEXP m_csr_rSEXP, SEXP user_biasSEXP, SEXP item_biasSEXP, SEXP lambdaSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csc_r(m_csc_rSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csr_r(m_csr_rSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4& >::type user_bias(user_biasSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4& >::type item_bias(item_biasSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    initialize_biases_float(m_csc_r, m_csr_r, user_bias, item_bias, lambda);
+    return R_NilValue;
+END_RCPP
+}
 // deep_copy
 SEXP deep_copy(SEXP x);
 RcppExport SEXP _rsparse_deep_copy(SEXP xSEXP) {
@@ -493,6 +521,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_als_implicit_float", (DL_FUNC) &_rsparse_als_implicit_float, 9},
     {"_rsparse_als_explicit_double", (DL_FUNC) &_rsparse_als_explicit_double, 11},
     {"_rsparse_als_explicit_float", (DL_FUNC) &_rsparse_als_explicit_float, 11},
+    {"_rsparse_initialize_biases_double", (DL_FUNC) &_rsparse_initialize_biases_double, 5},
+    {"_rsparse_initialize_biases_float", (DL_FUNC) &_rsparse_initialize_biases_float, 5},
     {"_rsparse_deep_copy", (DL_FUNC) &_rsparse_deep_copy, 1},
     {"_rsparse_rankmf_solver_double", (DL_FUNC) &_rsparse_rankmf_solver_double, 22},
     {"_rsparse_rankmf_solver_float", (DL_FUNC) &_rsparse_rankmf_solver_float, 22},
