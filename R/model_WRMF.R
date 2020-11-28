@@ -192,7 +192,8 @@ WRMF = R6::R6Class(
           initialize_biases_double(c_ui, c_iu,
                                    user_bias,
                                    item_bias,
-                                   private$lambda)
+                                   private$lambda,
+                                   private$non_negative)
           self$components[private$rank, ] = item_bias
           private$U[1L, ] = user_bias
         } else {
@@ -201,7 +202,8 @@ WRMF = R6::R6Class(
           initialize_biases_float(c_ui, c_iu,
                                   user_bias,
                                   item_bias,
-                                  private$lambda)
+                                  private$lambda,
+                                  private$non_negative)
           self$components[private$rank, ] = item_bias
           private$U[1L, ] = user_bias
         }

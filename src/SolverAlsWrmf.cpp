@@ -344,7 +344,7 @@ void initialize_biases(const dMappedCSC& ConfCSC,
                        const dMappedCSC& ConfCSR,
                        arma::Col<T>& user_bias,
                        arma::Col<T>& item_bias,
-                       T lambda)
+                       T lambda, bool non_negative)
 {
   for (int iter = 0; iter < 5; iter++) {
     item_bias.zeros();
@@ -353,6 +353,8 @@ void initialize_biases(const dMappedCSC& ConfCSC,
         item_bias[col] += ConfCSC.values[ix] - user_bias[ConfCSC.row_indices[ix]];
       }
       item_bias[col] /= lambda + static_cast<T>(ConfCSC.col_ptrs[col+1] - ConfCSC.col_ptrs[col]);
+      if (non_negative)
+        item_bias[col] = std::fmax(0., item_bias[col]);
     }
 
     user_bias.zeros();
@@ -361,6 +363,8 @@ void initialize_biases(const dMappedCSC& ConfCSC,
         user_bias[row] += ConfCSR.values[ix] - item_bias[ConfCSR.row_indices[ix]];
       }
       user_bias[row] /= lambda + static_cast<T>(ConfCSR.col_ptrs[row+1] - ConfCSR.col_ptrs[row]);
+      if (non_negative)
+        user_bias[row] = std::fmax(0., user_bias[row]);
     }
   }
 }
@@ -370,13 +374,13 @@ void initialize_biases_double(const Rcpp::S4 &m_csc_r,
                               const Rcpp::S4 &m_csr_r,
                               arma::Col<double>& user_bias,
                               arma::Col<double>& item_bias,
-                              double lambda)
+                              double lambda, bool non_negative)
 {
   const dMappedCSC ConfCSC = extract_mapped_csc(m_csc_r);
   const dMappedCSC ConfCSR = extract_mapped_csc(m_csr_r);
   initialize_biases<double>(ConfCSC, ConfCSR,
                             user_bias, item_bias,
-                            lambda);
+                            lambda, non_negative);
 }
 
 // [[Rcpp::export]]
@@ -384,7 +388,7 @@ void initialize_biases_float(const Rcpp::S4 &m_csc_r,
                              const Rcpp::S4 &m_csr_r,
                              Rcpp::S4& user_bias,
                              Rcpp::S4& item_bias,
-                             double lambda)
+                             double lambda, bool non_negative)
 {
   const dMappedCSC ConfCSC = extract_mapped_csc(m_csc_r);
   const dMappedCSC ConfCSR = extract_mapped_csc(m_csr_r);
@@ -396,7 +400,7 @@ void initialize_biases_float(const Rcpp::S4 &m_csc_r,
   arma::Col<float> item_bias_arma = arma::Col<float>(item_bias_ptr, item_bias_.size(), false, true);
   initialize_biases<float>(ConfCSC, ConfCSR,
                            user_bias_arma, item_bias_arma,
-                           lambda);
+                           lambda, non_negative);
 }
 
 // [[Rcpp::export]]
