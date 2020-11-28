@@ -112,7 +112,7 @@ on par with \code{"cholesky"}}
 (if "conjugate_gradient" solver used). \code{cg_steps = 3} by default.
 Controls precision of linear equation solution at the each ALS step. Usually no need to tune this parameter}
 
-\item{\code{precision}}{one of \code{c("double", "float")}. Should embeeding matrices be
+\item{\code{precision}}{one of \code{c("double", "float")}. Should embedding matrices be
 numeric or float (from \code{float} package). The latter is usually 2x faster and
 consumes less RAM. BUT \code{float} matrices are not "base" objects. Use carefully.}
 

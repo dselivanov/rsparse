@@ -59,7 +59,7 @@ WRMF = R6::R6Class(
     #' @param cg_steps \code{integer > 0} - max number of internal steps in conjugate gradient
     #' (if "conjugate_gradient" solver used). \code{cg_steps = 3} by default.
     #' Controls precision of linear equation solution at the each ALS step. Usually no need to tune this parameter
-    #' @param precision one of \code{c("double", "float")}. Should embeeding matrices be
+    #' @param precision one of \code{c("double", "float")}. Should embedding matrices be
     #' numeric or float (from \code{float} package). The latter is usually 2x faster and
     #' consumes less RAM. BUT \code{float} matrices are not "base" objects. Use carefully.
     #' @param ... not used at the moment
@@ -170,7 +170,7 @@ WRMF = R6::R6Class(
             nrow = private$rank
           )
         else
-          self$components = flrnorm(private$rank, n_item)
+          self$components = flrnorm(private$rank, n_item, 0, 0.01)
         if (private$non_negative)
           self$components = abs(self$components)
       } else {
@@ -194,8 +194,6 @@ WRMF = R6::R6Class(
                                    item_bias,
                                    private$lambda,
                                    private$non_negative)
-          self$components[private$rank, ] = item_bias
-          private$U[1L, ] = user_bias
         } else {
           user_bias = float(n_user)
           item_bias = float(n_item)
@@ -204,9 +202,9 @@ WRMF = R6::R6Class(
                                   item_bias,
                                   private$lambda,
                                   private$non_negative)
-          self$components[private$rank, ] = item_bias
-          private$U[1L, ] = user_bias
         }
+        self$components[private$rank, ] = item_bias
+        private$U[1L, ] = user_bias
       }
 
       logger$info("starting factorization with %d threads", getOption("rsparse_omp_threads", 1L))
