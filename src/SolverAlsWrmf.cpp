@@ -182,7 +182,7 @@ T als_explicit_cpp(const dMappedCSC& Conf,
         Conf.values[ix] = Conf_orig.at(ix) - X_.at(0, Conf.row_indices[ix]);
     }
     X = X_(arma::span(1, X_.n_rows-1), arma::span::all);
-    Y = Y_(arma::span(1, X_.n_rows-1), arma::span::all);
+    Y = Y_(arma::span(1, Y_.n_rows-1), arma::span::all);
   } else if (calc_item_bias) {
     Y_.row(Y_.n_rows-1).ones();
     for (auto col = 0; col < Conf.n_cols; col++) {
@@ -190,7 +190,7 @@ T als_explicit_cpp(const dMappedCSC& Conf,
         Conf.values[ix] = Conf_orig[ix] - X_.at(X_.n_rows-1, Conf.row_indices[ix]);
     }
     X = X_(arma::span(0, X_.n_rows-2), arma::span::all);
-    Y = Y_(arma::span(0, X_.n_rows-2), arma::span::all);
+    Y = Y_(arma::span(0, Y_.n_rows-2), arma::span::all);
   } else {
     Y = arma::Mat<T>(Y_.memptr(), Y_.n_rows, Y_.n_cols, false, false);
     X = arma::Mat<T>(X_.memptr(), X_.n_rows, X_.n_cols, false, false);
@@ -225,7 +225,7 @@ T als_explicit_cpp(const dMappedCSC& Conf,
       }
 
       if(lambda >= 0)
-      loss += accu(square( Y.col(i).t() * X_nnz - confidence.t() ));
+        loss += accu(square( Y.col(i).t() * X_nnz - confidence.t() ));
     } else {
       Y.col(i).zeros();
     }
@@ -233,14 +233,22 @@ T als_explicit_cpp(const dMappedCSC& Conf,
 
   if (calc_user_bias) {
     X_(arma::span(1, X_.n_rows - 1), arma::span::all) = X;
-    Y_(arma::span(1, X_.n_rows - 1), arma::span::all) = Y;
+    Y_(arma::span(1, Y_.n_rows - 1), arma::span::all) = Y;
+    if (lambda > 0)
+      loss += lambda * (
+        accu(square(Y)) +
+        accu(square(X(arma::span(0, X.n_rows-2), arma::span::all))));
   } else if (calc_item_bias) {
     X_(arma::span(0, X_.n_rows - 2), arma::span::all) = X;
-    Y_(arma::span(0, X_.n_rows - 2), arma::span::all) = Y;
+    Y_(arma::span(0, Y_.n_rows - 2), arma::span::all) = Y;
+    if (lambda > 0)
+      loss += lambda * (
+        accu(square(Y)) +
+        accu(square(X(arma::span(1, X.n_rows-1), arma::span::all))));
+  } else if (lambda > 0) {
+    loss += lambda * (accu(square(X)) + accu(square(Y)));
   }
 
-  if(lambda > 0)
-    loss += lambda * (accu(square(X)) + accu(square(Y)));
   return loss / static_cast<T>(Conf.nnz);
 }
 
