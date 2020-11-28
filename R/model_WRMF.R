@@ -86,19 +86,17 @@ WRMF = R6::R6Class(
       private$non_negative = non_negative
 
       n_threads = getOption("rsparse_omp_threads", 1L)
-      private$solver = function(x, X, Y, XtX) {
-        if (feedback == "implicit") {
-          solver_implicit(
-            x, X, Y, XtX,
-            lambda = private$lambda,
-            n_threads = n_threads,
-            solver_code = private$solver_code,
-            cg_steps = private$cg_steps,
-            non_negative = private$non_negative,
-            precision = private$precision)
-        } else {
-          solver_explicit(x, X, Y, private$lambda, private$non_negative)
-        }
+      private$solver = function(x, X, Y, XtX, bias_index) {
+        feedback_code = ifelse(feedback == "implicit", 0L, 1L)
+        als_solver(
+          x, X, Y, XtX,
+          lambda = private$lambda,
+          n_threads = n_threads,
+          solver_code = private$solver_code,
+          cg_steps = private$cg_steps,
+          non_negative = private$non_negative,
+          precision = private$precision,
+          feedback = feedback_code)
       }
 
       if (solver == "conjugate_gradient" && feedback == "explicit")
@@ -106,6 +104,7 @@ WRMF = R6::R6Class(
 
       self$components = init
       private$rank = as.integer(rank)
+      # private$rank = as.integer(rank) + 2L
 
       stopifnot(is.function(preprocess))
       private$preprocess = preprocess
@@ -174,15 +173,21 @@ WRMF = R6::R6Class(
       # iterate
       for (i in seq_len(n_iter)) {
         # solve for items
+        # YtY = tcrossprod(private$U[-2L, ]) +
+        #   fl(diag(x = private$lambda, nrow = private$rank - 1L, ncol = private$rank - 1L))
         YtY = tcrossprod(private$U) +
           fl(diag(x = private$lambda, nrow = private$rank, ncol = private$rank))
-        self$components = private$solver(c_ui, private$U, self$components, YtY)
+
+        self$components = private$solver(c_ui, private$U, self$components, YtY, 1L)
         loss = attr(self$components, "loss")
 
         # solve for users
+        # private$XtX = tcrossprod(self$components[-1L, ]) +
+        #   fl(diag(x = private$lambda, nrow = private$rank - 1L, ncol = private$rank - 1L))
         private$XtX = tcrossprod(self$components) +
           fl(diag(x = private$lambda, nrow = private$rank, ncol = private$rank))
-        private$U = private$solver(c_iu, self$components, private$U, private$XtX)
+
+        private$U = private$solver(c_iu, self$components, private$U, private$XtX, 2L)
         loss = attr(private$U, "loss")
 
         logger$info("iter %d loss = %.4f", i, loss)
@@ -269,6 +274,27 @@ WRMF = R6::R6Class(
   )
 )
 
+als_solver = function(
+  x, X, Y, XtX,
+  lambda,
+  n_threads,
+  solver_code,
+  cg_steps,
+  non_negative,
+  precision,
+  feedback_code) {
+
+  solver = ifelse(precision == "float",
+         als_float,
+         als_double)
+
+  # Y is modified in-place
+  loss = solver(x, X, Y, XtX, lambda, n_threads, solver_code, cg_steps, non_negative, feedback_code)
+  res = Y
+  data.table::setattr(res, "loss", loss)
+  res
+}
+
 solver_explicit = function(x, X, Y, lambda = 0, non_negative = FALSE) {
   res = vector("list", ncol(x))
   ridge = diag(x = lambda, nrow = nrow(X), ncol = nrow(X))
@@ -295,22 +321,37 @@ solver_explicit = function(x, X, Y, lambda = 0, non_negative = FALSE) {
   res
 }
 
-solver_implicit = function(
-  x, X, Y, XtX,
-  lambda,
-  n_threads,
-  solver_code,
-  cg_steps,
-  non_negative,
-  precision) {
+solver_explicit_biases = function(x, X, Y, bias_index = 1L, lambda = 0, non_negative = FALSE) {
+  ones = rep(1.0, ncol(Y))
+  y_bias_index = bias_index
+  x_bias_index = setdiff(c(1, 2), y_bias_index)
 
-  solver = ifelse(precision == "float",
-         als_implicit_float,
-         als_implicit_double)
-
-  # Y is modified in-place
-  loss = solver(x, X, Y, XtX, lambda, n_threads, solver_code, cg_steps, non_negative)
-  res = Y
+  biases = X[x_bias_index, ]
+  res = vector("list", ncol(x))
+  ridge = diag(x = lambda, nrow = nrow(X) - 1L, ncol = nrow(X) - 1L)
+  for (i in seq_len(ncol(x))) {
+    # find non-zero ratings
+    p1 = x@p[[i]]
+    p2 = x@p[[i + 1L]]
+    j = p1 + seq_len(p2 - p1)
+    # and corresponding indices
+    ind_nnz = x@i[j] + 1L
+    x_nnz = x@x[j] - biases[ind_nnz]
+    X_nnz =  X[-x_bias_index, ind_nnz, drop = F]
+    XtX = tcrossprod(X_nnz) + ridge
+    if (non_negative) {
+      res[[i]] = c_nnls_double(XtX, X_nnz %*% x_nnz, 10000L, 1e-3)
+    } else {
+      res[[i]] = solve(XtX, X_nnz %*% x_nnz)
+    }
+  }
+  res = do.call(cbind, res)
+  if (y_bias_index == 1) {
+    res = rbind(res[1, ], ones, res[-1, ], deparse.level = 0 )
+  } else {
+    res = rbind(ones, res, deparse.level = 0 )
+  }
+  loss = als_loss_explicit(x, X, res, lambda, getOption("rsparse_omp_threads", 1L))
   data.table::setattr(res, "loss", loss)
   res
 }

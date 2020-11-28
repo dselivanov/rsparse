@@ -73,16 +73,12 @@ dense_csc_prod <- function(x_r, y_csc_r, num_threads = 1L) {
     .Call(`_rsparse_dense_csc_prod`, x_r, y_csc_r, num_threads)
 }
 
-als_implicit_double <- function(m_csc_r, X, Y, XtX, lambda, n_threads, solver, cg_steps = 3L, non_negative = FALSE) {
-    .Call(`_rsparse_als_implicit_double`, m_csc_r, X, Y, XtX, lambda, n_threads, solver, cg_steps, non_negative)
+als_double <- function(m_csc_r, X, Y, XtX, lambda, n_threads, solver, cg_steps, non_negative, feedback) {
+    .Call(`_rsparse_als_double`, m_csc_r, X, Y, XtX, lambda, n_threads, solver, cg_steps, non_negative, feedback)
 }
 
-als_implicit_float <- function(m_csc_r, XR, YR, XtXR, lambda, n_threads, solver, cg_steps = 3L, non_negative = FALSE) {
-    .Call(`_rsparse_als_implicit_float`, m_csc_r, XR, YR, XtXR, lambda, n_threads, solver, cg_steps, non_negative)
-}
-
-als_loss_explicit <- function(m_csc_r, X, Y, lambda, n_threads) {
-    .Call(`_rsparse_als_loss_explicit`, m_csc_r, X, Y, lambda, n_threads)
+als_float <- function(m_csc_r, XR, YR, XtXR, lambda, n_threads, solver, cg_steps, non_negative, feedback) {
+    .Call(`_rsparse_als_float`, m_csc_r, XR, YR, XtXR, lambda, n_threads, solver, cg_steps, non_negative, feedback)
 }
 
 rankmf_solver_double <- function(x_r, W, H, W2_grad, H2_grad, user_features_r, item_features_r, rank, n_updates, learning_rate = 0.01, gamma = 1, lambda_user = 0.0, lambda_item_positive = 0.0, lambda_item_negative = 0.0, n_threads = 1L, update_items = TRUE, loss = 0L, kernel = 0L, max_negative_samples = 50L, margin = 0.1, optimizer = 0L, report_progress = 10L) {
