@@ -15,6 +15,11 @@
 #'   \item{\url{http://danielnee.com/2016/09/collaborative-filtering-using-alternating-least-squares/}}
 #'   \item{\url{http://www.benfrederickson.com/matrix-factorization/}}
 #'   \item{\url{http://www.benfrederickson.com/fast-implicit-matrix-factorization/}}
+#'   \item{Franc, Vojtech, Vaclav Hlavac, and Mirko Navara.
+#'         "Sequential coordinate-wise algorithm for the
+#'         non-negative least squares problem."
+#'         International Conference on Computer Analysis of Images
+#'         and Patterns. Springer, Berlin, Heidelberg, 2005.}
 #' }
 #' @export
 #' @examples
@@ -173,13 +178,17 @@ WRMF = R6::R6Class(
           ncol = n_user,
           nrow = private$rank
         )
-        if (private$with_bias) private$U[1, ] = rep(1.0, n_user)
+        # for item biases
+        if (private$with_bias) {
+          private$U[1, ] = rep(1.0, n_user)
+        }
       } else {
         private$U = flrunif(private$rank, n_user, 0, 0.01)
-        if (private$with_bias) private$U[1, ] = float::fl(rep(1.0, n_user))
+        if (private$with_bias) {
+          private$U[1, ] = float::fl(rep(1.0, n_user))
+        }
       }
 
-      # for item biases
       if (is.null(self$components)) {
         if (private$precision == "double") {
           self$components = matrix(
@@ -187,21 +196,27 @@ WRMF = R6::R6Class(
             ncol = n_item,
             nrow = private$rank
           )
-          if (private$with_bias)
+          # for user biases
+          if (private$with_bias) {
             self$components[private$rank, ] = rep(1.0, n_item)
-        }
-        else {
+          }
+        } else {
           self$components = flrunif(private$rank, n_item, 0, 0.01)
-          if (private$with_bias)
+          if (private$with_bias) {
             self$components[private$rank, ] = float::fl(rep(1.0, n_item))
+          }
         }
       } else {
         stopifnot(is.matrix(self$components) || is.float(self$components))
         stopifnot(ncol(self$components) == n_item)
         stopifnot(nrow(self$components) == private$rank)
       }
-      # for user biases
 
+      # NNLS
+      if (private$solver_code == 2L) {
+        self$components = abs(self$components)
+        private$U = abs(private$U)
+      }
 
       stopifnot(ncol(private$U) == ncol(c_iu))
       stopifnot(ncol(self$components) == ncol(c_ui))
