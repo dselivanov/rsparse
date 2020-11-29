@@ -313,6 +313,7 @@ double initialize_biases(const dMappedCSC& ConfCSC,
   double glob_mean = 0;
   for (size_t ix = 0; ix < ConfCSC.nnz; ix++)
     glob_mean += (ConfCSC.values[ix] - glob_mean) / (double)(ix+1);
+#pragma omp simd
   for (size_t ix = 0; ix < ConfCSC.nnz; ix++) {
     ConfCSC.values[ix] -= glob_mean;
     ConfCSR.values[ix] -= glob_mean;
