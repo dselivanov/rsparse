@@ -321,6 +321,47 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// initialize_biases_double
+void initialize_biases_double(const Rcpp::S4& m_csc_r, const Rcpp::S4& m_csr_r, arma::Col<double>& user_bias, arma::Col<double>& item_bias, double lambda, bool non_negative);
+RcppExport SEXP _rsparse_initialize_biases_double(SEXP m_csc_rSEXP, SEXP m_csr_rSEXP, SEXP user_biasSEXP, SEXP item_biasSEXP, SEXP lambdaSEXP, SEXP non_negativeSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csc_r(m_csc_rSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csr_r(m_csr_rSEXP);
+    Rcpp::traits::input_parameter< arma::Col<double>& >::type user_bias(user_biasSEXP);
+    Rcpp::traits::input_parameter< arma::Col<double>& >::type item_bias(item_biasSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< bool >::type non_negative(non_negativeSEXP);
+    initialize_biases_double(m_csc_r, m_csr_r, user_bias, item_bias, lambda, non_negative);
+    return R_NilValue;
+END_RCPP
+}
+// initialize_biases_float
+void initialize_biases_float(const Rcpp::S4& m_csc_r, const Rcpp::S4& m_csr_r, Rcpp::S4& user_bias, Rcpp::S4& item_bias, double lambda, bool non_negative);
+RcppExport SEXP _rsparse_initialize_biases_float(SEXP m_csc_rSEXP, SEXP m_csr_rSEXP, SEXP user_biasSEXP, SEXP item_biasSEXP, SEXP lambdaSEXP, SEXP non_negativeSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csc_r(m_csc_rSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csr_r(m_csr_rSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4& >::type user_bias(user_biasSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4& >::type item_bias(item_biasSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< bool >::type non_negative(non_negativeSEXP);
+    initialize_biases_float(m_csc_r, m_csr_r, user_bias, item_bias, lambda, non_negative);
+    return R_NilValue;
+END_RCPP
+}
+// deep_copy
+SEXP deep_copy(SEXP x);
+RcppExport SEXP _rsparse_deep_copy(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(deep_copy(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rankmf_solver_double
 void rankmf_solver_double(const Rcpp::S4& x_r, arma::Mat<double>& W, arma::Mat<double>& H, arma::Col<double>& W2_grad, arma::Col<double>& H2_grad, const Rcpp::S4& user_features_r, const Rcpp::S4& item_features_r, const arma::uword rank, const arma::uword n_updates, double learning_rate, double gamma, double lambda_user, double lambda_item_positive, double lambda_item_negative, const arma::uword n_threads, bool update_items, const arma::uword loss, const arma::uword kernel, arma::uword max_negative_samples, double margin, const arma::uword optimizer, const arma::uword report_progress);
 RcppExport SEXP _rsparse_rankmf_solver_double(SEXP x_rSEXP, SEXP WSEXP, SEXP HSEXP, SEXP W2_gradSEXP, SEXP H2_gradSEXP, SEXP user_features_rSEXP, SEXP item_features_rSEXP, SEXP rankSEXP, SEXP n_updatesSEXP, SEXP learning_rateSEXP, SEXP gammaSEXP, SEXP lambda_userSEXP, SEXP lambda_item_positiveSEXP, SEXP lambda_item_negativeSEXP, SEXP n_threadsSEXP, SEXP update_itemsSEXP, SEXP lossSEXP, SEXP kernelSEXP, SEXP max_negative_samplesSEXP, SEXP marginSEXP, SEXP optimizerSEXP, SEXP report_progressSEXP) {
@@ -384,8 +425,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // top_product
-Rcpp::IntegerMatrix top_product(const arma::mat& x, const arma::mat& y, unsigned k, unsigned n_threads, const Rcpp::S4& not_recommend_r, const Rcpp::IntegerVector& exclude);
-RcppExport SEXP _rsparse_top_product(SEXP xSEXP, SEXP ySEXP, SEXP kSEXP, SEXP n_threadsSEXP, SEXP not_recommend_rSEXP, SEXP excludeSEXP) {
+Rcpp::IntegerMatrix top_product(const arma::mat& x, const arma::mat& y, unsigned k, unsigned n_threads, const Rcpp::S4& not_recommend_r, const Rcpp::IntegerVector& exclude, const double glob_mean);
+RcppExport SEXP _rsparse_top_product(SEXP xSEXP, SEXP ySEXP, SEXP kSEXP, SEXP n_threadsSEXP, SEXP not_recommend_rSEXP, SEXP excludeSEXP, SEXP glob_meanSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -395,7 +436,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< unsigned >::type n_threads(n_threadsSEXP);
     Rcpp::traits::input_parameter< const Rcpp::S4& >::type not_recommend_r(not_recommend_rSEXP);
     Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type exclude(excludeSEXP);
-    rcpp_result_gen = Rcpp::wrap(top_product(x, y, k, n_threads, not_recommend_r, exclude));
+    Rcpp::traits::input_parameter< const double >::type glob_mean(glob_meanSEXP);
+    rcpp_result_gen = Rcpp::wrap(top_product(x, y, k, n_threads, not_recommend_r, exclude, glob_mean));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -477,9 +519,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_als_implicit_float", (DL_FUNC) &_rsparse_als_implicit_float, 9},
     {"_rsparse_als_explicit_double", (DL_FUNC) &_rsparse_als_explicit_double, 9},
     {"_rsparse_als_explicit_float", (DL_FUNC) &_rsparse_als_explicit_float, 9},
+    {"_rsparse_initialize_biases_double", (DL_FUNC) &_rsparse_initialize_biases_double, 6},
+    {"_rsparse_initialize_biases_float", (DL_FUNC) &_rsparse_initialize_biases_float, 6},
+    {"_rsparse_deep_copy", (DL_FUNC) &_rsparse_deep_copy, 1},
     {"_rsparse_rankmf_solver_double", (DL_FUNC) &_rsparse_rankmf_solver_double, 22},
     {"_rsparse_rankmf_solver_float", (DL_FUNC) &_rsparse_rankmf_solver_float, 22},
-    {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 6},
+    {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 7},
     {"_rsparse_arma_kmeans", (DL_FUNC) &_rsparse_arma_kmeans, 6},
     {"_rsparse_c_nnls_double", (DL_FUNC) &_rsparse_c_nnls_double, 4},
     {"_rsparse_omp_thread_count", (DL_FUNC) &_rsparse_omp_thread_count, 0},

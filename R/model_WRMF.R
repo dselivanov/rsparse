@@ -1,7 +1,7 @@
 #' @title Weighted Regularized Matrix Factorization for collaborative filtering
 #' @description Creates a matrix factorization model which is solved through Alternating Least Squares (Weighted ALS for implicit feedback).
 #' For implicit feedback see "Collaborative Filtering for Implicit Feedback Datasets" (Hu, Koren, Volinsky).
-#' For explicit feedback it corresponds to the classic model for rating matrix decomposition with MSE error (without biases at the moment).
+#' For explicit feedback it corresponds to the classic model for rating matrix decomposition with MSE error.
 #' These two algorithms are proven to work well in recommender systems.
 #' @references
 #' \itemize{
@@ -59,7 +59,7 @@ WRMF = R6::R6Class(
     #' @param cg_steps \code{integer > 0} - max number of internal steps in conjugate gradient
     #' (if "conjugate_gradient" solver used). \code{cg_steps = 3} by default.
     #' Controls precision of linear equation solution at the each ALS step. Usually no need to tune this parameter
-    #' @param precision one of \code{c("double", "float")}. Should embeeding matrices be
+    #' @param precision one of \code{c("double", "float")}. Should embedding matrices be
     #' numeric or float (from \code{float} package). The latter is usually 2x faster and
     #' consumes less RAM. BUT \code{float} matrices are not "base" objects. Use carefully.
     #' @param ... not used at the moment
@@ -89,9 +89,6 @@ WRMF = R6::R6Class(
 
       solver_codes = c("cholesky", "conjugate_gradient", "nnls")
       private$solver_code = match(solver, solver_codes) - 1L
-
-      if (feedback == "explicit" && precision == "float")
-        stop("Explicit solver doesn't support single precision at the moment (but in principle can support).")
 
       private$precision = match.arg(precision)
       private$feedback = feedback
@@ -146,7 +143,7 @@ WRMF = R6::R6Class(
     #' @param n_iter max number of ALS iterations
     #' @param convergence_tol convergence tolerance checked between iterations
     #' @param ... not used at the moment
-    fit_transform = function(x, n_iter = 10L, convergence_tol = 0.005, ...) {
+    fit_transform = function(x, n_iter = 10L, convergence_tol = ifelse(private$feedback == "implicit", 0.005, 0.001), ...) {
       if (private$feedback == "implicit" ) {
         logger$trace("WRMF$fit_transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
         blas_threads_keep = RhpcBLASctl::blas_get_num_procs()
@@ -159,13 +156,31 @@ WRMF = R6::R6Class(
 
       c_ui = as(x, "CsparseMatrix")
       c_ui = private$preprocess(c_ui)
+      c_iu = t(c_ui)
       # store item_ids in order to use them in predict method
       private$item_ids = colnames(c_ui)
 
       if ((private$feedback != "explicit") || private$non_negative) {
         stopifnot(all(c_ui@x >= 0))
       }
-      c_iu = t(c_ui)
+
+      # if (private$feedback == "explicit" && !private$non_negative) {
+      #   self$global_mean = mean(c_ui@x)
+      #   c_ui@x = c_ui@x - self$global_mean
+      # }
+      # if (private$with_bias) {
+      #   c_ui@x = deep_copy(c_ui@x)
+      #   c_ui_orig = deep_copy(c_ui@x)
+      # }
+      # else {
+      #   c_ui_orig = numeric(0L)
+      # }
+
+      # if (private$with_bias) {
+      #   c_iu_orig = deep_copy(c_iu@x)
+      # } else {
+      #   c_iu_orig = numeric(0L)
+      # }
 
       # init
       n_user = nrow(c_ui)
@@ -213,7 +228,7 @@ WRMF = R6::R6Class(
       }
 
       # NNLS
-      if (private$solver_code == 2L) {
+      if (private$non_negative) {
         self$components = abs(self$components)
         private$U = abs(private$U)
       }
@@ -221,14 +236,37 @@ WRMF = R6::R6Class(
       stopifnot(ncol(private$U) == ncol(c_iu))
       stopifnot(ncol(self$components) == ncol(c_ui))
 
-      logger$info("starting factorization")
+      # if (private$with_bias) {
+      #   logger$debug("initializing biases")
+      #   if (private$precision == "double") {
+      #     user_bias = numeric(n_user)
+      #     item_bias = numeric(n_item)
+      #     initialize_biases_double(c_ui, c_iu,
+      #                              user_bias,
+      #                              item_bias,
+      #                              private$lambda,
+      #                              private$non_negative)
+      #   } else {
+      #     user_bias = float(n_user)
+      #     item_bias = float(n_item)
+      #     initialize_biases_float(c_ui, c_iu,
+      #                             user_bias,
+      #                             item_bias,
+      #                             private$lambda,
+      #                             private$non_negative)
+      #   }
+      #   self$components[1L, ] = item_bias
+      #   private$U[private$rank, ] = user_bias
+      # }
+
+      logger$info("starting factorization with %d threads", getOption("rsparse_omp_threads", 1L))
+
       loss_prev_iter = Inf
 
       # iterate
       for (i in seq_len(n_iter)) {
         # solve for items
         loss = private$solver(c_ui, private$U, self$components, TRUE)
-
         # solve for users
         loss = private$solver(c_iu, self$components, private$U, FALSE)
 
@@ -287,6 +325,19 @@ WRMF = R6::R6Class(
       }
 
       loss = private$solver(t(x), self$components, res, FALSE, private$XtX)
+      # if (private$feedback == "implicit") {
+      #   loss = private$solver(t(x), self$components, res, FALSE, private$XtX)
+      # } else{
+      #   x_use = t(x)
+      #   if (!private$non_negative)
+      #     x_use@x = x_use@x - self$global_mean
+      #   if (private$with_bias) {
+      #     x_orig = deep_copy(x_use@x)
+      #   } else {
+      #     x_orig = numeric(0L)
+      #   }
+      #   loss = private$solver(x_use, self$components, res, FALSE)
+      # }
       res = t(res)
 
       if (private$precision == "double")
@@ -297,6 +348,7 @@ WRMF = R6::R6Class(
       res
     }
   ),
+  #### private -----
   private = list(
     solver_code = NULL,
     cg_steps = NULL,
@@ -313,8 +365,6 @@ WRMF = R6::R6Class(
     # this is essentially "confidence" transformation from WRMF article
     preprocess = NULL,
     feedback = NULL,
-    cv_data = NULL,
-    scorers_ellipsis = NULL,
     precision = NULL,
     XtX = NULL,
     solver = NULL,

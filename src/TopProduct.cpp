@@ -20,7 +20,8 @@ Rcpp::IntegerMatrix IntegerMatrixNA(int n, int m){
 Rcpp::IntegerMatrix top_product(const arma::mat &x, const arma::mat &y,
                           unsigned k, unsigned n_threads,
                           const Rcpp::S4 &not_recommend_r,
-                          const Rcpp::IntegerVector &exclude) {
+                          const Rcpp::IntegerVector &exclude,
+                          const double glob_mean = 0.) {
   std::unordered_set<int> exclude_set;
   for(Rcpp::IntegerVector::const_iterator it = exclude.begin(); it != exclude.end(); ++it) {
     exclude_set.insert( *it );
@@ -92,6 +93,9 @@ Rcpp::IntegerMatrix top_product(const arma::mat &x, const arma::mat &y,
       q.pop();
     }
   }
+  if (glob_mean != 0.)
+    for (auto ix = 0; ix < scores.length(); ix++)
+      scores[ix] += glob_mean;
   res.attr("scores") = scores;
   return(res);
 }

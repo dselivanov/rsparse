@@ -6,7 +6,7 @@
 \description{
 Creates a matrix factorization model which is solved through Alternating Least Squares (Weighted ALS for implicit feedback).
 For implicit feedback see "Collaborative Filtering for Implicit Feedback Datasets" (Hu, Koren, Volinsky).
-For explicit feedback it corresponds to the classic model for rating matrix decomposition with MSE error (without biases at the moment).
+For explicit feedback it corresponds to the classic model for rating matrix decomposition with MSE error.
 These two algorithms are proven to work well in recommender systems.
 }
 \examples{
@@ -110,7 +110,7 @@ At the moment only implemented for \code{"explicit"} feedback.}
 (if "conjugate_gradient" solver used). \code{cg_steps = 3} by default.
 Controls precision of linear equation solution at the each ALS step. Usually no need to tune this parameter}
 
-\item{\code{precision}}{one of \code{c("double", "float")}. Should embeeding matrices be
+\item{\code{precision}}{one of \code{c("double", "float")}. Should embedding matrices be
 numeric or float (from \code{float} package). The latter is usually 2x faster and
 consumes less RAM. BUT \code{float} matrices are not "base" objects. Use carefully.}
 
@@ -125,7 +125,12 @@ consumes less RAM. BUT \code{float} matrices are not "base" objects. Use careful
 \subsection{Method \code{fit_transform()}}{
 fits the model
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{WRMF$fit_transform(x, n_iter = 10L, convergence_tol = 0.005, ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{WRMF$fit_transform(
+  x,
+  n_iter = 10L,
+  convergence_tol = ifelse(private$feedback == "implicit", 0.005, 0.001),
+  ...
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
