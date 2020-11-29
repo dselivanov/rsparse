@@ -7,28 +7,26 @@ train = movielens100k[1:900, ]
 cv = movielens100k[901:nrow(movielens100k), ]
 
 test_that("test WRMF core", {
-  p_impl = expand.grid(solver = c("conjugate_gradient", "cholesky"),
+  p_impl = expand.grid(solver = c("conjugate_gradient", "cholesky", "nnls"),
                        feedback = c("implicit"),
-                       nnmf = c(TRUE, FALSE),
                        lambda = c(0, 1000),
                        stringsAsFactors = FALSE)
-  p_expl = expand.grid(solver = "cholesky",
+  p_expl = expand.grid(solver = c("cholesky", "nnls"),
                        feedback = c("explicit"),
                        lambda = c(0.1, 1000),
-                       nnmf = c(TRUE, FALSE), stringsAsFactors = FALSE)
+                       stringsAsFactors = FALSE)
   params = rbind(p_impl, p_expl)
   set.seed(1)
   for(i in 1:nrow(params)) {
     rank = sample(4:10, size = 1)
     K = sample(4:10, size = 1)
 
-    nnmf = params$nnmf[[i]]
     solver = params$solver[[i]]
     feedback = params$feedback[[i]]
     lambda = params$lambda[[i]]
-    message(sprintf("testing WRMF with parameters: nnmf = %d solver = '%s' feedback = '%s' lambda = %.3f, rank = %d",
-                    nnmf, solver, feedback, lambda, rank))
-    model = WRMF$new(rank = rank,  lambda = lambda, feedback = feedback, non_negative = nnmf, solver = solver)
+    message(sprintf("testing WRMF with parameters: solver = '%s' feedback = '%s' lambda = %.3f, rank = %d",
+                    solver, feedback, lambda, rank))
+    model = WRMF$new(rank = rank,  lambda = lambda, feedback = feedback, solver = solver)
     user_emb = model$fit_transform(train, n_iter = 5, convergence_tol = -1)
     # check dimensions
     expect_equal(dim(user_emb), c(nrow(train), rank))
@@ -42,7 +40,7 @@ test_that("test WRMF core", {
     user_emb = model$transform(cv)
     expect_equal(dim(user_emb), c(nrow(cv), rank))
     # check embeddings non-negative
-    if(nnmf) {
+    if(solver == "nnls") {
       expect_true(all(user_emb >= 0))
       expect_true(all(model$components >= 0))
     }

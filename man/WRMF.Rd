@@ -63,8 +63,8 @@ creates WRMF model
   init = NULL,
   preprocess = identity,
   feedback = c("implicit", "explicit"),
-  non_negative = FALSE,
-  solver = c("conjugate_gradient", "cholesky"),
+  solver = c("conjugate_gradient", "cholesky", "nnls"),
+  with_bias = FALSE,
   cg_steps = 3L,
   precision = c("double", "float"),
   ...
@@ -91,12 +91,15 @@ Note that it will not automatically add +1 to the weights of the positive entrie
 
 \item{\code{feedback}}{\code{character} - feedback type - one of \code{c("implicit", "explicit")}}
 
-\item{\code{non_negative}}{logical, whether to perform non-negative factorization}
-
-\item{\code{solver}}{\code{character} - solver for "implicit feedback" problem.
-One of \code{c("conjugate_gradient", "cholesky")}.
+\item{\code{solver}}{\code{character} - solver name.
+One of \code{c("conjugate_gradient", "cholesky", "nnls")}.
 Usually approximate \code{"conjugate_gradient"} is significantly faster and solution is
-on par with \code{"cholesky"}}
+on par with \code{"cholesky"}.
+\code{"nnls"} performs non-negative matrix factorization (NNMF) - restricts
+user and item embeddings to be non-negative.}
+
+\item{\code{with_bias}}{\code{bool} controls model should calculate user and item biases.
+At the moment only implemented for \code{"explicit"} feedback.}
 
 \item{\code{cg_steps}}{\code{integer > 0} - max number of internal steps in conjugate gradient
 (if "conjugate_gradient" solver used). \code{cg_steps = 3} by default.

@@ -111,3 +111,10 @@ const std::string currentDateTime() {
 
   return buf;
 }
+
+arma::fmat exctract_float_matrix(Rcpp::S4 x) {
+  Rcpp::IntegerMatrix x_data = x.slot("Data");
+  float *ptr = reinterpret_cast<float *>(&x_data[0]);
+  arma::fmat x_mapped = arma::fmat(ptr, x_data.nrow(), x_data.ncol(), false, true);
+  return (x_mapped);
+}

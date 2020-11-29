@@ -43,11 +43,14 @@ WRMF = R6::R6Class(
     #' "Collaborative Filtering for Implicit Feedback Datasets" paper.
     #' Note that it will not automatically add +1 to the weights of the positive entries.
     #' @param feedback \code{character} - feedback type - one of \code{c("implicit", "explicit")}
-    #' @param non_negative logical, whether to perform non-negative factorization
-    #' @param solver \code{character} - solver for "implicit feedback" problem.
-    #' One of \code{c("conjugate_gradient", "cholesky")}.
+    #' @param solver \code{character} - solver name.
+    #' One of \code{c("conjugate_gradient", "cholesky", "nnls")}.
     #' Usually approximate \code{"conjugate_gradient"} is significantly faster and solution is
-    #' on par with \code{"cholesky"}
+    #' on par with \code{"cholesky"}.
+    #' \code{"nnls"} performs non-negative matrix factorization (NNMF) - restricts
+    #' user and item embeddings to be non-negative.
+    #' @param with_bias \code{bool} controls model should calculate user and item biases.
+    #' At the moment only implemented for \code{"explicit"} feedback.
     #' @param cg_steps \code{integer > 0} - max number of internal steps in conjugate gradient
     #' (if "conjugate_gradient" solver used). \code{cg_steps = 3} by default.
     #' Controls precision of linear equation solution at the each ALS step. Usually no need to tune this parameter
@@ -60,18 +63,27 @@ WRMF = R6::R6Class(
                           init = NULL,
                           preprocess = identity,
                           feedback = c("implicit", "explicit"),
-                          non_negative = FALSE,
-                          solver = c("conjugate_gradient", "cholesky"),
+                          solver = c("conjugate_gradient", "cholesky", "nnls"),
+                          with_bias = FALSE,
                           cg_steps = 3L,
                           precision = c("double", "float"),
                           ...) {
       stopifnot(is.null(init) || is.matrix(init))
       solver = match.arg(solver)
+      private$non_negative = ifelse(solver == "nnls", TRUE, FALSE)
+
       precision = match.arg(precision)
       feedback = match.arg(feedback)
 
-      if (solver == "cholesky") private$solver_code = 0L
-      if (solver == "conjugate_gradient") private$solver_code = 1L
+      if (feedback == 'implicit') {
+        # FIXME
+        # now only support bias for explicit feedback
+        with_bias = FALSE
+      }
+      private$with_bias = with_bias
+
+      solver_codes = c("cholesky", "conjugate_gradient", "nnls")
+      private$solver_code = match(solver, solver_codes) - 1L
 
       if (feedback == "explicit" && precision == "float")
         stop("Explicit solver doesn't support single precision at the moment (but in principle can support).")
@@ -83,28 +95,43 @@ WRMF = R6::R6Class(
       stopifnot(is.integer(cg_steps) && length(cg_steps) == 1)
       private$cg_steps = cg_steps
 
-      private$non_negative = non_negative
-
       n_threads = getOption("rsparse_omp_threads", 1L)
-      private$solver = function(x, X, Y, XtX, bias_index) {
-        feedback_code = ifelse(feedback == "implicit", 0L, 1L)
-        als_solver(
-          x, X, Y, XtX,
-          lambda = private$lambda,
-          n_threads = n_threads,
-          solver_code = private$solver_code,
-          cg_steps = private$cg_steps,
-          non_negative = private$non_negative,
-          precision = private$precision,
-          feedback = feedback_code)
+      private$solver = function(x, X, Y, is_bias_last_row, XtX = NULL) {
+        if(feedback == "implicit") {
+          als_implicit(
+            x, X, Y,
+            lambda = private$lambda,
+            n_threads = n_threads,
+            solver_code = private$solver_code,
+            cg_steps = private$cg_steps,
+            precision = private$precision,
+            with_bias = private$with_bias,
+            is_bias_last_row = is_bias_last_row,
+            XtX = XtX)
+        } else {
+          als_explicit(
+            x, X, Y,
+            lambda = private$lambda,
+            n_threads = n_threads,
+            solver_code = private$solver_code,
+            cg_steps = private$cg_steps,
+            precision = private$precision,
+            with_bias = private$with_bias,
+            is_bias_last_row = is_bias_last_row)
+        }
+
       }
 
       if (solver == "conjugate_gradient" && feedback == "explicit")
         logger$warn("only 'cholesky' is available for 'explicit' feedback")
 
       self$components = init
-      private$rank = as.integer(rank)
-      # private$rank = as.integer(rank) + 2L
+      if (private$with_bias) {
+        private$rank = as.integer(rank) + 2L
+      } else {
+        private$rank = as.integer(rank)
+      }
+
 
       stopifnot(is.function(preprocess))
       private$preprocess = preprocess
@@ -140,29 +167,41 @@ WRMF = R6::R6Class(
       n_item = ncol(c_ui)
 
       logger$trace("initializing U")
-      if (private$precision == "double")
+      if (private$precision == "double") {
         private$U = matrix(
-          rnorm(n_user * private$rank, 0, 0.01),
+          runif(n_user * private$rank, 0, 0.01),
           ncol = n_user,
           nrow = private$rank
         )
-      else
-        private$U = flrnorm(private$rank, n_user, 0, 0.01)
+        if (private$with_bias) private$U[1, ] = rep(1.0, n_user)
+      } else {
+        private$U = flrunif(private$rank, n_user, 0, 0.01)
+        if (private$with_bias) private$U[1, ] = float::fl(rep(1.0, n_user))
+      }
 
+      # for item biases
       if (is.null(self$components)) {
-        if (private$precision == "double")
+        if (private$precision == "double") {
           self$components = matrix(
-            rnorm(n_item * private$rank, 0, 0.01),
+            runif(n_item * private$rank, 0, 0.01),
             ncol = n_item,
             nrow = private$rank
           )
-        else
-          self$components = flrnorm(private$rank, n_item, 0, 0.01)
+          if (private$with_bias)
+            self$components[private$rank, ] = rep(1.0, n_item)
+        }
+        else {
+          self$components = flrunif(private$rank, n_item, 0, 0.01)
+          if (private$with_bias)
+            self$components[private$rank, ] = float::fl(rep(1.0, n_item))
+        }
       } else {
         stopifnot(is.matrix(self$components) || is.float(self$components))
         stopifnot(ncol(self$components) == n_item)
         stopifnot(nrow(self$components) == private$rank)
       }
+      # for user biases
+
 
       stopifnot(ncol(private$U) == ncol(c_iu))
       stopifnot(ncol(self$components) == ncol(c_ui))
@@ -173,22 +212,10 @@ WRMF = R6::R6Class(
       # iterate
       for (i in seq_len(n_iter)) {
         # solve for items
-        # YtY = tcrossprod(private$U[-2L, ]) +
-        #   fl(diag(x = private$lambda, nrow = private$rank - 1L, ncol = private$rank - 1L))
-        YtY = tcrossprod(private$U) +
-          fl(diag(x = private$lambda, nrow = private$rank, ncol = private$rank))
-
-        self$components = private$solver(c_ui, private$U, self$components, YtY, 1L)
-        loss = attr(self$components, "loss")
+        loss = private$solver(c_ui, private$U, self$components, TRUE)
 
         # solve for users
-        # private$XtX = tcrossprod(self$components[-1L, ]) +
-        #   fl(diag(x = private$lambda, nrow = private$rank - 1L, ncol = private$rank - 1L))
-        private$XtX = tcrossprod(self$components) +
-          fl(diag(x = private$lambda, nrow = private$rank, ncol = private$rank))
-
-        private$U = private$solver(c_iu, self$components, private$U, private$XtX, 2L)
-        loss = attr(private$U, "loss")
+        loss = private$solver(c_iu, self$components, private$U, FALSE)
 
         logger$info("iter %d loss = %.4f", i, loss)
         if (loss_prev_iter / loss - 1 < convergence_tol) {
@@ -198,6 +225,12 @@ WRMF = R6::R6Class(
 
         loss_prev_iter = loss
       }
+
+      rank_ = ifelse(private$with_bias, private$rank - 1L, private$rank)
+      ridge = fl(diag(x = private$lambda, nrow = rank_, ncol = rank_))
+
+      X = if (private$with_bias) tcrossprod(self$components[-1L, ]) else self$components
+      private$XtX = tcrossprod(X) + ridge
 
       if (private$precision == "double")
         data.table::setattr(self$components, "dimnames", list(NULL, colnames(x)))
@@ -238,7 +271,7 @@ WRMF = R6::R6Class(
         res = float(0, nrow = private$rank, ncol = nrow(x))
       }
 
-      loss = private$solver(t(x), self$components, res, private$XtX)
+      loss = private$solver(t(x), self$components, res, FALSE, private$XtX)
       res = t(res)
 
       if (private$precision == "double")
@@ -269,30 +302,57 @@ WRMF = R6::R6Class(
     scorers_ellipsis = NULL,
     precision = NULL,
     XtX = NULL,
-    als_implicit_fun = NULL,
-    solver = NULL
+    solver = NULL,
+    with_bias = NULL
   )
 )
 
-als_solver = function(
+als_implicit = function(
+  x, X, Y,
+  lambda,
+  n_threads,
+  solver_code,
+  cg_steps,
+  precision,
+  with_bias,
+  is_bias_last_row,
+  XtX = NULL) {
+
+  solver = ifelse(precision == "float",
+                  als_implicit_float,
+                  als_implicit_double)
+
+  if(is.null(XtX)) {
+    rank = ifelse(with_bias, nrow(X) - 1L, nrow(X))
+    ridge = fl(diag(x = lambda, nrow = rank, ncol = rank))
+    if (with_bias) {
+      index_row_to_discard = ifelse(is_bias_last_row, rank, 1L)
+      XtX = tcrossprod(X[-index_row_to_discard, ])
+    } else {
+      XtX = tcrossprod(X)
+    }
+    XtX = XtX + ridge
+  }
+  # Y is modified in-place
+  loss = solver(x, X, Y, XtX, lambda, n_threads, solver_code, cg_steps, is_bias_last_row)
+}
+
+als_explicit = function(
   x, X, Y, XtX,
   lambda,
   n_threads,
   solver_code,
   cg_steps,
-  non_negative,
   precision,
-  feedback_code) {
+  with_bias,
+  is_bias_last_row) {
 
   solver = ifelse(precision == "float",
-         als_float,
-         als_double)
+                  als_explicit_float,
+                  als_explicit_double)
 
   # Y is modified in-place
-  loss = solver(x, X, Y, XtX, lambda, n_threads, solver_code, cg_steps, non_negative, feedback_code)
-  res = Y
-  data.table::setattr(res, "loss", loss)
-  res
+  loss = solver(x, X, Y, lambda, n_threads, solver_code, cg_steps, with_bias, is_bias_last_row)
 }
 
 solver_explicit = function(x, X, Y, lambda = 0, non_negative = FALSE) {

@@ -245,9 +245,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// als_double
-double als_double(const Rcpp::S4& m_csc_r, arma::mat& X, arma::mat& Y, const arma::mat& XtX, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps, bool non_negative, const arma::uword feedback);
-RcppExport SEXP _rsparse_als_double(SEXP m_csc_rSEXP, SEXP XSEXP, SEXP YSEXP, SEXP XtXSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP, SEXP non_negativeSEXP, SEXP feedbackSEXP) {
+// als_implicit_double
+double als_implicit_double(const Rcpp::S4& m_csc_r, arma::mat& X, arma::mat& Y, const arma::mat& XtX, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps, bool is_bias_last_row);
+RcppExport SEXP _rsparse_als_implicit_double(SEXP m_csc_rSEXP, SEXP XSEXP, SEXP YSEXP, SEXP XtXSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP, SEXP is_bias_last_rowSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -259,29 +259,65 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< unsigned >::type n_threads(n_threadsSEXP);
     Rcpp::traits::input_parameter< unsigned >::type solver(solverSEXP);
     Rcpp::traits::input_parameter< unsigned >::type cg_steps(cg_stepsSEXP);
-    Rcpp::traits::input_parameter< bool >::type non_negative(non_negativeSEXP);
-    Rcpp::traits::input_parameter< const arma::uword >::type feedback(feedbackSEXP);
-    rcpp_result_gen = Rcpp::wrap(als_double(m_csc_r, X, Y, XtX, lambda, n_threads, solver, cg_steps, non_negative, feedback));
+    Rcpp::traits::input_parameter< bool >::type is_bias_last_row(is_bias_last_rowSEXP);
+    rcpp_result_gen = Rcpp::wrap(als_implicit_double(m_csc_r, X, Y, XtX, lambda, n_threads, solver, cg_steps, is_bias_last_row));
     return rcpp_result_gen;
 END_RCPP
 }
-// als_float
-double als_float(const Rcpp::S4& m_csc_r, Rcpp::S4& XR, Rcpp::S4& YR, Rcpp::S4& XtXR, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps, bool non_negative, const arma::uword feedback);
-RcppExport SEXP _rsparse_als_float(SEXP m_csc_rSEXP, SEXP XRSEXP, SEXP YRSEXP, SEXP XtXRSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP, SEXP non_negativeSEXP, SEXP feedbackSEXP) {
+// als_implicit_float
+double als_implicit_float(const Rcpp::S4& m_csc_r, Rcpp::S4& X_, Rcpp::S4& Y_, Rcpp::S4& XtX_, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps, bool is_bias_last_row);
+RcppExport SEXP _rsparse_als_implicit_float(SEXP m_csc_rSEXP, SEXP X_SEXP, SEXP Y_SEXP, SEXP XtX_SEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP, SEXP is_bias_last_rowSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csc_r(m_csc_rSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4& >::type XR(XRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4& >::type YR(YRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::S4& >::type XtXR(XtXRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4& >::type X_(X_SEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4& >::type Y_(Y_SEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4& >::type XtX_(XtX_SEXP);
     Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
     Rcpp::traits::input_parameter< unsigned >::type n_threads(n_threadsSEXP);
     Rcpp::traits::input_parameter< unsigned >::type solver(solverSEXP);
     Rcpp::traits::input_parameter< unsigned >::type cg_steps(cg_stepsSEXP);
-    Rcpp::traits::input_parameter< bool >::type non_negative(non_negativeSEXP);
-    Rcpp::traits::input_parameter< const arma::uword >::type feedback(feedbackSEXP);
-    rcpp_result_gen = Rcpp::wrap(als_float(m_csc_r, XR, YR, XtXR, lambda, n_threads, solver, cg_steps, non_negative, feedback));
+    Rcpp::traits::input_parameter< bool >::type is_bias_last_row(is_bias_last_rowSEXP);
+    rcpp_result_gen = Rcpp::wrap(als_implicit_float(m_csc_r, X_, Y_, XtX_, lambda, n_threads, solver, cg_steps, is_bias_last_row));
+    return rcpp_result_gen;
+END_RCPP
+}
+// als_explicit_double
+double als_explicit_double(const Rcpp::S4& m_csc_r, arma::mat& X, arma::mat& Y, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps, const bool with_biases, bool is_bias_last_row);
+RcppExport SEXP _rsparse_als_explicit_double(SEXP m_csc_rSEXP, SEXP XSEXP, SEXP YSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP, SEXP with_biasesSEXP, SEXP is_bias_last_rowSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csc_r(m_csc_rSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< unsigned >::type n_threads(n_threadsSEXP);
+    Rcpp::traits::input_parameter< unsigned >::type solver(solverSEXP);
+    Rcpp::traits::input_parameter< unsigned >::type cg_steps(cg_stepsSEXP);
+    Rcpp::traits::input_parameter< const bool >::type with_biases(with_biasesSEXP);
+    Rcpp::traits::input_parameter< bool >::type is_bias_last_row(is_bias_last_rowSEXP);
+    rcpp_result_gen = Rcpp::wrap(als_explicit_double(m_csc_r, X, Y, lambda, n_threads, solver, cg_steps, with_biases, is_bias_last_row));
+    return rcpp_result_gen;
+END_RCPP
+}
+// als_explicit_float
+double als_explicit_float(const Rcpp::S4& m_csc_r, Rcpp::S4& X_, Rcpp::S4& Y_, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps, const bool with_biases, bool is_bias_last_row);
+RcppExport SEXP _rsparse_als_explicit_float(SEXP m_csc_rSEXP, SEXP X_SEXP, SEXP Y_SEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP, SEXP with_biasesSEXP, SEXP is_bias_last_rowSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csc_r(m_csc_rSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4& >::type X_(X_SEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4& >::type Y_(Y_SEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< unsigned >::type n_threads(n_threadsSEXP);
+    Rcpp::traits::input_parameter< unsigned >::type solver(solverSEXP);
+    Rcpp::traits::input_parameter< unsigned >::type cg_steps(cg_stepsSEXP);
+    Rcpp::traits::input_parameter< const bool >::type with_biases(with_biasesSEXP);
+    Rcpp::traits::input_parameter< bool >::type is_bias_last_row(is_bias_last_rowSEXP);
+    rcpp_result_gen = Rcpp::wrap(als_explicit_float(m_csc_r, X_, Y_, lambda, n_threads, solver, cg_steps, with_biases, is_bias_last_row));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -437,8 +473,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_cpp_glove_partial_fit", (DL_FUNC) &_rsparse_cpp_glove_partial_fit, 6},
     {"_rsparse_csr_dense_tcrossprod", (DL_FUNC) &_rsparse_csr_dense_tcrossprod, 3},
     {"_rsparse_dense_csc_prod", (DL_FUNC) &_rsparse_dense_csc_prod, 3},
-    {"_rsparse_als_double", (DL_FUNC) &_rsparse_als_double, 10},
-    {"_rsparse_als_float", (DL_FUNC) &_rsparse_als_float, 10},
+    {"_rsparse_als_implicit_double", (DL_FUNC) &_rsparse_als_implicit_double, 9},
+    {"_rsparse_als_implicit_float", (DL_FUNC) &_rsparse_als_implicit_float, 9},
+    {"_rsparse_als_explicit_double", (DL_FUNC) &_rsparse_als_explicit_double, 9},
+    {"_rsparse_als_explicit_float", (DL_FUNC) &_rsparse_als_explicit_float, 9},
     {"_rsparse_rankmf_solver_double", (DL_FUNC) &_rsparse_rankmf_solver_double, 22},
     {"_rsparse_rankmf_solver_float", (DL_FUNC) &_rsparse_rankmf_solver_float, 22},
     {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 6},
