@@ -88,7 +88,7 @@ WRMF = R6::R6Class(
       private$with_bias = with_bias
 
       solver_codes = c("cholesky", "conjugate_gradient", "nnls")
-      private$solver_code = match(solver, solver_codes) - 1L
+      private$solver_code = match(solver[1], solver_codes) - 1L
 
       private$precision = match.arg(precision)
       private$feedback = feedback
@@ -98,13 +98,14 @@ WRMF = R6::R6Class(
       private$cg_steps = cg_steps
 
       n_threads = getOption("rsparse_omp_threads", 1L)
-      private$solver = function(x, X, Y, is_bias_last_row, XtX = NULL) {
+      private$solver = function(x, X, Y, is_bias_last_row, XtX = NULL, avoid_cg = FALSE) {
+        solver_use = ifelse(avoid_cg && private$solver == 1L, 0L, private$solver)
         if(feedback == "implicit") {
           als_implicit(
             x, X, Y,
             lambda = private$lambda,
             n_threads = n_threads,
-            solver_code = private$solver_code,
+            solver_code = solver_use,
             cg_steps = private$cg_steps,
             precision = private$precision,
             with_bias = private$with_bias,
@@ -115,7 +116,7 @@ WRMF = R6::R6Class(
             x, X, Y,
             lambda = private$lambda,
             n_threads = n_threads,
-            solver_code = private$solver_code,
+            solver_code = solver_use,
             cg_steps = private$cg_steps,
             precision = private$precision,
             with_bias = private$with_bias,
@@ -324,7 +325,7 @@ WRMF = R6::R6Class(
         res = float(0, nrow = private$rank, ncol = nrow(x))
       }
 
-      loss = private$solver(t(x), self$components, res, FALSE, private$XtX)
+      loss = private$solver(t(x), self$components, res, FALSE, private$XtX, TRUE)
       # if (private$feedback == "implicit") {
       #   loss = private$solver(t(x), self$components, res, FALSE, private$XtX)
       # } else{
