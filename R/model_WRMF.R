@@ -164,24 +164,6 @@ WRMF = R6::R6Class(
         stopifnot(all(c_ui@x >= 0))
       }
 
-      # if (private$feedback == "explicit" && !private$non_negative) {
-      #   self$global_mean = mean(c_ui@x)
-      #   c_ui@x = c_ui@x - self$global_mean
-      # }
-      # if (private$with_bias) {
-      #   c_ui@x = deep_copy(c_ui@x)
-      #   c_ui_orig = deep_copy(c_ui@x)
-      # }
-      # else {
-      #   c_ui_orig = numeric(0L)
-      # }
-
-      # if (private$with_bias) {
-      #   c_iu_orig = deep_copy(c_iu@x)
-      # } else {
-      #   c_iu_orig = numeric(0L)
-      # }
-
       # init
       n_user = nrow(c_ui)
       n_item = ncol(c_ui)
@@ -236,28 +218,34 @@ WRMF = R6::R6Class(
       stopifnot(ncol(private$U) == ncol(c_iu))
       stopifnot(ncol(self$components) == ncol(c_ui))
 
-      # if (private$with_bias) {
-      #   logger$debug("initializing biases")
-      #   if (private$precision == "double") {
-      #     user_bias = numeric(n_user)
-      #     item_bias = numeric(n_item)
-      #     initialize_biases_double(c_ui, c_iu,
-      #                              user_bias,
-      #                              item_bias,
-      #                              private$lambda,
-      #                              private$non_negative)
-      #   } else {
-      #     user_bias = float(n_user)
-      #     item_bias = float(n_item)
-      #     initialize_biases_float(c_ui, c_iu,
-      #                             user_bias,
-      #                             item_bias,
-      #                             private$lambda,
-      #                             private$non_negative)
-      #   }
-      #   self$components[1L, ] = item_bias
-      #   private$U[private$rank, ] = user_bias
-      # }
+      if (private$with_bias) {
+        logger$debug("initializing biases")
+        if (private$feedback == "explicit")
+          c_ui@x = deep_copy(c_ui@x)
+        if (private$precision == "double") {
+          user_bias = numeric(n_user)
+          item_bias = numeric(n_item)
+          self$global_mean = initialize_biases_double(c_ui, c_iu,
+                                                      user_bias,
+                                                      item_bias,
+                                                      private$lambda,
+                                                      private$non_negative)
+        } else {
+          user_bias = float(n_user)
+          item_bias = float(n_item)
+          self$global_mean = initialize_biases_float(c_ui, c_iu,
+                                                     user_bias,
+                                                     item_bias,
+                                                     private$lambda,
+                                                     private$non_negative)
+        }
+        self$components[1L, ] = item_bias
+        private$U[private$rank, ] = user_bias
+      } else if (private$feedback == "explicit") {
+        self$global_mean = mean(c_ui@x)
+        c_ui@x = c_ui@x - self$global_mean
+        c_iu@x = c_iu@x - self$global_mean
+      }
 
       logger$info("starting factorization with %d threads", getOption("rsparse_omp_threads", 1L))
 
@@ -317,6 +305,8 @@ WRMF = R6::R6Class(
 
       x = as(x, "CsparseMatrix")
       x = private$preprocess(x)
+      if (self$global_mean != 0.)
+        x@x = x@x - self$global_mean
 
       if (private$precision == "double") {
         res = matrix(0, nrow = private$rank, ncol = nrow(x))
@@ -325,19 +315,6 @@ WRMF = R6::R6Class(
       }
 
       loss = private$solver(t(x), self$components, res, FALSE, private$XtX)
-      # if (private$feedback == "implicit") {
-      #   loss = private$solver(t(x), self$components, res, FALSE, private$XtX)
-      # } else{
-      #   x_use = t(x)
-      #   if (!private$non_negative)
-      #     x_use@x = x_use@x - self$global_mean
-      #   if (private$with_bias) {
-      #     x_orig = deep_copy(x_use@x)
-      #   } else {
-      #     x_orig = numeric(0L)
-      #   }
-      #   loss = private$solver(x_use, self$components, res, FALSE)
-      # }
       res = t(res)
 
       if (private$precision == "double")

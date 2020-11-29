@@ -90,11 +90,11 @@ als_explicit_float <- function(m_csc_r, X_, Y_, lambda, n_threads, solver, cg_st
 }
 
 initialize_biases_double <- function(m_csc_r, m_csr_r, user_bias, item_bias, lambda, non_negative) {
-    invisible(.Call(`_rsparse_initialize_biases_double`, m_csc_r, m_csr_r, user_bias, item_bias, lambda, non_negative))
+    .Call(`_rsparse_initialize_biases_double`, m_csc_r, m_csr_r, user_bias, item_bias, lambda, non_negative)
 }
 
 initialize_biases_float <- function(m_csc_r, m_csr_r, user_bias, item_bias, lambda, non_negative) {
-    invisible(.Call(`_rsparse_initialize_biases_float`, m_csc_r, m_csr_r, user_bias, item_bias, lambda, non_negative))
+    .Call(`_rsparse_initialize_biases_float`, m_csc_r, m_csr_r, user_bias, item_bias, lambda, non_negative)
 }
 
 deep_copy <- function(x) {

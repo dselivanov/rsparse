@@ -168,7 +168,7 @@ T als_explicit(const dMappedCSC& Conf,
   if(lambda > 0) {
     if (with_biases) {
       auto X_no_bias = X(arma::span(1, X.n_rows - 1), arma::span::all);
-      auto Y_no_bias = X(arma::span(1, Y.n_rows - 1), arma::span::all);
+      auto Y_no_bias = Y(arma::span(1, Y.n_rows - 1), arma::span::all);
       loss += lambda * (accu(square(X_no_bias)) + accu(square(Y_no_bias)));
     } else {
       loss += lambda * (accu(square(X)) + accu(square(Y)));
@@ -304,11 +304,20 @@ double als_explicit_float(const Rcpp::S4 &m_csc_r,
 }
 
 template <class T>
-void initialize_biases(const dMappedCSC& ConfCSC,
-                       const dMappedCSC& ConfCSR,
-                       arma::Col<T>& user_bias,
-                       arma::Col<T>& item_bias,
-                       T lambda, bool non_negative) {
+double initialize_biases(const dMappedCSC& ConfCSC,
+                         const dMappedCSC& ConfCSR,
+                         arma::Col<T>& user_bias,
+                         arma::Col<T>& item_bias,
+                         T lambda, bool non_negative) {
+  /* Robust mean calculation */
+  double glob_mean = 0;
+  for (size_t ix = 0; ix < ConfCSC.nnz; ix++)
+    glob_mean += (ConfCSC.values[ix] - glob_mean) / (double)(ix+1);
+  for (size_t ix = 0; ix < ConfCSC.nnz; ix++) {
+    ConfCSC.values[ix] -= glob_mean;
+    ConfCSR.values[ix] -= glob_mean;
+  }
+
   for (int iter = 0; iter < 5; iter++) {
     item_bias.zeros();
     for (int col = 0; col < ConfCSC.n_cols; col++) {
@@ -330,37 +339,38 @@ void initialize_biases(const dMappedCSC& ConfCSC,
         user_bias[row] = std::fmax(0., user_bias[row]);
     }
   }
+  return glob_mean;
 }
 
 // [[Rcpp::export]]
-void initialize_biases_double(const Rcpp::S4 &m_csc_r,
-                              const Rcpp::S4 &m_csr_r,
-                              arma::Col<double>& user_bias,
-                              arma::Col<double>& item_bias,
-                              double lambda, bool non_negative) {
+double initialize_biases_double(const Rcpp::S4 &m_csc_r,
+                                const Rcpp::S4 &m_csr_r,
+                                arma::Col<double>& user_bias,
+                                arma::Col<double>& item_bias,
+                                double lambda, bool non_negative) {
   const dMappedCSC ConfCSC = extract_mapped_csc(m_csc_r);
   const dMappedCSC ConfCSR = extract_mapped_csc(m_csr_r);
-  initialize_biases<double>(ConfCSC, ConfCSR,
-                            user_bias, item_bias,
-                            lambda, non_negative);
+  return initialize_biases<double>(ConfCSC, ConfCSR,
+                                   user_bias, item_bias,
+                                   lambda, non_negative);
 }
 
 // [[Rcpp::export]]
-void initialize_biases_float(const Rcpp::S4 &m_csc_r,
-                             const Rcpp::S4 &m_csr_r,
-                             Rcpp::S4& user_bias,
-                             Rcpp::S4& item_bias,
-                             double lambda, bool non_negative) {
+double initialize_biases_float(const Rcpp::S4 &m_csc_r,
+                               const Rcpp::S4 &m_csr_r,
+                               Rcpp::S4& user_bias,
+                               Rcpp::S4& item_bias,
+                               double lambda, bool non_negative) {
   const dMappedCSC ConfCSC = extract_mapped_csc(m_csc_r);
   const dMappedCSC ConfCSR = extract_mapped_csc(m_csr_r);
 
   arma::Col<float> user_bias_arma = exctract_float_matrix(user_bias);
   arma::Col<float> item_bias_arma = exctract_float_matrix(item_bias);
 
-  initialize_biases<float>(ConfCSC, ConfCSR,
-                           user_bias_arma,
-                           item_bias_arma,
-                           lambda, non_negative);
+  return initialize_biases<float>(ConfCSC, ConfCSR,
+                                  user_bias_arma,
+                                  item_bias_arma,
+                                  lambda, non_negative);
 }
 
 // [[Rcpp::export]]
