@@ -176,8 +176,12 @@ T als_explicit(const dMappedCSC& Conf,
 
   if(lambda > 0) {
     if (with_biases) {
-      auto X_no_bias = X(arma::span(1, X.n_rows - 1), arma::span::all);
-      auto Y_no_bias = X(arma::span(1, Y.n_rows - 1), arma::span::all);
+      arma::uword index_last_but_one;
+      // n_rows - 2 is the index of the last but one row
+      index_last_but_one = X.n_rows - 2;
+      auto X_no_bias = X(arma::span(1, index_last_but_one), arma::span::all);
+      index_last_but_one = Y.n_rows - 2;
+      auto Y_no_bias = X(arma::span(1, index_last_but_one), arma::span::all);
       loss += lambda * (accu(square(X_no_bias)) + accu(square(Y_no_bias)));
     } else {
       loss += lambda * (accu(square(X)) + accu(square(Y)));
