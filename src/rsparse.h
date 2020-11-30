@@ -18,7 +18,7 @@
 dMappedCSR extract_mapped_csr(Rcpp::S4 input);
 dMappedCSC extract_mapped_csc(Rcpp::S4 input);
 arma::fmat exctract_float_matrix(Rcpp::S4 x);
-
+arma::fvec exctract_float_vector(Rcpp::S4 x);
 // [[Rcpp::export]]
 int omp_thread_count();
 

@@ -89,12 +89,12 @@ als_explicit_float <- function(m_csc_r, X_, Y_, lambda, n_threads, solver, cg_st
     .Call(`_rsparse_als_explicit_float`, m_csc_r, X_, Y_, lambda, n_threads, solver, cg_steps, with_biases, is_bias_last_row)
 }
 
-initialize_biases_double <- function(m_csc_r, m_csr_r, user_bias, item_bias, lambda, non_negative) {
-    invisible(.Call(`_rsparse_initialize_biases_double`, m_csc_r, m_csr_r, user_bias, item_bias, lambda, non_negative))
+initialize_biases_double <- function(m_csc_r, m_csr_r, user_bias, item_bias, lambda, non_negative, calculate_global_bias = FALSE) {
+    .Call(`_rsparse_initialize_biases_double`, m_csc_r, m_csr_r, user_bias, item_bias, lambda, non_negative, calculate_global_bias)
 }
 
-initialize_biases_float <- function(m_csc_r, m_csr_r, user_bias, item_bias, lambda, non_negative) {
-    invisible(.Call(`_rsparse_initialize_biases_float`, m_csc_r, m_csr_r, user_bias, item_bias, lambda, non_negative))
+initialize_biases_float <- function(m_csc_r, m_csr_r, user_bias, item_bias, lambda, non_negative, calculate_global_bias = FALSE) {
+    .Call(`_rsparse_initialize_biases_float`, m_csc_r, m_csr_r, user_bias, item_bias, lambda, non_negative, calculate_global_bias)
 }
 
 deep_copy <- function(x) {

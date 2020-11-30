@@ -317,11 +317,30 @@ double als_explicit_float(const Rcpp::S4 &m_csc_r,
 }
 
 template <class T>
-void initialize_biases(const dMappedCSC& ConfCSC,
-                       const dMappedCSC& ConfCSR,
-                       arma::Col<T>& user_bias,
-                       arma::Col<T>& item_bias,
-                       T lambda, bool non_negative) {
+double initialize_biases(dMappedCSC& ConfCSC, // modified in place
+                         dMappedCSC& ConfCSR, // modified in place
+                         arma::Col<T>& user_bias,
+                         arma::Col<T>& item_bias,
+                         T lambda,
+                         bool non_negative,
+                         bool calculate_global_bias = false) {
+  /* Robust mean calculation */
+  double global_bias = 0;
+  if (calculate_global_bias) {
+    for (size_t ix = 0; ix < ConfCSC.nnz; ix++)
+      global_bias += (ConfCSC.values[ix] - global_bias) / (double)(ix+1);
+    #ifdef _OPENMP
+    #pragma omp simd
+    #endif
+    for (size_t ix = 0; ix < ConfCSC.nnz; ix++) {
+      ConfCSC.values[ix] -= global_bias;
+      ConfCSR.values[ix] -= global_bias;
+    }
+  }
+
+
+
+
   for (int iter = 0; iter < 5; iter++) {
     item_bias.zeros();
     for (int col = 0; col < ConfCSC.n_cols; col++) {
@@ -343,37 +362,46 @@ void initialize_biases(const dMappedCSC& ConfCSC,
         user_bias[row] = std::fmax(0., user_bias[row]);
     }
   }
+  return global_bias;
 }
 
 // [[Rcpp::export]]
-void initialize_biases_double(const Rcpp::S4 &m_csc_r,
-                              const Rcpp::S4 &m_csr_r,
-                              arma::Col<double>& user_bias,
-                              arma::Col<double>& item_bias,
-                              double lambda, bool non_negative) {
-  const dMappedCSC ConfCSC = extract_mapped_csc(m_csc_r);
-  const dMappedCSC ConfCSR = extract_mapped_csc(m_csr_r);
-  initialize_biases<double>(ConfCSC, ConfCSR,
-                            user_bias, item_bias,
-                            lambda, non_negative);
+double initialize_biases_double(const Rcpp::S4 &m_csc_r,
+                                const Rcpp::S4 &m_csr_r,
+                                arma::Col<double>& user_bias,
+                                arma::Col<double>& item_bias,
+                                double lambda,
+                                bool non_negative,
+                                bool calculate_global_bias = false) {
+  dMappedCSC ConfCSC = extract_mapped_csc(m_csc_r);
+  dMappedCSC ConfCSR = extract_mapped_csc(m_csr_r);
+  return initialize_biases<double>(ConfCSC, ConfCSR,
+                                   user_bias, item_bias,
+                                   lambda,
+                                   non_negative,
+                                   calculate_global_bias);
 }
 
 // [[Rcpp::export]]
-void initialize_biases_float(const Rcpp::S4 &m_csc_r,
-                             const Rcpp::S4 &m_csr_r,
-                             Rcpp::S4& user_bias,
-                             Rcpp::S4& item_bias,
-                             double lambda, bool non_negative) {
-  const dMappedCSC ConfCSC = extract_mapped_csc(m_csc_r);
-  const dMappedCSC ConfCSR = extract_mapped_csc(m_csr_r);
+double initialize_biases_float(const Rcpp::S4 &m_csc_r,
+                               const Rcpp::S4 &m_csr_r,
+                               Rcpp::S4& user_bias,
+                               Rcpp::S4& item_bias,
+                               double lambda,
+                               bool non_negative,
+                               bool calculate_global_bias = false) {
+  dMappedCSC ConfCSC = extract_mapped_csc(m_csc_r);
+  dMappedCSC ConfCSR = extract_mapped_csc(m_csr_r);
 
-  arma::Col<float> user_bias_arma = exctract_float_matrix(user_bias);
-  arma::Col<float> item_bias_arma = exctract_float_matrix(item_bias);
+  arma::Col<float> user_bias_arma = exctract_float_vector(user_bias);
+  arma::Col<float> item_bias_arma = exctract_float_vector(item_bias);
 
-  initialize_biases<float>(ConfCSC, ConfCSR,
-                           user_bias_arma,
-                           item_bias_arma,
-                           lambda, non_negative);
+  return initialize_biases<float>(ConfCSC, ConfCSR,
+                                  user_bias_arma,
+                                  item_bias_arma,
+                                  lambda,
+                                  non_negative,
+                                  calculate_global_bias);
 }
 
 // [[Rcpp::export]]

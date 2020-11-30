@@ -69,7 +69,8 @@ creates WRMF model
   preprocess = identity,
   feedback = c("implicit", "explicit"),
   solver = c("conjugate_gradient", "cholesky", "nnls"),
-  with_bias = FALSE,
+  with_user_item_bias = FALSE,
+  with_global_bias = FALSE,
   cg_steps = 3L,
   precision = c("double", "float"),
   ...
@@ -103,7 +104,10 @@ on par with \code{"cholesky"}.
 \code{"nnls"} performs non-negative matrix factorization (NNMF) - restricts
 user and item embeddings to be non-negative.}
 
-\item{\code{with_bias}}{\code{bool} controls model should calculate user and item biases.
+\item{\code{with_user_item_bias}}{\code{bool} controls if  model should calculate user and item biases.
+At the moment only implemented for \code{"explicit"} feedback.}
+
+\item{\code{with_global_bias}}{\code{bool} controls if model should calculate global biases (mean).
 At the moment only implemented for \code{"explicit"} feedback.}
 
 \item{\code{cg_steps}}{\code{integer > 0} - max number of internal steps in conjugate gradient

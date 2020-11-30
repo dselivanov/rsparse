@@ -12,7 +12,7 @@ All matrix factorization recommenders inherit from this class
 \describe{
 \item{\code{components}}{item embeddings}
 
-\item{\code{global_mean}}{global mean (for centering values in explicit feedback)}
+\item{\code{global_bias}}{global mean (for centering values in explicit feedback)}
 }
 \if{html}{\out{</div>}}
 }

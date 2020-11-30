@@ -54,7 +54,9 @@ WRMF = R6::R6Class(
     #' on par with \code{"cholesky"}.
     #' \code{"nnls"} performs non-negative matrix factorization (NNMF) - restricts
     #' user and item embeddings to be non-negative.
-    #' @param with_bias \code{bool} controls model should calculate user and item biases.
+    #' @param with_user_item_bias \code{bool} controls if  model should calculate user and item biases.
+    #' At the moment only implemented for \code{"explicit"} feedback.
+    #' @param with_global_bias \code{bool} controls if model should calculate global biases (mean).
     #' At the moment only implemented for \code{"explicit"} feedback.
     #' @param cg_steps \code{integer > 0} - max number of internal steps in conjugate gradient
     #' (if "conjugate_gradient" solver used). \code{cg_steps = 3} by default.
@@ -69,7 +71,8 @@ WRMF = R6::R6Class(
                           preprocess = identity,
                           feedback = c("implicit", "explicit"),
                           solver = c("conjugate_gradient", "cholesky", "nnls"),
-                          with_bias = FALSE,
+                          with_user_item_bias = FALSE,
+                          with_global_bias = FALSE,
                           cg_steps = 3L,
                           precision = c("double", "float"),
                           ...) {
@@ -83,9 +86,13 @@ WRMF = R6::R6Class(
       if (feedback == 'implicit') {
         # FIXME
         # now only support bias for explicit feedback
-        with_bias = FALSE
+        with_user_item_bias = FALSE
+        with_global_bias = FALSE
       }
-      private$with_bias = with_bias
+      private$with_user_item_bias = with_user_item_bias
+
+      private$with_global_bias = with_global_bias
+      self$global_bias = 0
 
       solver_codes = c("cholesky", "conjugate_gradient", "nnls")
       private$solver_code = match(solver, solver_codes) - 1L
@@ -108,7 +115,7 @@ WRMF = R6::R6Class(
             solver_code = solver_use,
             cg_steps = private$cg_steps,
             precision = private$precision,
-            with_bias = private$with_bias,
+            with_user_item_bias = private$with_user_item_bias,
             is_bias_last_row = is_bias_last_row,
             XtX = XtX)
         } else {
@@ -119,14 +126,22 @@ WRMF = R6::R6Class(
             solver_code = solver_use,
             cg_steps = private$cg_steps,
             precision = private$precision,
-            with_bias = private$with_bias,
+            with_user_item_bias = private$with_user_item_bias,
             is_bias_last_row = is_bias_last_row)
         }
 
       }
 
+      private$init_user_item_bias = function(c_ui, c_iu, user_bias, item_bias) {
+        FUN = ifelse(private$precision == 'double',
+                     initialize_biases_double,
+                     initialize_biases_float)
+        FUN(c_ui, c_iu, user_bias, item_bias, private$lambda,
+            private$non_negative, private$with_global_bias)
+      }
+
       self$components = init
-      if (private$with_bias) {
+      if (private$with_user_item_bias) {
         private$rank = as.integer(rank) + 2L
       } else {
         private$rank = as.integer(rank)
@@ -162,24 +177,6 @@ WRMF = R6::R6Class(
         stopifnot(all(c_ui@x >= 0))
       }
 
-      # if (private$feedback == "explicit" && !private$non_negative) {
-      #   self$global_mean = mean(c_ui@x)
-      #   c_ui@x = c_ui@x - self$global_mean
-      # }
-      # if (private$with_bias) {
-      #   c_ui@x = deep_copy(c_ui@x)
-      #   c_ui_orig = deep_copy(c_ui@x)
-      # }
-      # else {
-      #   c_ui_orig = numeric(0L)
-      # }
-
-      # if (private$with_bias) {
-      #   c_iu_orig = deep_copy(c_iu@x)
-      # } else {
-      #   c_iu_orig = numeric(0L)
-      # }
-
       # init
       n_user = nrow(c_ui)
       n_item = ncol(c_ui)
@@ -192,12 +189,12 @@ WRMF = R6::R6Class(
           nrow = private$rank
         )
         # for item biases
-        if (private$with_bias) {
+        if (private$with_user_item_bias) {
           private$U[1, ] = rep(1.0, n_user)
         }
       } else {
         private$U = flrnorm(private$rank, n_user, 0, 0.01)
-        if (private$with_bias) {
+        if (private$with_user_item_bias) {
           private$U[1, ] = float::fl(rep(1.0, n_user))
         }
       }
@@ -210,12 +207,12 @@ WRMF = R6::R6Class(
             nrow = private$rank
           )
           # for user biases
-          if (private$with_bias) {
+          if (private$with_user_item_bias) {
             self$components[private$rank, ] = rep(1.0, n_item)
           }
         } else {
           self$components = flrnorm(private$rank, n_item, 0, 0.01)
-          if (private$with_bias) {
+          if (private$with_user_item_bias) {
             self$components[private$rank, ] = float::fl(rep(1.0, n_item))
           }
         }
@@ -234,28 +231,30 @@ WRMF = R6::R6Class(
       stopifnot(ncol(private$U) == ncol(c_iu))
       stopifnot(ncol(self$components) == ncol(c_ui))
 
-      # if (private$with_bias) {
-      #   logger$debug("initializing biases")
-      #   if (private$precision == "double") {
-      #     user_bias = numeric(n_user)
-      #     item_bias = numeric(n_item)
-      #     initialize_biases_double(c_ui, c_iu,
-      #                              user_bias,
-      #                              item_bias,
-      #                              private$lambda,
-      #                              private$non_negative)
-      #   } else {
-      #     user_bias = float(n_user)
-      #     item_bias = float(n_item)
-      #     initialize_biases_float(c_ui, c_iu,
-      #                             user_bias,
-      #                             item_bias,
-      #                             private$lambda,
-      #                             private$non_negative)
-      #   }
-      #   self$components[1L, ] = item_bias
-      #   private$U[private$rank, ] = user_bias
-      # }
+      if (private$with_user_item_bias) {
+        logger$debug("initializing biases")
+        # copy only c_ui@x
+        # beacause c_iu is internal
+        if (private$feedback == "explicit" && private$with_global_bias)
+          c_ui@x = deep_copy(c_ui@x)
+
+
+        if (private$precision == "double") {
+          user_bias = numeric(n_user)
+          item_bias = numeric(n_item)
+        } else {
+          user_bias = float(n_user)
+          item_bias = float(n_item)
+        }
+
+        self$global_bias = private$init_user_item_bias(c_ui, c_iu, user_bias, item_bias)
+        self$components[1L, ] = item_bias
+        private$U[private$rank, ] = user_bias
+      } else if (private$feedback == "explicit" && private$with_global_bias) {
+        self$global_bias = mean(c_ui@x)
+        c_ui@x = c_ui@x - self$global_bias
+        c_iu@x = c_iu@x - self$global_bias
+      }
 
       logger$info("starting factorization with %d threads", getOption("rsparse_omp_threads", 1L))
 
@@ -277,10 +276,10 @@ WRMF = R6::R6Class(
         loss_prev_iter = loss
       }
 
-      rank_ = ifelse(private$with_bias, private$rank - 1L, private$rank)
+      rank_ = ifelse(private$with_user_item_bias, private$rank - 1L, private$rank)
       ridge = fl(diag(x = private$lambda, nrow = rank_, ncol = rank_))
 
-      X = if (private$with_bias) tcrossprod(self$components[-1L, ]) else self$components
+      X = if (private$with_user_item_bias) tcrossprod(self$components[-1L, ]) else self$components
       private$XtX = tcrossprod(X) + ridge
 
       if (private$precision == "double")
@@ -315,6 +314,8 @@ WRMF = R6::R6Class(
 
       x = as(x, "CsparseMatrix")
       x = private$preprocess(x)
+      if (self$global_bias != 0.)
+        x@x = x@x - self$global_bias
 
       if (private$precision == "double") {
         res = matrix(0, nrow = private$rank, ncol = nrow(x))
@@ -323,19 +324,7 @@ WRMF = R6::R6Class(
       }
 
       loss = private$solver(t(x), self$components, res, FALSE, private$XtX, TRUE)
-      # if (private$feedback == "implicit") {
-      #   loss = private$solver(t(x), self$components, res, FALSE, private$XtX)
-      # } else{
-      #   x_use = t(x)
-      #   if (!private$non_negative)
-      #     x_use@x = x_use@x - self$global_mean
-      #   if (private$with_bias) {
-      #     x_orig = deep_copy(x_use@x)
-      #   } else {
-      #     x_orig = numeric(0L)
-      #   }
-      #   loss = private$solver(x_use, self$components, res, FALSE)
-      # }
+
       res = t(res)
 
       if (private$precision == "double")
@@ -366,7 +355,9 @@ WRMF = R6::R6Class(
     precision = NULL,
     XtX = NULL,
     solver = NULL,
-    with_bias = NULL
+    with_user_item_bias = NULL,
+    with_global_bias = NULL,
+    init_user_item_bias = NULL
   )
 )
 
@@ -377,7 +368,7 @@ als_implicit = function(
   solver_code,
   cg_steps,
   precision,
-  with_bias,
+  with_user_item_bias,
   is_bias_last_row,
   XtX = NULL) {
 
@@ -386,9 +377,9 @@ als_implicit = function(
                   als_implicit_double)
 
   if(is.null(XtX)) {
-    rank = ifelse(with_bias, nrow(X) - 1L, nrow(X))
+    rank = ifelse(with_user_item_bias, nrow(X) - 1L, nrow(X))
     ridge = fl(diag(x = lambda, nrow = rank, ncol = rank))
-    if (with_bias) {
+    if (with_user_item_bias) {
       index_row_to_discard = ifelse(is_bias_last_row, rank, 1L)
       XtX = tcrossprod(X[-index_row_to_discard, ])
     } else {
@@ -407,7 +398,7 @@ als_explicit = function(
   solver_code,
   cg_steps,
   precision,
-  with_bias,
+  with_user_item_bias,
   is_bias_last_row) {
 
   solver = ifelse(precision == "float",
@@ -415,7 +406,7 @@ als_explicit = function(
                   als_explicit_double)
 
   # Y is modified in-place
-  loss = solver(x, X, Y, lambda, n_threads, solver_code, cg_steps, with_bias, is_bias_last_row)
+  loss = solver(x, X, Y, lambda, n_threads, solver_code, cg_steps, with_user_item_bias, is_bias_last_row)
 }
 
 solver_explicit = function(x, X, Y, lambda = 0, non_negative = FALSE) {
