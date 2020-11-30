@@ -125,9 +125,6 @@ WRMF = R6::R6Class(
 
       }
 
-      if (solver == "conjugate_gradient" && feedback == "explicit")
-        logger$warn("only 'cholesky' is available for 'explicit' feedback")
-
       self$components = init
       if (private$with_bias) {
         private$rank = as.integer(rank) + 2L

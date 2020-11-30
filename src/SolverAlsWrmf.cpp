@@ -6,6 +6,8 @@
 #define CONJUGATE_GRADIENT 1
 #define SEQ_COORDINATE_WISE_NNLS 2
 
+#define CG_TOL 1e-10
+
 template <class T>
 arma::Mat<T> without_row(const arma::Mat<T> &X_nnz, const bool last) {
   if (last) {
@@ -19,10 +21,10 @@ template <class T>
 arma::Col<T> cg_solver_impicit(const arma::Mat<T> &X_nnz,
                       const arma::Col<T> &confidence,
                       const arma::Col<T> &x_old,
-                      const int n_iter,
+                      const arma::uword n_iter,
                       const arma::Mat<T> &XtX) {
   arma::Col<T> x = x_old;
-  arma::Col<T> confidence_1 = confidence - 1.0;
+  const arma::Col<T> confidence_1 = confidence - 1.0;
 
   arma::Col<T> Ap;
   arma::Col<T> r = X_nnz * (confidence - (confidence_1 % (X_nnz.t() * x))) - XtX * x;
@@ -30,13 +32,13 @@ arma::Col<T> cg_solver_impicit(const arma::Mat<T> &X_nnz,
   double rsold, rsnew, alpha;
   rsold = arma::dot(r, r);
 
-  for(int k = 0; k < n_iter; k++) {
+  for(auto k = 0; k < n_iter; k++) {
     Ap = XtX * p + X_nnz * (confidence_1 % (X_nnz.t() * p));
     alpha =  rsold / dot(p, Ap);
     x += alpha * p;
     r -= alpha * Ap;
     rsnew = dot(r, r);
-    if (rsnew < TOL) break;
+    if (rsnew < CG_TOL) break;
     p = r + p * (rsnew / rsold);
     rsold = rsnew;
   }
@@ -48,22 +50,22 @@ arma::Col<T> cg_solver_explicit(const arma::Mat<T> &X_nnz,
                                 const arma::Col<T> &confidence,
                                 const arma::Col<T> &x_old,
                                 T lambda,
-                                const int n_iter) {
+                                const arma::uword n_iter) {
   arma::Col<T> x = x_old;
 
   arma::Col<T> Ap;
-  arma::Col<T> r = X_nnz * confidence - ((X_nnz * (X_nnz.t() * x)) + x * lambda);
+  arma::Col<T> r = X_nnz * (confidence - (X_nnz.t() * x)) - lambda * x;
   arma::Col<T> p = r;
   double rsold, rsnew, alpha;
-  rsold = as_scalar(r.t() * r);
+  rsold = arma::dot(r, r);
 
-  for(int k = 0; k < n_iter; k++) {
-    Ap = (X_nnz * (X_nnz.t() * p)) + p * lambda;
+  for(auto k = 0; k < n_iter; k++) {
+    Ap = (X_nnz * (X_nnz.t() * p)) + lambda * p;
     alpha =  rsold / arma::dot(p, Ap);
     x += alpha * p;
     r -= alpha * Ap;
     rsnew = arma::dot(r, r);
-    if (rsnew < TOL) break;
+    if (rsnew < CG_TOL) break;
     p = r + p * (rsnew / rsold);
     rsold = rsnew;
   }
@@ -138,6 +140,13 @@ T als_explicit(const dMappedCSC& Conf,
         Y_new = solve(lhs, rhs, arma::solve_opts::fast );
       } else if (solver == SEQ_COORDINATE_WISE_NNLS) { // SEQ_COORDINATE_WISE_NNLS
         Y_new = c_nnls<T>(lhs, rhs, 10000, 1e-3);
+      } else if (solver == CONJUGATE_GRADIENT) {
+        if (with_biases) {
+          auto init = without_row<T>(Y.col(i), !is_bias_last_row);
+          Y_new = cg_solver_explicit<T>(X_nnz, confidence, init, lambda, cg_steps);
+        } else {
+          Y_new = cg_solver_explicit<T>(X_nnz, confidence, Y.col(i), lambda, cg_steps);
+        }
       }
 
       arma::Row<T> err;
@@ -167,8 +176,12 @@ T als_explicit(const dMappedCSC& Conf,
 
   if(lambda > 0) {
     if (with_biases) {
-      auto X_no_bias = X(arma::span(1, X.n_rows - 1), arma::span::all);
-      auto Y_no_bias = X(arma::span(1, Y.n_rows - 1), arma::span::all);
+      arma::uword index_last_but_one;
+      // n_rows - 2 is the index of the last but one row
+      index_last_but_one = X.n_rows - 2;
+      auto X_no_bias = X(arma::span(1, index_last_but_one), arma::span::all);
+      index_last_but_one = Y.n_rows - 2;
+      auto Y_no_bias = X(arma::span(1, index_last_but_one), arma::span::all);
       loss += lambda * (accu(square(X_no_bias)) + accu(square(Y_no_bias)));
     } else {
       loss += lambda * (accu(square(X)) + accu(square(Y)));

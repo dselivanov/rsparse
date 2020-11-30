@@ -13,7 +13,7 @@ test_that("test WRMF core", {
                        with_bias = FALSE,
                        precision = c("double", "float"),
                        stringsAsFactors = FALSE)
-  p_expl = expand.grid(solver = c("cholesky", "nnls"),
+  p_expl = expand.grid(solver = c("conjugate_gradient", "cholesky", "nnls"),
                        feedback = c("explicit"),
                        lambda = c(0.1, 1000),
                        with_bias = c(TRUE, FALSE),
