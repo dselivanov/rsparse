@@ -97,10 +97,6 @@ initialize_biases_float <- function(m_csc_r, m_csr_r, user_bias, item_bias, lamb
     .Call(`_rsparse_initialize_biases_float`, m_csc_r, m_csr_r, user_bias, item_bias, lambda, non_negative, calculate_global_bias)
 }
 
-deep_copy <- function(x) {
-    .Call(`_rsparse_deep_copy`, x)
-}
-
 rankmf_solver_double <- function(x_r, W, H, W2_grad, H2_grad, user_features_r, item_features_r, rank, n_updates, learning_rate = 0.01, gamma = 1, lambda_user = 0.0, lambda_item_positive = 0.0, lambda_item_negative = 0.0, n_threads = 1L, update_items = TRUE, loss = 0L, kernel = 0L, max_negative_samples = 50L, margin = 0.1, optimizer = 0L, report_progress = 10L) {
     invisible(.Call(`_rsparse_rankmf_solver_double`, x_r, W, H, W2_grad, H2_grad, user_features_r, item_features_r, rank, n_updates, learning_rate, gamma, lambda_user, lambda_item_positive, lambda_item_negative, n_threads, update_items, loss, kernel, max_negative_samples, margin, optimizer, report_progress))
 }
@@ -127,5 +123,13 @@ omp_thread_count <- function() {
 
 cpp_make_sparse_approximation <- function(mat_template, X, Y, sparse_matrix_type, n_threads) {
     .Call(`_rsparse_cpp_make_sparse_approximation`, mat_template, X, Y, sparse_matrix_type, n_threads)
+}
+
+large_rand_matrix <- function(nrow, ncol) {
+    .Call(`_rsparse_large_rand_matrix`, nrow, ncol)
+}
+
+deep_copy <- function(x) {
+    .Call(`_rsparse_deep_copy`, x)
 }
 

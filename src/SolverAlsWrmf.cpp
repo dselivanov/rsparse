@@ -403,12 +403,3 @@ double initialize_biases_float(const Rcpp::S4 &m_csc_r,
                                   non_negative,
                                   calculate_global_bias);
 }
-
-// [[Rcpp::export]]
-SEXP deep_copy(SEXP x) {
-  SEXP out = PROTECT(Rf_allocVector(REALSXP, Rf_xlength(x)));
-  if (Rf_xlength(x))
-    memcpy(REAL(out), REAL(x), (size_t)Rf_xlength(x)*sizeof(double));
-  UNPROTECT(1);
-  return out;
-}

@@ -125,3 +125,30 @@ arma::fvec exctract_float_vector(Rcpp::S4 x) {
   arma::fvec x_mapped = arma::fvec(ptr, x_data.length(), false, true);
   return (x_mapped);
 }
+
+// [[Rcpp::export]]
+SEXP large_rand_matrix(SEXP nrow, SEXP ncol)
+{
+  int nrow_int = Rf_asInteger(nrow);
+  int ncol_int = Rf_asInteger(ncol);
+  R_xlen_t tot_size = (R_xlen_t)nrow_int * (R_xlen_t)ncol_int;
+  if (tot_size <= 0 || nrow_int <= 0 || ncol_int <= 0)
+    Rf_error("Factors dimensions exceed R limits.");
+  SEXP vec = PROTECT(Rf_allocMatrix(REALSXP, nrow_int, ncol_int));
+  double *ptr_vec = REAL(vec);
+  for (R_xlen_t ix = 0; ix < tot_size; ix++)
+    ptr_vec[ix] = norm_rand();
+  for (R_xlen_t ix = 0; ix < tot_size; ix++)
+    ptr_vec[ix] /= 100.;
+  UNPROTECT(1);
+  return vec;
+}
+
+// [[Rcpp::export]]
+SEXP deep_copy(SEXP x) {
+  SEXP out = PROTECT(Rf_allocVector(REALSXP, Rf_xlength(x)));
+  if (Rf_xlength(x))
+    memcpy(REAL(out), REAL(x), (size_t)Rf_xlength(x)*sizeof(double));
+  UNPROTECT(1);
+  return out;
+}
