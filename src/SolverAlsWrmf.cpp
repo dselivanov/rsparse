@@ -9,10 +9,10 @@
 #define CG_TOL 1e-10
 
 template <class T>
-arma::Mat<T> without_row(const arma::Mat<T> &X_nnz, const bool last) {
-  if (last) {
+arma::Mat<T> drop_row(const arma::Mat<T> &X_nnz, const bool drop_last) {
+  if (drop_last) { // drop last row
     return X_nnz.head_rows(X_nnz.n_rows - 1);
-  } else {
+  } else { // drop first row
     return X_nnz.tail_rows(X_nnz.n_rows - 1);
   }
 };
@@ -81,7 +81,7 @@ T als_explicit(const dMappedCSC& Conf,
           const unsigned solver,
           const unsigned cg_steps,
           const bool with_biases,
-          const bool is_bias_last_row) {
+          const bool is_x_bias_last_row) {
   /* Note about biases:
    * For user factors, the first row will be set to all ones
    * to match with the item biases, and the calculated user biases will be in the
@@ -90,15 +90,23 @@ T als_explicit(const dMappedCSC& Conf,
    * mach with the user biases, and the calculated item biases will be in the
    * first row.
    */
+
+  // if is_x_bias_last_row == true
+  // X = [1, ..., x_bias]
+  // Y = [y_bias, ..., 1]
+  // if is_x_bias_last_row == false
+  // X = [x_bias, ..., 1]
+  // Y = [1, ..., y_bias]
+
   const arma::uword rank = X.n_rows;
 
-  arma::Col<T> biases;
+  arma::Col<T> x_biases;
 
   if (with_biases) {
-    // row number where biases are stored
-    arma::uword bias_index = 0;
-    if (is_bias_last_row) bias_index = X.n_rows - 1;
-     biases = X.row(bias_index).t();
+    if (is_x_bias_last_row) // last row
+      x_biases = X.row(X.n_rows - 1).t();
+    else // first row
+      x_biases = X.row(0).t();
   }
 
   T loss = 0;
@@ -115,13 +123,13 @@ T als_explicit(const dMappedCSC& Conf,
       auto idx = arma::uvec(&Conf.row_indices[p1], p2 - p1, false, true);
       arma::Col<T> confidence = arma::conv_to< arma::Col<T> >::from(arma::vec(&Conf.values[p1], p2 - p1));
       arma::Mat<T> X_nnz;
-      // if is_bias_last_row == true
+      // if is_x_bias_last_row == true
       // X_nnz = [1, ...]
-      // if is_bias_last_row == false
+      // if is_x_bias_last_row == false
       // X_nnz = [..., 1]
       if (with_biases) {
-        X_nnz = without_row<T>(X.cols(idx), is_bias_last_row);
-        confidence -= biases(idx);
+        X_nnz = drop_row<T>(X.cols(idx), is_x_bias_last_row);
+        confidence -= x_biases(idx);
       } else {
         X_nnz = X.cols(idx);
       }
@@ -130,10 +138,10 @@ T als_explicit(const dMappedCSC& Conf,
       lhs.diag() += lambda;
       const arma::Mat<T> rhs = X_nnz * confidence;
       arma::Col<T> Y_new;
-      // if is_bias_last_row == true
+      // if is_x_bias_last_row == true
       // X_nnz = [1, ..., x_bias]
       // Y_new should be [y_bias, ...]
-      // if is_bias_last_row == false
+      // if is_x_bias_last_row == false
       // X_nnz = [x_bias, ..., 1]
       // Y_new should be [..., y_bias]
       if (solver == CHOLESKY) { // CHOLESKY
@@ -142,7 +150,7 @@ T als_explicit(const dMappedCSC& Conf,
         Y_new = c_nnls<T>(lhs, rhs, 10000, 1e-3);
       } else if (solver == CONJUGATE_GRADIENT) {
         if (with_biases) {
-          auto init = without_row<T>(Y.col(i), !is_bias_last_row);
+          auto init = drop_row<T>(Y.col(i), !is_x_bias_last_row);
           Y_new = cg_solver_explicit<T>(X_nnz, confidence, init, lambda, cg_steps);
         } else {
           Y_new = cg_solver_explicit<T>(X_nnz, confidence, Y.col(i), lambda, cg_steps);
@@ -152,7 +160,7 @@ T als_explicit(const dMappedCSC& Conf,
       arma::Row<T> err;
 
       if (with_biases) {
-        if (is_bias_last_row) {
+        if (is_x_bias_last_row) {
           // X_nnz = [1, ..., x_bias]
           // Y_new should be [y_bias, ...]
           // Y.col(i) should be [y_bias, ..., 1]
@@ -170,21 +178,40 @@ T als_explicit(const dMappedCSC& Conf,
       err = confidence.t() - (Y_new.t() * X_nnz);
       loss += arma::dot(err, err);
     } else {
-      Y.col(i).zeros();
+      if (with_biases) {
+        // FIXME should we only set to zero embeddings and leave
+        // biases "as is" from initialization?
+        const arma::Col<T> z(rank - 1, arma::fill::zeros);
+        if (is_x_bias_last_row) {
+          Y.col(i).head(rank - 1) = z;
+        } else {
+          Y.col(i).tail(rank - 1) = z;
+        }
+      } else {
+        Y.col(i).zeros();
+      }
     }
   }
 
   if(lambda > 0) {
     if (with_biases) {
-      arma::uword index_last_but_one;
-      // n_rows - 2 is the index of the last but one row
-      index_last_but_one = X.n_rows - 2;
-      auto X_no_bias = X(arma::span(1, index_last_but_one), arma::span::all);
-      index_last_but_one = Y.n_rows - 2;
-      auto Y_no_bias = X(arma::span(1, index_last_but_one), arma::span::all);
-      loss += lambda * (accu(square(X_no_bias)) + accu(square(Y_no_bias)));
+      // lambda applied to all learned parameters:
+      // embeddings and biases
+      // so we select all rows excluding dummy ones
+      // if is_x_bias_last_row == true
+      // X = [1, ..., x_bias]
+      // Y = [y_bias, ..., 1]
+      bool is_drop_last_x = !is_x_bias_last_row;
+      bool is_drop_last_y = is_x_bias_last_row;
+      auto X_excl_ones = drop_row<T>(X, is_drop_last_x);
+      auto Y_excl_ones = drop_row<T>(Y, is_drop_last_y);
+      // accu(X_excl_ones % X_excl_ones)
+      // as per arma docs "multiply-and-accumulate"
+      // should should be translated
+      // into efficient MKL/OpenBLAS calls
+      loss += lambda * (accu(X_excl_ones % X_excl_ones) + accu(Y_excl_ones % Y_excl_ones));
     } else {
-      loss += lambda * (accu(square(X)) + accu(square(Y)));
+      loss += lambda * (accu(X % X) + accu(Y % Y));
     }
   }
   return (loss / Conf.nnz);
@@ -200,7 +227,7 @@ T als_impicit(const dMappedCSC& Conf,
           unsigned n_threads,
           unsigned solver,
           unsigned cg_steps,
-          bool is_bias_last_row) {
+          bool is_x_bias_last_row) {
   // const arma::uword rank = X.n_rows;
   T loss = 0;
   size_t nc = Conf.n_cols;
@@ -237,7 +264,7 @@ T als_impicit(const dMappedCSC& Conf,
   }
 
   if(lambda > 0) {
-    loss += lambda * (accu(square(X)) + accu(square(Y)));
+    loss += lambda * (accu(X % X) + accu(Y % Y));
   }
   return (loss / Conf.nnz);
 }
@@ -251,11 +278,11 @@ double als_implicit_double(const Rcpp::S4 &m_csc_r,
                   unsigned n_threads,
                   unsigned solver,
                   unsigned cg_steps,
-                  bool is_bias_last_row) {
+                  bool is_x_bias_last_row) {
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
   return (double)als_impicit<double>(
       Conf, X, Y, XtX, lambda, n_threads, solver, cg_steps,
-      is_bias_last_row
+      is_x_bias_last_row
     );
 }
 
@@ -268,7 +295,7 @@ double als_implicit_float( const Rcpp::S4 &m_csc_r,
                   unsigned n_threads,
                   unsigned solver,
                   unsigned cg_steps,
-                  bool is_bias_last_row) {
+                  bool is_x_bias_last_row) {
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
   // get arma matrices which share memory with R "float" matrices
   arma::fmat X = exctract_float_matrix(X_);
@@ -276,7 +303,7 @@ double als_implicit_float( const Rcpp::S4 &m_csc_r,
   arma::fmat XtX = exctract_float_matrix(XtX_);
   return (double)als_impicit<float>(
       Conf, X, Y, XtX, lambda, n_threads, solver, cg_steps,
-      is_bias_last_row
+      is_x_bias_last_row
     );
 }
 
@@ -289,11 +316,11 @@ double als_explicit_double(const Rcpp::S4 &m_csc_r,
                            unsigned solver,
                            unsigned cg_steps,
                            const bool with_biases,
-                           bool is_bias_last_row) {
+                           bool is_x_bias_last_row) {
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
   return (double)als_explicit<double>(
       Conf, X, Y, lambda, n_threads, solver, cg_steps,
-      with_biases, is_bias_last_row
+      with_biases, is_x_bias_last_row
   );
 }
 
@@ -306,13 +333,13 @@ double als_explicit_float(const Rcpp::S4 &m_csc_r,
                           unsigned solver,
                           unsigned cg_steps,
                           const bool with_biases,
-                          bool is_bias_last_row) {
+                          bool is_x_bias_last_row) {
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
   arma::fmat X = exctract_float_matrix(X_);
   arma::fmat Y = exctract_float_matrix(Y_);
   return (double)als_explicit<float>(
       Conf, X, Y, lambda, n_threads, solver, cg_steps,
-      with_biases, is_bias_last_row
+      with_biases, is_x_bias_last_row
   );
 }
 
