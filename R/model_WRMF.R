@@ -189,7 +189,7 @@ WRMF = R6::R6Class(
       logger$trace("initializing U")
       if (private$precision == "double") {
         private$U = matrix(
-          runif(n_user * private$rank, 0, 0.01),
+          rnorm(n_user * private$rank, 0, 0.01),
           ncol = n_user,
           nrow = private$rank
         )
@@ -198,7 +198,7 @@ WRMF = R6::R6Class(
           private$U[1, ] = rep(1.0, n_user)
         }
       } else {
-        private$U = flrunif(private$rank, n_user, 0, 0.01)
+        private$U = flrnorm(private$rank, n_user, 0, 0.01)
         if (private$with_bias) {
           private$U[1, ] = float::fl(rep(1.0, n_user))
         }
@@ -207,7 +207,7 @@ WRMF = R6::R6Class(
       if (is.null(self$components)) {
         if (private$precision == "double") {
           self$components = matrix(
-            runif(n_item * private$rank, 0, 0.01),
+            rnorm(n_item * private$rank, 0, 0.01),
             ncol = n_item,
             nrow = private$rank
           )
@@ -216,7 +216,7 @@ WRMF = R6::R6Class(
             self$components[private$rank, ] = rep(1.0, n_item)
           }
         } else {
-          self$components = flrunif(private$rank, n_item, 0, 0.01)
+          self$components = flrnorm(private$rank, n_item, 0, 0.01)
           if (private$with_bias) {
             self$components[private$rank, ] = float::fl(rep(1.0, n_item))
           }
