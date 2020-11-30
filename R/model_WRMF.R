@@ -88,7 +88,7 @@ WRMF = R6::R6Class(
       private$with_bias = with_bias
 
       solver_codes = c("cholesky", "conjugate_gradient", "nnls")
-      private$solver_code = match(solver[1], solver_codes) - 1L
+      private$solver_code = match(solver, solver_codes) - 1L
 
       private$precision = match.arg(precision)
       private$feedback = feedback
@@ -99,7 +99,7 @@ WRMF = R6::R6Class(
 
       n_threads = getOption("rsparse_omp_threads", 1L)
       private$solver = function(x, X, Y, is_bias_last_row, XtX = NULL, avoid_cg = FALSE) {
-        solver_use = ifelse(avoid_cg && private$solver == 1L, 0L, private$solver)
+        solver_use = ifelse(avoid_cg && private$solver_code == 1L, 0L, private$solver_code)
         if(feedback == "implicit") {
           als_implicit(
             x, X, Y,

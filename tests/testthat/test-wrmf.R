@@ -11,11 +11,13 @@ test_that("test WRMF core", {
                        feedback = c("implicit"),
                        lambda = c(0, 1000),
                        with_bias = FALSE,
+                       precision = c("double", "float"),
                        stringsAsFactors = FALSE)
   p_expl = expand.grid(solver = c("cholesky", "nnls"),
                        feedback = c("explicit"),
                        lambda = c(0.1, 1000),
                        with_bias = c(TRUE, FALSE),
+                       precision = c("double", "float"),
                        stringsAsFactors = FALSE)
   params = rbind(p_impl, p_expl)
   set.seed(1)
@@ -27,10 +29,12 @@ test_that("test WRMF core", {
     feedback = params$feedback[[i]]
     lambda = params$lambda[[i]]
     with_bias = params$with_bias[[i]]
+    precision = params$precision[[i]]
     rank_with_bias = rank + with_bias * 2
     message(sprintf("testing WRMF with parameters: solver = '%s' feedback = '%s' lambda = %.3f, rank = %d, with_bias = %d",
                     solver, feedback, lambda, rank, with_bias))
-    model = WRMF$new(rank = rank,  lambda = lambda, feedback = feedback, solver = solver, with_bias = with_bias)
+    model = WRMF$new(rank = rank,  lambda = lambda, feedback = feedback, solver = solver,
+                     with_bias = with_bias, precision = precision)
     user_emb = model$fit_transform(train, n_iter = 5, convergence_tol = -1)
     # check dimensions
     expect_equal(dim(user_emb), c(nrow(train), rank_with_bias))
