@@ -18,7 +18,7 @@ arma::Mat<T> drop_row(const arma::Mat<T> &X_nnz, const bool drop_last) {
 };
 
 template <class T>
-arma::Col<T> cg_solver_impicit(const arma::Mat<T> &X_nnz,
+arma::Col<T> cg_solver_implicit(const arma::Mat<T> &X_nnz,
                       const arma::Col<T> &confidence,
                       const arma::Col<T> &x_old,
                       const arma::uword n_iter,
@@ -80,6 +80,8 @@ T als_explicit(const dMappedCSC& Conf,
           const unsigned n_threads,
           const unsigned solver,
           const unsigned cg_steps,
+          const bool dynamic_lambda,
+          const arma::Col<T>& cnt_X,
           const bool with_biases,
           const bool is_x_bias_last_row) {
   /* Note about biases:
@@ -121,6 +123,7 @@ T als_explicit(const dMappedCSC& Conf,
     // so p1 becomes equal to p2 or greater than number of columns
     if(p1 < p2) {
       auto idx = arma::uvec(&Conf.row_indices[p1], p2 - p1, false, true);
+      T lambda_use = lambda * (dynamic_lambda? static_cast<T>(p2-p1) : 1.);
       arma::Col<T> confidence = arma::conv_to< arma::Col<T> >::from(arma::vec(&Conf.values[p1], p2 - p1));
       arma::Mat<T> X_nnz;
       // if is_x_bias_last_row == true
@@ -144,13 +147,13 @@ T als_explicit(const dMappedCSC& Conf,
       if (solver == CONJUGATE_GRADIENT) {
         if (with_biases) {
           auto init = drop_row<T>(Y.col(i), !is_x_bias_last_row);
-          Y_new = cg_solver_explicit<T>(X_nnz, confidence, init, lambda, cg_steps);
+          Y_new = cg_solver_explicit<T>(X_nnz, confidence, init, lambda_use, cg_steps);
         } else {
-          Y_new = cg_solver_explicit<T>(X_nnz, confidence, Y.col(i), lambda, cg_steps);
+          Y_new = cg_solver_explicit<T>(X_nnz, confidence, Y.col(i), lambda_use, cg_steps);
         }
       } else {
         arma::Mat<T> lhs = X_nnz * X_nnz.t();
-        lhs.diag() += lambda;
+        lhs.diag() += lambda_use;
         const arma::Mat<T> rhs = X_nnz * confidence;
 
         if (solver == CHOLESKY) { // CHOLESKY
@@ -178,11 +181,9 @@ T als_explicit(const dMappedCSC& Conf,
         Y.col(i) = Y_new;
       }
       err = confidence.t() - (Y_new.t() * X_nnz);
-      loss += arma::dot(err, err);
+      loss += arma::dot(err, err) + lambda_use * arma::dot(Y_new, Y_new);
     } else {
       if (with_biases) {
-        // FIXME should we only set to zero embeddings and leave
-        // biases "as is" from initialization?
         const arma::Col<T> z(rank - 1, arma::fill::zeros);
         if (is_x_bias_last_row) {
           Y.col(i).head(rank - 1) = z;
@@ -211,9 +212,17 @@ T als_explicit(const dMappedCSC& Conf,
       // as per arma docs "multiply-and-accumulate"
       // should should be translated
       // into efficient MKL/OpenBLAS calls
-      loss += lambda * (accu(X_excl_ones % X_excl_ones) + accu(Y_excl_ones % Y_excl_ones));
+      if (!dynamic_lambda)
+        loss += lambda * accu(X_excl_ones % X_excl_ones);
+      else {
+        loss += lambda * accu((X_excl_ones % X_excl_ones) * cnt_X);
+      }
     } else {
-      loss += lambda * (accu(X % X) + accu(Y % Y));
+      if (!dynamic_lambda)
+        loss += lambda * accu(X % X);
+      else {
+        loss += lambda * accu((X % X) * cnt_X);
+      }
     }
   }
   return (loss / Conf.nnz);
@@ -221,7 +230,7 @@ T als_explicit(const dMappedCSC& Conf,
 
 
 template <class T>
-T als_impicit(const dMappedCSC& Conf,
+T als_implicit(const dMappedCSC& Conf,
           arma::Mat<T>& X,
           arma::Mat<T>& Y,
           const arma::Mat<T>& XtX,
@@ -247,7 +256,7 @@ T als_impicit(const dMappedCSC& Conf,
       arma::Col<T> Y_new;
 
       if(solver == CONJUGATE_GRADIENT) {
-        Y_new = cg_solver_impicit<T>(X_nnz, confidence, Y.col(i), cg_steps, XtX);
+        Y_new = cg_solver_implicit<T>(X_nnz, confidence, Y.col(i), cg_steps, XtX);
       } else {
         const arma::Mat<T> lhs = XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
         const arma::Mat<T> rhs = X_nnz * confidence;
@@ -283,7 +292,7 @@ double als_implicit_double(const Rcpp::S4 &m_csc_r,
                   unsigned cg_steps,
                   bool is_x_bias_last_row) {
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
-  return (double)als_impicit<double>(
+  return (double)als_implicit<double>(
       Conf, X, Y, XtX, lambda, n_threads, solver, cg_steps,
       is_x_bias_last_row
     );
@@ -301,10 +310,10 @@ double als_implicit_float( const Rcpp::S4 &m_csc_r,
                   bool is_x_bias_last_row) {
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
   // get arma matrices which share memory with R "float" matrices
-  arma::fmat X = exctract_float_matrix(X_);
-  arma::fmat Y = exctract_float_matrix(Y_);
-  arma::fmat XtX = exctract_float_matrix(XtX_);
-  return (double)als_impicit<float>(
+  arma::fmat X = extract_float_matrix(X_);
+  arma::fmat Y = extract_float_matrix(Y_);
+  arma::fmat XtX = extract_float_matrix(XtX_);
+  return (double)als_implicit<float>(
       Conf, X, Y, XtX, lambda, n_threads, solver, cg_steps,
       is_x_bias_last_row
     );
@@ -314,15 +323,18 @@ double als_implicit_float( const Rcpp::S4 &m_csc_r,
 double als_explicit_double(const Rcpp::S4 &m_csc_r,
                            arma::mat& X,
                            arma::mat& Y,
+                           arma::Col<double> cnt_X,
                            double lambda,
                            unsigned n_threads,
                            unsigned solver,
                            unsigned cg_steps,
+                           const bool dynamic_lambda,
                            const bool with_biases,
                            bool is_x_bias_last_row) {
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
   return (double)als_explicit<double>(
       Conf, X, Y, lambda, n_threads, solver, cg_steps,
+      dynamic_lambda, cnt_X,
       with_biases, is_x_bias_last_row
   );
 }
@@ -330,18 +342,22 @@ double als_explicit_double(const Rcpp::S4 &m_csc_r,
 // [[Rcpp::export]]
 double als_explicit_float(const Rcpp::S4 &m_csc_r,
                           Rcpp::S4 &X_,
-                          Rcpp::S4 & Y_,
+                          Rcpp::S4 &Y_,
+                          Rcpp::S4 &cnt_X_,
                           double lambda,
                           unsigned n_threads,
                           unsigned solver,
                           unsigned cg_steps,
+                          const bool dynamic_lambda,
                           const bool with_biases,
                           bool is_x_bias_last_row) {
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
-  arma::fmat X = exctract_float_matrix(X_);
-  arma::fmat Y = exctract_float_matrix(Y_);
+  arma::fmat X = extract_float_matrix(X_);
+  arma::fmat Y = extract_float_matrix(Y_);
+  arma::fmat cnt_X = extract_float_vector(cnt_X_);
   return (double)als_explicit<float>(
       Conf, X, Y, lambda, n_threads, solver, cg_steps,
+      dynamic_lambda, cnt_X,
       with_biases, is_x_bias_last_row
   );
 }
@@ -352,6 +368,7 @@ double initialize_biases(dMappedCSC& ConfCSC, // modified in place
                          arma::Col<T>& user_bias,
                          arma::Col<T>& item_bias,
                          T lambda,
+                         bool dynamic_lambda,
                          bool non_negative,
                          bool calculate_global_bias = false) {
   /* Robust mean calculation */
@@ -374,20 +391,22 @@ double initialize_biases(dMappedCSC& ConfCSC, // modified in place
   for (int iter = 0; iter < 5; iter++) {
     item_bias.zeros();
     for (int col = 0; col < ConfCSC.n_cols; col++) {
+      T lambda_use = lambda * (dynamic_lambda? static_cast<T>(ConfCSC.col_ptrs[col+1]-ConfCSC.col_ptrs[col]) : 1.);
       for (int ix = ConfCSC.col_ptrs[col]; ix < ConfCSC.col_ptrs[col+1]; ix++) {
         item_bias[col] += ConfCSC.values[ix] - user_bias[ConfCSC.row_indices[ix]];
       }
-      item_bias[col] /= lambda + static_cast<T>(ConfCSC.col_ptrs[col+1] - ConfCSC.col_ptrs[col]);
+      item_bias[col] /= lambda_use + static_cast<T>(ConfCSC.col_ptrs[col+1] - ConfCSC.col_ptrs[col]);
       if (non_negative)
         item_bias[col] = std::fmax(0., item_bias[col]);
     }
 
     user_bias.zeros();
     for (int row = 0; row < ConfCSR.n_cols; row++) {
+      T lambda_use = lambda * (dynamic_lambda? static_cast<T>(ConfCSR.col_ptrs[row+1]-ConfCSR.col_ptrs[row]) : 1.);
       for (int ix = ConfCSR.col_ptrs[row]; ix < ConfCSR.col_ptrs[row+1]; ix++) {
         user_bias[row] += ConfCSR.values[ix] - item_bias[ConfCSR.row_indices[ix]];
       }
-      user_bias[row] /= lambda + static_cast<T>(ConfCSR.col_ptrs[row+1] - ConfCSR.col_ptrs[row]);
+      user_bias[row] /= lambda_use + static_cast<T>(ConfCSR.col_ptrs[row+1] - ConfCSR.col_ptrs[row]);
       if (non_negative)
         user_bias[row] = std::fmax(0., user_bias[row]);
     }
@@ -401,13 +420,14 @@ double initialize_biases_double(const Rcpp::S4 &m_csc_r,
                                 arma::Col<double>& user_bias,
                                 arma::Col<double>& item_bias,
                                 double lambda,
+                                bool dynamic_lambda,
                                 bool non_negative,
                                 bool calculate_global_bias = false) {
   dMappedCSC ConfCSC = extract_mapped_csc(m_csc_r);
   dMappedCSC ConfCSR = extract_mapped_csc(m_csr_r);
   return initialize_biases<double>(ConfCSC, ConfCSR,
                                    user_bias, item_bias,
-                                   lambda,
+                                   lambda, dynamic_lambda,
                                    non_negative,
                                    calculate_global_bias);
 }
@@ -418,18 +438,19 @@ double initialize_biases_float(const Rcpp::S4 &m_csc_r,
                                Rcpp::S4& user_bias,
                                Rcpp::S4& item_bias,
                                double lambda,
+                               bool dynamic_lambda,
                                bool non_negative,
                                bool calculate_global_bias = false) {
   dMappedCSC ConfCSC = extract_mapped_csc(m_csc_r);
   dMappedCSC ConfCSR = extract_mapped_csc(m_csr_r);
 
-  arma::Col<float> user_bias_arma = exctract_float_vector(user_bias);
-  arma::Col<float> item_bias_arma = exctract_float_vector(item_bias);
+  arma::Col<float> user_bias_arma = extract_float_vector(user_bias);
+  arma::Col<float> item_bias_arma = extract_float_vector(item_bias);
 
   return initialize_biases<float>(ConfCSC, ConfCSR,
                                   user_bias_arma,
                                   item_bias_arma,
-                                  lambda,
+                                  lambda, dynamic_lambda,
                                   non_negative,
                                   calculate_global_bias);
 }
