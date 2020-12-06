@@ -73,10 +73,53 @@ arma::Col<T> cg_solver_explicit(const arma::Mat<T> &X_nnz,
 }
 
 template <class T>
+arma::Col<T> cg_solver_explicit_cofactor(const arma::Mat<T> &X_nnz,
+                                         const arma::Col<T> &confidence,
+                                         const arma::Col<T> &x_old,
+                                         const arma::Mat<T> &XtX_implicit,
+                                         const arma::Col<T> &X_nnz_implicit_sum,
+                                         T lambda,
+                                         const bool exclude_first,
+                                         const bool exclude_last,
+                                         const arma::uword n_iter) {
+  arma::Col<T> x = x_old;
+
+  arma::Col<T> Ap;
+  arma::Col<T> r = X_nnz * (confidence - (X_nnz.t() * x)) - lambda * x;
+  if (!exclude_first && !exclude_last)
+    r += X_nnz_implicit_sum - XtX_implicit * x;
+  else if (exclude_first)
+    r(arma::span(1, r.n_rows-1)) += X_nnz_implicit_sum - XtX_implicit * x(arma::span(1, r.n_rows-1));
+  else
+    r(arma::span(0, r.n_rows-2)) += X_nnz_implicit_sum - XtX_implicit * x(arma::span(0, r.n_rows-2));
+  arma::Col<T> p = r;
+  double rsold, rsnew, alpha;
+  rsold = arma::dot(r, r);
+
+  for(auto k = 0; k < n_iter; k++) {
+    Ap = (X_nnz * (X_nnz.t() * p)) + lambda * p;
+    if (!exclude_first && !exclude_last)
+      Ap += XtX_implicit * p;
+    else if (exclude_first)
+      Ap(arma::span(1, r.n_rows-1)) += XtX_implicit * p(arma::span(1, r.n_rows-1));
+    else
+      Ap(arma::span(0, r.n_rows-2)) += XtX_implicit * p(arma::span(0, r.n_rows-2));
+    alpha =  rsold / arma::dot(p, Ap);
+    x += alpha * p;
+    r -= alpha * Ap;
+    rsnew = arma::dot(r, r);
+    if (rsnew < CG_TOL) break;
+    p = r + p * (rsnew / rsold);
+    rsold = rsnew;
+  }
+  return x;
+}
+
+template <class T>
 T als_explicit(const dMappedCSC& Conf,
           arma::Mat<T>& X,
           arma::Mat<T>& Y,
-          const arma::Mat<T> X_implicit,
+          const arma::Mat<T>& X_implicit,
           const arma::Mat<T>& XtX_implicit,
           const double lambda,
           const unsigned n_threads,
@@ -85,7 +128,6 @@ T als_explicit(const dMappedCSC& Conf,
           const bool dynamic_lambda,
           const arma::Col<T>& cnt_X,
           const bool with_implicit_features,
-          const T weight_implicit,
           const bool with_biases,
           const bool is_x_bias_last_row) {
   /* Note about biases:
@@ -149,36 +191,49 @@ T als_explicit(const dMappedCSC& Conf,
       // X_nnz = [x_bias, ..., 1]
       // Y_new should be [..., y_bias]
       if (solver == CONJUGATE_GRADIENT) {
-        if (with_biases) {
-          auto init = drop_row<T>(Y.col(i), !is_x_bias_last_row);
-          Y_new = cg_solver_explicit<T>(X_nnz, confidence, init, lambda_use, cg_steps);
+        if (!with_implicit_features) {
+          if (with_biases) {
+            auto init = drop_row<T>(Y.col(i), !is_x_bias_last_row);
+            Y_new = cg_solver_explicit<T>(X_nnz, confidence, init, lambda_use, cg_steps);
+          } else {
+            Y_new = cg_solver_explicit<T>(X_nnz, confidence, Y.col(i), lambda_use, cg_steps);
+          }
         } else {
-          Y_new = cg_solver_explicit<T>(X_nnz, confidence, Y.col(i), lambda_use, cg_steps);
+          if (with_biases) {
+            auto init = drop_row<T>(Y.col(i), !is_x_bias_last_row);
+            Y_new = cg_solver_explicit_cofactor<T>(X_nnz, confidence, init,
+                                                   XtX_implicit, arma::sum(X_implicit.cols(idx), 1),
+                                                   lambda_use, !is_x_bias_last_row, is_x_bias_last_row, cg_steps);
+          } else {
+            Y_new = cg_solver_explicit_cofactor<T>(X_nnz, confidence, Y.col(i),
+                                                   XtX_implicit, arma::sum(X_implicit.cols(idx), 1),
+                                                   lambda_use, false, false, cg_steps);
+          }
         }
       } else {
         arma::Mat<T> lhs = X_nnz * X_nnz.t();
         if (with_implicit_features) {
           if (!with_biases)
-            lhs += weight_implicit * XtX_implicit;
+            lhs += XtX_implicit;
           else {
             if (is_x_bias_last_row)
-              lhs(arma::span(1, lhs.n_rows-1), arma::span(1, lhs.n_cols-1)) += weight_implicit * XtX_implicit;
+              lhs(arma::span(1, lhs.n_rows-1), arma::span(1, lhs.n_cols-1)) += XtX_implicit;
             else
-              lhs(arma::span(0, lhs.n_rows-2), arma::span(0, lhs.n_cols-2)) += weight_implicit * XtX_implicit;
+              lhs(arma::span(0, lhs.n_rows-2), arma::span(0, lhs.n_cols-2)) += XtX_implicit;
           }
         }
         lhs.diag() += lambda_use;
         arma::Mat<T> rhs = X_nnz * confidence;
         if (with_implicit_features) {
           if (!with_biases)
-            rhs += weight_implicit * arma::sum(X_implicit.cols(idx), 1);
+            rhs += arma::sum(X_implicit.cols(idx), 1);
           else {
             if (is_x_bias_last_row)
               rhs(arma::span(1, rhs.n_rows - 1), arma::span::all)
-                += weight_implicit * arma::sum(X_implicit.cols(idx), 1);
+                += arma::sum(X_implicit.cols(idx), 1);
             else
               rhs(arma::span(0, rhs.n_rows - 2), arma::span::all)
-                += weight_implicit * arma::sum(X_implicit.cols(idx), 1);
+                += arma::sum(X_implicit.cols(idx), 1);
           }
         }
 
@@ -358,14 +413,13 @@ double als_explicit_double(const Rcpp::S4 &m_csc_r,
                            unsigned cg_steps,
                            const bool dynamic_lambda,
                            const bool with_implicit_features,
-                           const double weight_implicit,
                            const bool with_biases,
                            bool is_x_bias_last_row) {
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
   return (double)als_explicit<double>(
       Conf, X, Y, X_implicit, XtX_implicit,
       lambda, n_threads, solver, cg_steps,
-      dynamic_lambda, cnt_X, with_implicit_features, weight_implicit,
+      dynamic_lambda, cnt_X, with_implicit_features,
       with_biases, is_x_bias_last_row
   );
 }
@@ -383,7 +437,6 @@ double als_explicit_float(const Rcpp::S4 &m_csc_r,
                           unsigned cg_steps,
                           const bool dynamic_lambda,
                           const bool with_implicit_features,
-                          const float weight_implicit,
                           const bool with_biases,
                           bool is_x_bias_last_row) {
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
@@ -395,7 +448,7 @@ double als_explicit_float(const Rcpp::S4 &m_csc_r,
   return (double)als_explicit<float>(
       Conf, X, Y, X_implicit, XtX_implicit,
       lambda, n_threads, solver, cg_steps,
-      dynamic_lambda, cnt_X, with_implicit_features, weight_implicit,
+      dynamic_lambda, cnt_X, with_implicit_features,
       with_biases, is_x_bias_last_row
   );
 }

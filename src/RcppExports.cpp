@@ -284,8 +284,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // als_explicit_double
-double als_explicit_double(const Rcpp::S4& m_csc_r, arma::mat& X, arma::mat& Y, arma::mat& X_implicit, const arma::mat& XtX_implicit, const arma::Col<double>& cnt_X, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps, const bool dynamic_lambda, const bool with_implicit_features, const double weight_implicit, const bool with_biases, bool is_x_bias_last_row);
-RcppExport SEXP _rsparse_als_explicit_double(SEXP m_csc_rSEXP, SEXP XSEXP, SEXP YSEXP, SEXP X_implicitSEXP, SEXP XtX_implicitSEXP, SEXP cnt_XSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP, SEXP dynamic_lambdaSEXP, SEXP with_implicit_featuresSEXP, SEXP weight_implicitSEXP, SEXP with_biasesSEXP, SEXP is_x_bias_last_rowSEXP) {
+double als_explicit_double(const Rcpp::S4& m_csc_r, arma::mat& X, arma::mat& Y, arma::mat& X_implicit, const arma::mat& XtX_implicit, const arma::Col<double>& cnt_X, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps, const bool dynamic_lambda, const bool with_implicit_features, const bool with_biases, bool is_x_bias_last_row);
+RcppExport SEXP _rsparse_als_explicit_double(SEXP m_csc_rSEXP, SEXP XSEXP, SEXP YSEXP, SEXP X_implicitSEXP, SEXP XtX_implicitSEXP, SEXP cnt_XSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP, SEXP dynamic_lambdaSEXP, SEXP with_implicit_featuresSEXP, SEXP with_biasesSEXP, SEXP is_x_bias_last_rowSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -301,16 +301,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< unsigned >::type cg_steps(cg_stepsSEXP);
     Rcpp::traits::input_parameter< const bool >::type dynamic_lambda(dynamic_lambdaSEXP);
     Rcpp::traits::input_parameter< const bool >::type with_implicit_features(with_implicit_featuresSEXP);
-    Rcpp::traits::input_parameter< const double >::type weight_implicit(weight_implicitSEXP);
     Rcpp::traits::input_parameter< const bool >::type with_biases(with_biasesSEXP);
     Rcpp::traits::input_parameter< bool >::type is_x_bias_last_row(is_x_bias_last_rowSEXP);
-    rcpp_result_gen = Rcpp::wrap(als_explicit_double(m_csc_r, X, Y, X_implicit, XtX_implicit, cnt_X, lambda, n_threads, solver, cg_steps, dynamic_lambda, with_implicit_features, weight_implicit, with_biases, is_x_bias_last_row));
+    rcpp_result_gen = Rcpp::wrap(als_explicit_double(m_csc_r, X, Y, X_implicit, XtX_implicit, cnt_X, lambda, n_threads, solver, cg_steps, dynamic_lambda, with_implicit_features, with_biases, is_x_bias_last_row));
     return rcpp_result_gen;
 END_RCPP
 }
 // als_explicit_float
-double als_explicit_float(const Rcpp::S4& m_csc_r, Rcpp::S4& X_, Rcpp::S4& Y_, const Rcpp::S4& X_implicit_, const Rcpp::S4& XtX_implicit_, const Rcpp::S4& cnt_X_, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps, const bool dynamic_lambda, const bool with_implicit_features, const float weight_implicit, const bool with_biases, bool is_x_bias_last_row);
-RcppExport SEXP _rsparse_als_explicit_float(SEXP m_csc_rSEXP, SEXP X_SEXP, SEXP Y_SEXP, SEXP X_implicit_SEXP, SEXP XtX_implicit_SEXP, SEXP cnt_X_SEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP, SEXP dynamic_lambdaSEXP, SEXP with_implicit_featuresSEXP, SEXP weight_implicitSEXP, SEXP with_biasesSEXP, SEXP is_x_bias_last_rowSEXP) {
+double als_explicit_float(const Rcpp::S4& m_csc_r, Rcpp::S4& X_, Rcpp::S4& Y_, const Rcpp::S4& X_implicit_, const Rcpp::S4& XtX_implicit_, const Rcpp::S4& cnt_X_, double lambda, unsigned n_threads, unsigned solver, unsigned cg_steps, const bool dynamic_lambda, const bool with_implicit_features, const bool with_biases, bool is_x_bias_last_row);
+RcppExport SEXP _rsparse_als_explicit_float(SEXP m_csc_rSEXP, SEXP X_SEXP, SEXP Y_SEXP, SEXP X_implicit_SEXP, SEXP XtX_implicit_SEXP, SEXP cnt_X_SEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP, SEXP dynamic_lambdaSEXP, SEXP with_implicit_featuresSEXP, SEXP with_biasesSEXP, SEXP is_x_bias_last_rowSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -326,10 +325,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< unsigned >::type cg_steps(cg_stepsSEXP);
     Rcpp::traits::input_parameter< const bool >::type dynamic_lambda(dynamic_lambdaSEXP);
     Rcpp::traits::input_parameter< const bool >::type with_implicit_features(with_implicit_featuresSEXP);
-    Rcpp::traits::input_parameter< const float >::type weight_implicit(weight_implicitSEXP);
     Rcpp::traits::input_parameter< const bool >::type with_biases(with_biasesSEXP);
     Rcpp::traits::input_parameter< bool >::type is_x_bias_last_row(is_x_bias_last_rowSEXP);
-    rcpp_result_gen = Rcpp::wrap(als_explicit_float(m_csc_r, X_, Y_, X_implicit_, XtX_implicit_, cnt_X_, lambda, n_threads, solver, cg_steps, dynamic_lambda, with_implicit_features, weight_implicit, with_biases, is_x_bias_last_row));
+    rcpp_result_gen = Rcpp::wrap(als_explicit_float(m_csc_r, X_, Y_, X_implicit_, XtX_implicit_, cnt_X_, lambda, n_threads, solver, cg_steps, dynamic_lambda, with_implicit_features, with_biases, is_x_bias_last_row));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -535,8 +533,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_dense_csc_prod", (DL_FUNC) &_rsparse_dense_csc_prod, 3},
     {"_rsparse_als_implicit_double", (DL_FUNC) &_rsparse_als_implicit_double, 9},
     {"_rsparse_als_implicit_float", (DL_FUNC) &_rsparse_als_implicit_float, 9},
-    {"_rsparse_als_explicit_double", (DL_FUNC) &_rsparse_als_explicit_double, 15},
-    {"_rsparse_als_explicit_float", (DL_FUNC) &_rsparse_als_explicit_float, 15},
+    {"_rsparse_als_explicit_double", (DL_FUNC) &_rsparse_als_explicit_double, 14},
+    {"_rsparse_als_explicit_float", (DL_FUNC) &_rsparse_als_explicit_float, 14},
     {"_rsparse_initialize_biases_double", (DL_FUNC) &_rsparse_initialize_biases_double, 8},
     {"_rsparse_initialize_biases_float", (DL_FUNC) &_rsparse_initialize_biases_float, 8},
     {"_rsparse_deep_copy", (DL_FUNC) &_rsparse_deep_copy, 1},
