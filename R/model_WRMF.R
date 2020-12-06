@@ -169,7 +169,6 @@ WRMF = R6::R6Class(
             cg_steps = private$cg_steps,
             dynamic_lambda = private$dynamic_lambda,
             with_implicit_features = private$with_implicit_features && nrow(XtX_implicit) && ncol(XtX_implicit),
-            weight_implicit = private$weight_implicit,
             precision = private$precision,
             with_user_item_bias = private$with_user_item_bias,
             is_bias_last_row = is_bias_last_row)
@@ -356,8 +355,12 @@ WRMF = R6::R6Class(
           U_i = solver_implicit_features(c_iu, self$components, private$lambda,
                                          private$dynamic_lambda, private$with_user_item_bias,
                                          private$non_negative)
-          private$XtX_implicit = tcrossprod(self$components_i)
-          XtX_implicit_u = tcrossprod(U_i)
+          private$XtX_implicit = private$weight_implicit * tcrossprod(self$components_i)
+          XtX_implicit_u = private$weight_implicit * tcrossprod(U_i)
+          if (private$weight_implicit != 1.) {
+            self$components_i = private$weight_implicit * self$components_i
+            U_i = private$weight_implicit * U_i
+          }
         }
 
         # solve for items
@@ -511,7 +514,6 @@ als_explicit = function(
   cg_steps,
   dynamic_lambda,
   with_implicit_features,
-  weight_implicit,
   precision,
   with_user_item_bias,
   is_bias_last_row) {
@@ -523,7 +525,7 @@ als_explicit = function(
   # Y is modified in-place
   loss = solver(x, X, Y, X_implicit, XtX_implicit, cnt_X,
                 lambda, n_threads, solver_code, cg_steps,
-                dynamic_lambda, with_implicit_features, weight_implicit,
+                dynamic_lambda, with_implicit_features,
                 with_user_item_bias, is_bias_last_row)
 }
 
