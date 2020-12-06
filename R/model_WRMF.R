@@ -24,6 +24,9 @@
 #'         "Large-scale parallel collaborative filtering for the netflix prize."
 #'         International conference on algorithmic applications in management.
 #'         Springer, Berlin, Heidelberg, 2008.}
+#'   \item{Liang, Dawen, et al.
+#'         "Factorization meets the item embedding: Regularizing matrix factorization with item co-occurrence."
+#'         Proceedings of the 10th ACM conference on recommender systems. 2016.}
 #' }
 #' @export
 #' @examples
@@ -64,9 +67,14 @@ WRMF = R6::R6Class(
     #' At the moment only implemented for \code{"explicit"} feedback.
     #' @param with_global_bias \code{bool} controls if model should calculate global biases (mean).
     #' At the moment only implemented for \code{"explicit"} feedback.
+    #' @param with_implicit_features \code{bool} In the explicit feedback model, whether to jointly
+    #' factorize a binary matrix of user/item occurrences.
     #' @param cg_steps \code{integer > 0} - max number of internal steps in conjugate gradient
     #' (if "conjugate_gradient" solver used). \code{cg_steps = 3} by default.
-    #' Controls precision of linear equation solution at the each ALS step. Usually no need to tune this parameter
+    #' Controls precision of linear equation solution at the each ALS step.
+    #' Usually no need to tune this parameter.
+    #' @param weight_implicit \code{numeric >= 0} When passing `with_implicit_features=TRUE`,
+    #' this is the weight that the implicit features will have in the loss function.
     #' @param precision one of \code{c("double", "float")}. Should embedding matrices be
     #' numeric or float (from \code{float} package). The latter is usually 2x faster and
     #' consumes less RAM. BUT \code{float} matrices are not "base" objects. Use carefully.
@@ -80,7 +88,9 @@ WRMF = R6::R6Class(
                           solver = c("conjugate_gradient", "cholesky", "nnls"),
                           with_user_item_bias = FALSE,
                           with_global_bias = FALSE,
+                          with_implicit_features = FALSE,
                           cg_steps = 3L,
+                          weight_implicit = 0.5,
                           precision = c("double", "float"),
                           ...) {
       stopifnot(is.null(init) || is.matrix(init))
@@ -108,12 +118,16 @@ WRMF = R6::R6Class(
       private$feedback = feedback
       private$lambda = as.numeric(lambda)
       private$dynamic_lambda = as.logical(dynamic_lambda)[1L]
+      private$with_implicit_features = as.logical(with_implicit_features)[1L]
+      private$weight_implicit = as.numeric(weight_implicit)[1L]
+      stopifnot(private$weight_implicit >= 0.)
 
       stopifnot(is.integer(cg_steps) && length(cg_steps) == 1)
       private$cg_steps = cg_steps
 
       n_threads = getOption("rsparse_omp_threads", 1L)
-      private$solver = function(x, X, Y, is_bias_last_row, XtX = NULL, cnt_X=NULL, avoid_cg = FALSE) {
+      private$solver = function(x, X, Y, is_bias_last_row, X_implicit = NULL, XtX = NULL,
+                                cnt_X=NULL, avoid_cg = FALSE, XtX_implicit = NULL) {
         solver_use = ifelse(avoid_cg && private$solver_code == 1L, 0L, private$solver_code)
         if (private$lambda && dynamic_lambda && is.null(cnt_X)) {
           if (private$precision == "double") {
@@ -121,7 +135,20 @@ WRMF = R6::R6Class(
           } else {
             cnt_X = float::float(ncol(X))
           }
+        } else if (is.null(cnt_X)) {
+          cnt_X = numeric()
+          if (private$precision == "float")
+            cnt_X = float::fl(cnt_X)
         }
+        if (is.null(XtX_implicit)) {
+          XtX_implicit = matrix(numeric(), nrow=0L, ncol=0L)
+          X_implicit = matrix(numeric(), nrow=0L, ncol=0L)
+        }
+        if (private$precision == "float" && !("float32" %in% class(XtX_implicit))) {
+          XtX_implicit = float::fl(XtX_implicit)
+          X_implicit = float::fl(X_implicit)
+        }
+
         if(feedback == "implicit") {
           als_implicit(
             x, X, Y,
@@ -135,12 +162,14 @@ WRMF = R6::R6Class(
             XtX = XtX)
         } else {
           als_explicit(
-            x, X, Y, cnt_X,
+            x, X, Y, X_implicit, XtX_implicit, cnt_X,
             lambda = private$lambda,
             n_threads = n_threads,
             solver_code = solver_use,
             cg_steps = private$cg_steps,
             dynamic_lambda = private$dynamic_lambda,
+            with_implicit_features = private$with_implicit_features && nrow(XtX_implicit) && ncol(XtX_implicit),
+            weight_implicit = private$weight_implicit,
             precision = private$precision,
             with_user_item_bias = private$with_user_item_bias,
             is_bias_last_row = is_bias_last_row)
@@ -208,10 +237,36 @@ WRMF = R6::R6Class(
         if (private$with_user_item_bias) {
           private$U[1, ] = rep(1.0, n_user)
         }
+
+        if (private$with_implicit_features) {
+          rank_implicit = private$rank - ifelse(private$with_user_item_bias, 0L, 2L)
+          self$components_i = matrix(
+            rnorm(n_item * rank_implicit, 0, 0.01),
+            ncol = n_item,
+            nrow = rank_implicit
+          )
+          U_i = matrix(
+            rnorm(n_user * rank_implicit, 0, 0.01),
+            ncol = n_user,
+            nrow = rank_implicit
+          )
+        } else {
+          self$components_i = NULL
+          U_i = NULL
+        }
       } else {
         private$U = flrnorm(private$rank, n_user, 0, 0.01)
         if (private$with_user_item_bias) {
           private$U[1, ] = float::fl(rep(1.0, n_user))
+        }
+
+        if (private$with_implicit_features) {
+          rank_implicit = private$rank - ifelse(private$with_user_item_bias, 0L, 2L)
+          self$components_i = flrnorm(rank_implicit, n_item, 0, 0.01)
+          U_i = flrnorm(rank_implicit, n_user, 0, 0.01)
+        } else {
+          self$components_i = NULL
+          U_i = NULL
         }
       }
 
@@ -238,6 +293,9 @@ WRMF = R6::R6Class(
         stopifnot(nrow(self$components) == private$rank)
       }
 
+      if (!private$with_implicit_features)
+        XtX_implicit_u = NULL
+
       # NNLS
       if (private$non_negative) {
         self$components = abs(self$components)
@@ -250,7 +308,7 @@ WRMF = R6::R6Class(
       if (private$with_user_item_bias) {
         logger$debug("initializing biases")
         # copy only c_ui@x
-        # beacause c_iu is internal
+        # because c_iu is internal
         if (private$feedback == "explicit" && private$with_global_bias)
           c_ui@x = deep_copy(c_ui@x)
 
@@ -291,10 +349,23 @@ WRMF = R6::R6Class(
 
       # iterate
       for (i in seq_len(n_iter)) {
+        if (private$with_implicit_features) {
+          self$components_i = solver_implicit_features(c_ui, private$U, private$lambda,
+                                                       private$dynamic_lambda, private$with_user_item_bias,
+                                                       private$non_negative)
+          U_i = solver_implicit_features(c_iu, self$components, private$lambda,
+                                         private$dynamic_lambda, private$with_user_item_bias,
+                                         private$non_negative)
+          private$XtX_implicit = tcrossprod(self$components_i)
+          XtX_implicit_u = tcrossprod(U_i)
+        }
+
         # solve for items
-        loss = private$solver(c_ui, private$U, self$components, TRUE, cnt_X=cnt_i)
+        loss = private$solver(c_ui, private$U, self$components, TRUE, cnt_X=cnt_i,
+                              X_implicit=U_i, XtX_implicit = XtX_implicit_u)
         # solve for users
-        loss = private$solver(c_iu, self$components, private$U, FALSE, cnt_X=cnt_u)
+        loss = private$solver(c_iu, self$components, private$U, FALSE, cnt_X=cnt_u,
+                              X_implicit=self$components_i, XtX_implicit = private$XtX_implicit)
 
         logger$info("iter %d loss = %.4f", i, loss)
         if (loss_prev_iter / loss - 1 < convergence_tol) {
@@ -310,6 +381,10 @@ WRMF = R6::R6Class(
 
       X = if (private$with_user_item_bias) tcrossprod(self$components[-1L, ]) else self$components
       private$XtX = tcrossprod(X) + ridge
+      if (private$precision == "float" && private$with_implicit_features) {
+        self$components_i = float::fl(self$components_i)
+        private$XtX_implicit = float::fl(private$XtX_implicit)
+      }
 
       if (private$precision == "double")
         data.table::setattr(self$components, "dimnames", list(NULL, colnames(x)))
@@ -352,7 +427,8 @@ WRMF = R6::R6Class(
         res = float(0, nrow = private$rank, ncol = nrow(x))
       }
 
-      loss = private$solver(t(x), self$components, res, FALSE, private$XtX, avoid_cg=TRUE)
+      loss = private$solver(t(x), self$components, res, FALSE, self$components_i, private$XtX,
+                            avoid_cg=TRUE, XtX_implicit=private$XtX_implicit)
 
       res = t(res)
 
@@ -362,7 +438,10 @@ WRMF = R6::R6Class(
         setattr(res@Data, "dimnames", list(rownames(x), NULL))
 
       res
-    }
+    },
+    #' @field components_i Components from implicit features (if passing
+    #' `with_implicit_features=TRUE`).
+    components_i = NULL
   ),
   #### private -----
   private = list(
@@ -384,9 +463,12 @@ WRMF = R6::R6Class(
     feedback = NULL,
     precision = NULL,
     XtX = NULL,
+    XtX_implicit = NULL,
     solver = NULL,
     with_user_item_bias = NULL,
     with_global_bias = NULL,
+    with_implicit_features = FALSE,
+    weight_implicit = 0.,
     init_user_item_bias = NULL
   )
 )
@@ -422,12 +504,14 @@ als_implicit = function(
 }
 
 als_explicit = function(
-  x, X, Y, cnt_X,
+  x, X, Y, X_implicit, XtX_implicit, cnt_X,
   lambda,
   n_threads,
   solver_code,
   cg_steps,
   dynamic_lambda,
+  with_implicit_features,
+  weight_implicit,
   precision,
   with_user_item_bias,
   is_bias_last_row) {
@@ -437,7 +521,10 @@ als_explicit = function(
                   als_explicit_double)
 
   # Y is modified in-place
-  loss = solver(x, X, Y, cnt_X, lambda, n_threads, solver_code, cg_steps, dynamic_lambda, with_user_item_bias, is_bias_last_row)
+  loss = solver(x, X, Y, X_implicit, XtX_implicit, cnt_X,
+                lambda, n_threads, solver_code, cg_steps,
+                dynamic_lambda, with_implicit_features, weight_implicit,
+                with_user_item_bias, is_bias_last_row)
 }
 
 solver_explicit = function(x, X, Y, lambda = 0, non_negative = FALSE) {
@@ -499,4 +586,16 @@ solver_explicit_biases = function(x, X, Y, bias_index = 1L, lambda = 0, non_nega
   loss = als_loss_explicit(x, X, res, lambda, getOption("rsparse_omp_threads", 1L))
   data.table::setattr(res, "loss", loss)
   res
+}
+
+solver_implicit_features = function(x, X, lambda = 0, dynamic_lambda = TRUE, with_user_item_bias = FALSE, non_negative = FALSE) {
+  if (with_user_item_bias)
+    X = X[seq(2L, nrow(X) - 1L), , drop=FALSE]
+  ridge = diag(x = lambda * ifelse(dynamic_lambda, ncol(X), 1), nrow = nrow(X), ncol = nrow(X))
+  x@x = rep(1., length(x@x))
+  if (!non_negative) {
+    return(solve(tcrossprod(X) + ridge, X %*% x))
+  } else {
+    return(c_nnls_double(tcrossprod(X) + ridge, X %*% x, 10000L, 1e-3))
+  }
 }

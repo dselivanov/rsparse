@@ -76,12 +76,16 @@ template <class T>
 T als_explicit(const dMappedCSC& Conf,
           arma::Mat<T>& X,
           arma::Mat<T>& Y,
+          const arma::Mat<T> X_implicit,
+          const arma::Mat<T>& XtX_implicit,
           const double lambda,
           const unsigned n_threads,
           const unsigned solver,
           const unsigned cg_steps,
           const bool dynamic_lambda,
           const arma::Col<T>& cnt_X,
+          const bool with_implicit_features,
+          const T weight_implicit,
           const bool with_biases,
           const bool is_x_bias_last_row) {
   /* Note about biases:
@@ -153,8 +157,30 @@ T als_explicit(const dMappedCSC& Conf,
         }
       } else {
         arma::Mat<T> lhs = X_nnz * X_nnz.t();
+        if (with_implicit_features) {
+          if (!with_biases)
+            lhs += weight_implicit * XtX_implicit;
+          else {
+            if (is_x_bias_last_row)
+              lhs(arma::span(1, lhs.n_rows-1), arma::span(1, lhs.n_cols-1)) += weight_implicit * XtX_implicit;
+            else
+              lhs(arma::span(0, lhs.n_rows-2), arma::span(0, lhs.n_cols-2)) += weight_implicit * XtX_implicit;
+          }
+        }
         lhs.diag() += lambda_use;
-        const arma::Mat<T> rhs = X_nnz * confidence;
+        arma::Mat<T> rhs = X_nnz * confidence;
+        if (with_implicit_features) {
+          if (!with_biases)
+            rhs += weight_implicit * arma::sum(X_implicit.cols(idx), 1);
+          else {
+            if (is_x_bias_last_row)
+              rhs(arma::span(1, rhs.n_rows - 1), arma::span::all)
+                += weight_implicit * arma::sum(X_implicit.cols(idx), 1);
+            else
+              rhs(arma::span(0, rhs.n_rows - 2), arma::span::all)
+                += weight_implicit * arma::sum(X_implicit.cols(idx), 1);
+          }
+        }
 
         if (solver == CHOLESKY) { // CHOLESKY
           Y_new = solve(lhs, rhs, arma::solve_opts::fast );
@@ -323,18 +349,23 @@ double als_implicit_float( const Rcpp::S4 &m_csc_r,
 double als_explicit_double(const Rcpp::S4 &m_csc_r,
                            arma::mat& X,
                            arma::mat& Y,
-                           arma::Col<double> cnt_X,
+                           arma::mat& X_implicit,
+                           const arma::mat& XtX_implicit,
+                           const arma::Col<double> &cnt_X,
                            double lambda,
                            unsigned n_threads,
                            unsigned solver,
                            unsigned cg_steps,
                            const bool dynamic_lambda,
+                           const bool with_implicit_features,
+                           const double weight_implicit,
                            const bool with_biases,
                            bool is_x_bias_last_row) {
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
   return (double)als_explicit<double>(
-      Conf, X, Y, lambda, n_threads, solver, cg_steps,
-      dynamic_lambda, cnt_X,
+      Conf, X, Y, X_implicit, XtX_implicit,
+      lambda, n_threads, solver, cg_steps,
+      dynamic_lambda, cnt_X, with_implicit_features, weight_implicit,
       with_biases, is_x_bias_last_row
   );
 }
@@ -343,21 +374,28 @@ double als_explicit_double(const Rcpp::S4 &m_csc_r,
 double als_explicit_float(const Rcpp::S4 &m_csc_r,
                           Rcpp::S4 &X_,
                           Rcpp::S4 &Y_,
-                          Rcpp::S4 &cnt_X_,
+                          const Rcpp::S4 &X_implicit_,
+                          const Rcpp::S4 &XtX_implicit_,
+                          const Rcpp::S4 &cnt_X_,
                           double lambda,
                           unsigned n_threads,
                           unsigned solver,
                           unsigned cg_steps,
                           const bool dynamic_lambda,
+                          const bool with_implicit_features,
+                          const float weight_implicit,
                           const bool with_biases,
                           bool is_x_bias_last_row) {
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
   arma::fmat X = extract_float_matrix(X_);
   arma::fmat Y = extract_float_matrix(Y_);
+  const arma::fmat X_implicit = extract_float_matrix(X_implicit_);
+  const arma::fmat XtX_implicit = extract_float_matrix(XtX_implicit_);
   arma::fmat cnt_X = extract_float_vector(cnt_X_);
   return (double)als_explicit<float>(
-      Conf, X, Y, lambda, n_threads, solver, cg_steps,
-      dynamic_lambda, cnt_X,
+      Conf, X, Y, X_implicit, XtX_implicit,
+      lambda, n_threads, solver, cg_steps,
+      dynamic_lambda, cnt_X, with_implicit_features, weight_implicit,
       with_biases, is_x_bias_last_row
   );
 }
