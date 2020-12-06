@@ -39,10 +39,21 @@ preds = model$predict(cv, k = 10, not_recommend = cv)
         "Large-scale parallel collaborative filtering for the netflix prize."
         International conference on algorithmic applications in management.
         Springer, Berlin, Heidelberg, 2008.}
+  \item{Liang, Dawen, et al.
+        "Factorization meets the item embedding: Regularizing matrix factorization with item co-occurrence."
+        Proceedings of the 10th ACM conference on recommender systems. 2016.}
 }
 }
 \section{Super class}{
 \code{\link[rsparse:MatrixFactorizationRecommender]{rsparse::MatrixFactorizationRecommender}} -> \code{WRMF}
+}
+\section{Public fields}{
+\if{html}{\out{<div class="r6-fields">}}
+\describe{
+\item{\code{components_i}}{Components from implicit features (if passing
+`with_implicit_features=TRUE`).}
+}
+\if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -76,7 +87,9 @@ creates WRMF model
   solver = c("conjugate_gradient", "cholesky", "nnls"),
   with_user_item_bias = FALSE,
   with_global_bias = FALSE,
+  with_implicit_features = FALSE,
   cg_steps = 3L,
+  weight_implicit = 0.5,
   precision = c("double", "float"),
   ...
 )}\if{html}{\out{</div>}}
@@ -117,9 +130,16 @@ At the moment only implemented for \code{"explicit"} feedback.}
 \item{\code{with_global_bias}}{\code{bool} controls if model should calculate global biases (mean).
 At the moment only implemented for \code{"explicit"} feedback.}
 
+\item{\code{with_implicit_features}}{\code{bool} In the explicit feedback model, whether to jointly
+factorize a binary matrix of user/item occurrences.}
+
 \item{\code{cg_steps}}{\code{integer > 0} - max number of internal steps in conjugate gradient
 (if "conjugate_gradient" solver used). \code{cg_steps = 3} by default.
-Controls precision of linear equation solution at the each ALS step. Usually no need to tune this parameter}
+Controls precision of linear equation solution at the each ALS step.
+Usually no need to tune this parameter.}
+
+\item{\code{weight_implicit}}{\code{numeric >= 0} When passing `with_implicit_features=TRUE`,
+this is the weight that the implicit features will have in the loss function.}
 
 \item{\code{precision}}{one of \code{c("double", "float")}. Should embedding matrices be
 numeric or float (from \code{float} package). The latter is usually 2x faster and
