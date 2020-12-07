@@ -1738,7 +1738,7 @@ CXX=$(${R_HOME}/bin/R CMD config CXX)
 CXXFLAGS=$("${R_HOME}/bin/R" CMD config CXXFLAGS)
 
 ## configure float libs
-FLOAT_LIBS=`${R_HOME}/bin/Rscript -e "float:::ldflags(static = (Sys.info()['sysname'] = 'Darwin'))"`
+FLOAT_LIBS=`${R_HOME}/bin/Rscript -e "float:::ldflags(static = (Sys.info()['sysname'] == 'Darwin'))"`
 
 #------------------------------------------------------
 # borrowed from https://github.com/RcppCore/RcppArmadillo/blob/c2fde536fe9b70238a95c2e2e413bca9681d23d2/configure.ac#L1
