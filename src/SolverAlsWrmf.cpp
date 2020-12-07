@@ -9,7 +9,7 @@
 #define CG_TOL 1e-10
 
 template <class T>
-arma::subview<T> drop_row(const arma::Mat<T> &X_nnz, const bool drop_last) {
+arma::Mat<T> drop_row(const arma::Mat<T> &X_nnz, const bool drop_last) {
   if (drop_last) { // drop last row
     return X_nnz.head_rows(X_nnz.n_rows - 1);
   } else { // drop first row

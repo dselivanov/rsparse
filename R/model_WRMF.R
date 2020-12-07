@@ -453,8 +453,8 @@ solver_explicit = function(x, X, Y, lambda = 0, non_negative = FALSE) {
     }
   }
   res = do.call(cbind, res)
-  loss = als_loss_explicit(x, X, res, lambda, getOption("rsparse_omp_threads", 1L))
-  data.table::setattr(res, "loss", loss)
+  # loss = als_loss_explicit(x, X, res, lambda, getOption("rsparse_omp_threads", 1L))
+  # data.table::setattr(res, "loss", loss)
   res
 }
 
@@ -488,7 +488,7 @@ solver_explicit_biases = function(x, X, Y, bias_index = 1L, lambda = 0, non_nega
   } else {
     res = rbind(ones, res, deparse.level = 0 )
   }
-  loss = als_loss_explicit(x, X, res, lambda, getOption("rsparse_omp_threads", 1L))
-  data.table::setattr(res, "loss", loss)
+  # loss = als_loss_explicit(x, X, res, lambda, getOption("rsparse_omp_threads", 1L))
+  # data.table::setattr(res, "loss", loss)
   res
 }

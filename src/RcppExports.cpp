@@ -543,7 +543,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_als_explicit_float", (DL_FUNC) &_rsparse_als_explicit_float, 11},
     {"_rsparse_initialize_biases_double", (DL_FUNC) &_rsparse_initialize_biases_double, 8},
     {"_rsparse_initialize_biases_float", (DL_FUNC) &_rsparse_initialize_biases_float, 8},
-    {"_rsparse_deep_copy", (DL_FUNC) &_rsparse_deep_copy, 1},
     {"_rsparse_rankmf_solver_double", (DL_FUNC) &_rsparse_rankmf_solver_double, 22},
     {"_rsparse_rankmf_solver_float", (DL_FUNC) &_rsparse_rankmf_solver_float, 22},
     {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 7},
