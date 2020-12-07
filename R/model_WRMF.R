@@ -86,14 +86,16 @@ WRMF = R6::R6Class(
       stopifnot(is.null(init) || is.matrix(init))
       solver = match.arg(solver)
       private$non_negative = ifelse(solver == "nnls", TRUE, FALSE)
-
-      precision = match.arg(precision)
       feedback = match.arg(feedback)
 
       if (feedback == 'implicit') {
         # FIXME
         # now only support bias for explicit feedback
         with_user_item_bias = FALSE
+        with_global_bias = FALSE
+      }
+      if (private$non_negative && with_global_bias == TRUE) {
+        logger$warn("setting `with_global_bias=FALSE` for 'nnls' solver")
         with_global_bias = FALSE
       }
       private$with_user_item_bias = with_user_item_bias
