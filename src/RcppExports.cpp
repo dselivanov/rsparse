@@ -457,12 +457,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // c_nnls_double
-arma::Mat<double> c_nnls_double(const arma::mat& x, const arma::mat& y, uint max_iter, double rel_tol);
+arma::Mat<double> c_nnls_double(const arma::mat& x, const arma::vec& y, uint max_iter, double rel_tol);
 RcppExport SEXP _rsparse_c_nnls_double(SEXP xSEXP, SEXP ySEXP, SEXP max_iterSEXP, SEXP rel_tolSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
     Rcpp::traits::input_parameter< uint >::type max_iter(max_iterSEXP);
     Rcpp::traits::input_parameter< double >::type rel_tol(rel_tolSEXP);
     rcpp_result_gen = Rcpp::wrap(c_nnls_double(x, y, max_iter, rel_tol));

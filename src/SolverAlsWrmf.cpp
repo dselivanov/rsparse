@@ -126,7 +126,7 @@ T als_explicit(const dMappedCSC& Conf,
       T lambda_use = lambda * (dynamic_lambda? static_cast<T>(p2-p1) : 1.);
       arma::Col<T> confidence = arma::conv_to< arma::Col<T> >::from(arma::vec(&Conf.values[p1], p2 - p1));
       arma::Mat<T> X_nnz = X.cols(idx);
-
+      arma::Col<T> init = Y.col(i);
       // if is_x_bias_last_row == true
       // X_nnz = [1, ...]
       // if is_x_bias_last_row == false
@@ -134,6 +134,7 @@ T als_explicit(const dMappedCSC& Conf,
       if (with_biases) {
         X_nnz = drop_row<T>(X_nnz, is_x_bias_last_row);
         confidence -= x_biases(idx);
+        init = drop_row<T>(init, !is_x_bias_last_row);
       }
 
       arma::Col<T> Y_new;
@@ -144,12 +145,7 @@ T als_explicit(const dMappedCSC& Conf,
       // X_nnz = [x_bias, ..., 1]
       // Y_new should be [..., y_bias]
       if (solver == CONJUGATE_GRADIENT) {
-        if (with_biases) {
-          auto init = drop_row<T>(Y.col(i), !is_x_bias_last_row);
-          Y_new = cg_solver_explicit<T>(X_nnz, confidence, init, lambda_use, cg_steps);
-        } else {
-          Y_new = cg_solver_explicit<T>(X_nnz, confidence, Y.col(i), lambda_use, cg_steps);
-        }
+        Y_new = cg_solver_explicit<T>(X_nnz, confidence, init, lambda_use, cg_steps);
       } else {
         arma::Mat<T> lhs = X_nnz * X_nnz.t();
         lhs.diag() += lambda_use;
@@ -158,10 +154,10 @@ T als_explicit(const dMappedCSC& Conf,
         if (solver == CHOLESKY) { // CHOLESKY
           Y_new = solve(lhs, rhs, arma::solve_opts::fast );
         } else if (solver == SEQ_COORDINATE_WISE_NNLS) { // SEQ_COORDINATE_WISE_NNLS
-          Y_new = c_nnls<T>(lhs, rhs, 10000, 1e-3);
+          Y_new = c_nnls<T>(lhs, rhs, init, 10000, 1e-3);
         }
       }
-      arma::Row<T> err;
+      arma::Row<T> diff;
 
       if (with_biases) {
         if (is_x_bias_last_row) {
@@ -179,8 +175,8 @@ T als_explicit(const dMappedCSC& Conf,
       } else {
         Y.unsafe_col(i) = Y_new;
       }
-      err = confidence.t() - (Y_new.t() * X_nnz);
-      loss += arma::dot(err, err) + lambda_use * arma::dot(Y_new, Y_new);
+      diff = confidence.t() - (Y_new.t() * X_nnz);
+      loss += arma::dot(diff, diff) + lambda_use * arma::dot(Y_new, Y_new);
     } else {
       if (with_biases) {
         const arma::Col<T> z(rank - 1, arma::fill::zeros);
@@ -260,7 +256,7 @@ T als_implicit(const dMappedCSC& Conf,
         const arma::Mat<T> lhs = XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
         const arma::Mat<T> rhs = X_nnz * confidence;
         if (solver == SEQ_COORDINATE_WISE_NNLS) {
-          Y_new = c_nnls<T>(lhs, rhs, 10000, 1e-3);
+          Y_new = c_nnls<T>(lhs, rhs, Y.col(i), 10000, 1e-3);
         } else { // CHOLESKY
           Y_new = solve(lhs, rhs, arma::solve_opts::fast );
         }
