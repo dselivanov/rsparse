@@ -9,3 +9,4 @@ docs/
 .travis.yml
 ^cran-comments\.md$
 .github/
+^\.github$
