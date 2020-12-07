@@ -1,7 +1,6 @@
 # rsparse <img src='man/figures/logo.png' align="right" height="128" />
 <!-- badges: start -->
 [![R build status](https://github.com/rexyai/rsparse/workflows/R-CMD-check/badge.svg)](https://github.com/rexyai/rsparse/actions)
-[![Travis-CI Build Status](https://travis-ci.org/rexyai/rsparse.svg?branch=master)](https://travis-ci.org/rexyai/rsparse)
 [![codecov](https://codecov.io/gh/rexyai/rsparse/branch/master/graph/badge.svg)](https://codecov.io/gh/rexyai/rsparse/branch/master)
 [![License](https://eddelbuettel.github.io/badges/GPL2+.svg)](http://www.gnu.org/licenses/gpl-2.0.html)
 [![Project Status](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
