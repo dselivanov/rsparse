@@ -20,6 +20,10 @@
 #'         non-negative least squares problem."
 #'         International Conference on Computer Analysis of Images
 #'         and Patterns. Springer, Berlin, Heidelberg, 2005.}
+#'   \item{Zhou, Yunhong, et al.
+#'         "Large-scale parallel collaborative filtering for the netflix prize."
+#'         International conference on algorithmic applications in management.
+#'         Springer, Berlin, Heidelberg, 2008.}
 #' }
 #' @export
 #' @examples
@@ -38,6 +42,8 @@ WRMF = R6::R6Class(
     #' @description creates WRMF model
     #' @param rank size of the latent dimension
     #' @param lambda regularization parameter
+    #' @param dynamic_lambda whether `lambda` is to be scaled according to the number
+    #  of non-missing entries for each row/column (only applicable to the explicit-feedback model).
     #' @param init initialization of item embeddings
     #' @param preprocess \code{identity()} by default. User spectified function which will
     #' be applied to user-item interaction matrix before running matrix factorization
@@ -67,6 +73,7 @@ WRMF = R6::R6Class(
     #' @param ... not used at the moment
     initialize = function(rank = 10L,
                           lambda = 0,
+                          dynamic_lambda = TRUE,
                           init = NULL,
                           preprocess = identity,
                           feedback = c("implicit", "explicit"),
@@ -100,13 +107,21 @@ WRMF = R6::R6Class(
       private$precision = match.arg(precision)
       private$feedback = feedback
       private$lambda = as.numeric(lambda)
+      private$dynamic_lambda = as.logical(dynamic_lambda)[1L]
 
       stopifnot(is.integer(cg_steps) && length(cg_steps) == 1)
       private$cg_steps = cg_steps
 
       n_threads = getOption("rsparse_omp_threads", 1L)
-      private$solver = function(x, X, Y, is_bias_last_row, XtX = NULL, avoid_cg = FALSE) {
+      private$solver = function(x, X, Y, is_bias_last_row, XtX = NULL, cnt_X=NULL, avoid_cg = FALSE) {
         solver_use = ifelse(avoid_cg && private$solver_code == 1L, 0L, private$solver_code)
+        if (private$lambda && dynamic_lambda && is.null(cnt_X)) {
+          if (private$precision == "double") {
+            cnt_X = numeric(ncol(X))
+          } else {
+            cnt_X = float::float(ncol(X))
+          }
+        }
         if(feedback == "implicit") {
           als_implicit(
             x, X, Y,
@@ -120,11 +135,12 @@ WRMF = R6::R6Class(
             XtX = XtX)
         } else {
           als_explicit(
-            x, X, Y,
+            x, X, Y, cnt_X,
             lambda = private$lambda,
             n_threads = n_threads,
             solver_code = solver_use,
             cg_steps = private$cg_steps,
+            dynamic_lambda = private$dynamic_lambda,
             precision = private$precision,
             with_user_item_bias = private$with_user_item_bias,
             is_bias_last_row = is_bias_last_row)
@@ -136,7 +152,7 @@ WRMF = R6::R6Class(
         FUN = ifelse(private$precision == 'double',
                      initialize_biases_double,
                      initialize_biases_float)
-        FUN(c_ui, c_iu, user_bias, item_bias, private$lambda,
+        FUN(c_ui, c_iu, user_bias, item_bias, private$lambda, private$dynamic_lambda,
             private$non_negative, private$with_global_bias)
       }
 
@@ -252,12 +268,25 @@ WRMF = R6::R6Class(
 
       loss_prev_iter = Inf
 
+      # for dynamic lambda, need to keep track of the number of entries
+      # in order to calculate the regularized loss
+      cnt_u = numeric()
+      cnt_i = numeric()
+      if (private$dynamic_lambda) {
+        cnt_u = as.numeric(diff(c_ui@p))
+        cnt_i = as.numeric(diff(c_iu@p))
+      }
+      if (private$precision == "float") {
+        cnt_u = float::fl(cnt_u)
+        cnt_i = float::fl(cnt_i)
+      }
+
       # iterate
       for (i in seq_len(n_iter)) {
         # solve for items
-        loss = private$solver(c_ui, private$U, self$components, TRUE)
+        loss = private$solver(c_ui, private$U, self$components, TRUE, cnt_X=cnt_i)
         # solve for users
-        loss = private$solver(c_iu, self$components, private$U, FALSE)
+        loss = private$solver(c_iu, self$components, private$U, FALSE, cnt_X=cnt_u)
 
         logger$info("iter %d loss = %.4f", i, loss)
         if (loss_prev_iter / loss - 1 < convergence_tol) {
@@ -315,7 +344,7 @@ WRMF = R6::R6Class(
         res = float(0, nrow = private$rank, ncol = nrow(x))
       }
 
-      loss = private$solver(t(x), self$components, res, FALSE, private$XtX, TRUE)
+      loss = private$solver(t(x), self$components, res, FALSE, private$XtX, avoid_cg=TRUE)
 
       res = t(res)
 
@@ -333,6 +362,7 @@ WRMF = R6::R6Class(
     cg_steps = NULL,
     scorers = NULL,
     lambda = NULL,
+    dynamic_lambda = FALSE,
     rank = NULL,
     non_negative = NULL,
     # user factor matrix = rank * n_users
@@ -384,11 +414,12 @@ als_implicit = function(
 }
 
 als_explicit = function(
-  x, X, Y, XtX,
+  x, X, Y, cnt_X,
   lambda,
   n_threads,
   solver_code,
   cg_steps,
+  dynamic_lambda,
   precision,
   with_user_item_bias,
   is_bias_last_row) {
@@ -398,7 +429,7 @@ als_explicit = function(
                   als_explicit_double)
 
   # Y is modified in-place
-  loss = solver(x, X, Y, lambda, n_threads, solver_code, cg_steps, with_user_item_bias, is_bias_last_row)
+  loss = solver(x, X, Y, cnt_X, lambda, n_threads, solver_code, cg_steps, dynamic_lambda, with_user_item_bias, is_bias_last_row)
 }
 
 solver_explicit = function(x, X, Y, lambda = 0, non_negative = FALSE) {
