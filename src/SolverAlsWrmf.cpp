@@ -9,7 +9,7 @@
 #define CG_TOL 1e-10
 
 template <class T>
-arma::Mat<T> without_row(const arma::Mat<T> &X_nnz, const bool last) {
+arma::subview<T> without_row(const arma::Mat<T> &X_nnz, const bool last) {
   if (last) {
     return X_nnz.head_rows(X_nnz.n_rows - 1);
   } else {
@@ -114,16 +114,15 @@ T als_explicit(const dMappedCSC& Conf,
     if(p1 < p2) {
       auto idx = arma::uvec(&Conf.row_indices[p1], p2 - p1, false, true);
       arma::Col<T> confidence = arma::conv_to< arma::Col<T> >::from(arma::vec(&Conf.values[p1], p2 - p1));
-      arma::Mat<T> X_nnz;
+      arma::Mat<T> X_nnz = X.cols(idx);
+
       // if is_bias_last_row == true
       // X_nnz = [1, ...]
       // if is_bias_last_row == false
       // X_nnz = [..., 1]
       if (with_biases) {
-        X_nnz = without_row<T>(X.cols(idx), is_bias_last_row);
+        X_nnz = without_row<T>(X_nnz, is_bias_last_row);
         confidence -= biases(idx);
-      } else {
-        X_nnz = X.cols(idx);
       }
 
       arma::Mat<T> lhs = X_nnz * X_nnz.t();
@@ -156,21 +155,21 @@ T als_explicit(const dMappedCSC& Conf,
           // X_nnz = [1, ..., x_bias]
           // Y_new should be [y_bias, ...]
           // Y.col(i) should be [y_bias, ..., 1]
-          Y.col(i).head(rank - 1) = Y_new;
+          Y.unsafe_col(i).head(rank - 1) = Y_new;
 
         } else {
           // X_nnz = [x_bias, ..., 1]
           // Y_new should be [..., y_bias]
           // Y.col(i) should be [1, ..., y_bias]
-          Y.col(i).tail(rank - 1) = Y_new;
+          Y.unsafe_col(i).tail(rank - 1) = Y_new;
         }
       } else {
-        Y.col(i) = Y_new;
+        Y.unsafe_col(i) = Y_new;
       }
       err = confidence.t() - (Y_new.t() * X_nnz);
       loss += arma::dot(err, err);
     } else {
-      Y.col(i).zeros();
+      Y.unsafe_col(i).zeros();
     }
   }
 
