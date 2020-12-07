@@ -35,6 +35,10 @@ preds = model$predict(cv, k = 10, not_recommend = cv)
         non-negative least squares problem."
         International Conference on Computer Analysis of Images
         and Patterns. Springer, Berlin, Heidelberg, 2005.}
+  \item{Zhou, Yunhong, et al.
+        "Large-scale parallel collaborative filtering for the netflix prize."
+        International conference on algorithmic applications in management.
+        Springer, Berlin, Heidelberg, 2008.}
 }
 }
 \section{Super class}{
@@ -65,6 +69,7 @@ creates WRMF model
 \if{html}{\out{<div class="r">}}\preformatted{WRMF$new(
   rank = 10L,
   lambda = 0,
+  dynamic_lambda = TRUE,
   init = NULL,
   preprocess = identity,
   feedback = c("implicit", "explicit"),
@@ -83,6 +88,8 @@ creates WRMF model
 \item{\code{rank}}{size of the latent dimension}
 
 \item{\code{lambda}}{regularization parameter}
+
+\item{\code{dynamic_lambda}}{whether `lambda` is to be scaled according to the number}
 
 \item{\code{init}}{initialization of item embeddings}
 
