@@ -199,11 +199,7 @@ WRMF = R6::R6Class(
 
       logger$trace("initializing U")
       if (private$precision == "double") {
-        private$U = matrix(
-          rnorm(n_user * private$rank, 0, 0.01),
-          ncol = n_user,
-          nrow = private$rank
-        )
+        private$U = large_rand_matrix(private$rank, n_user)
         # for item biases
         if (private$with_user_item_bias) {
           private$U[1, ] = rep(1.0, n_user)
@@ -217,11 +213,7 @@ WRMF = R6::R6Class(
 
       if (is.null(self$components)) {
         if (private$precision == "double") {
-          self$components = matrix(
-            rnorm(n_item * private$rank, 0, 0.01),
-            ncol = n_item,
-            nrow = private$rank
-          )
+          self$components = large_rand_matrix(private$rank, n_item)
           # for user biases
           if (private$with_user_item_bias) {
             self$components[private$rank, ] = rep(1.0, n_item)
@@ -250,7 +242,7 @@ WRMF = R6::R6Class(
       if (private$with_user_item_bias) {
         logger$debug("initializing biases")
         # copy only c_ui@x
-        # beacause c_iu is internal
+        # because c_iu is internal
         if (private$feedback == "explicit" && private$with_global_bias)
           c_ui@x = deep_copy(c_ui@x)
 
