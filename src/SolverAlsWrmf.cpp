@@ -6,6 +6,8 @@
 #define CONJUGATE_GRADIENT 1
 #define SEQ_COORDINATE_WISE_NNLS 2
 
+#define SCD_MAX_ITER 10000
+#define SCD_TOL 1e-3
 #define CG_TOL 1e-10
 
 template <class T>
@@ -154,7 +156,7 @@ T als_explicit(const dMappedCSC& Conf,
         if (solver == CHOLESKY) { // CHOLESKY
           Y_new = solve(lhs, rhs, arma::solve_opts::fast );
         } else if (solver == SEQ_COORDINATE_WISE_NNLS) { // SEQ_COORDINATE_WISE_NNLS
-          Y_new = c_nnls<T>(lhs, rhs, init, 10000, 1e-3);
+          Y_new = c_nnls<T>(lhs, rhs, init, SCD_MAX_ITER, SCD_TOL);
         }
       }
       arma::Row<T> diff;
@@ -256,7 +258,7 @@ T als_implicit(const dMappedCSC& Conf,
         const arma::Mat<T> lhs = XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
         const arma::Mat<T> rhs = X_nnz * confidence;
         if (solver == SEQ_COORDINATE_WISE_NNLS) {
-          Y_new = c_nnls<T>(lhs, rhs, Y.col(i), 10000, 1e-3);
+          Y_new = c_nnls<T>(lhs, rhs, Y.col(i), SCD_MAX_ITER, SCD_TOL);
         } else { // CHOLESKY
           Y_new = solve(lhs, rhs, arma::solve_opts::fast );
         }

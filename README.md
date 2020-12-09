@@ -95,7 +95,17 @@ Here is example of `rsparse::WRMF` on [lastfm360k](https://www.upf.edu/web/mtg/l
 
 We follow [mlapi](https://github.com/dselivanov/mlapi) conventions.
 
-# Configure
+# Release and configure
+
+## Making release
+
+Don't forget to add `DARMA_NO_DEBUG` to `PKG_CXXFLAGS` to skip bound checks (this has significant impact on NNLS solver)
+
+```
+PKG_CXXFLAGS = ... -DARMA_NO_DEBUG
+```
+
+## Configure
 
 Generate configure:
 
