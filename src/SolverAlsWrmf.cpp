@@ -235,8 +235,27 @@ T als_implicit(const dMappedCSC& Conf,
           unsigned n_threads,
           unsigned solver,
           unsigned cg_steps,
+          const bool with_biases,
           bool is_x_bias_last_row) {
-  // const arma::uword rank = X.n_rows;
+
+  // if is_x_bias_last_row == true
+  // X = [1, ..., x_bias]
+  // Y = [y_bias, ..., 1]
+  // if is_x_bias_last_row == false
+  // X = [x_bias, ..., 1]
+  // Y = [1, ..., y_bias]
+
+  const arma::uword rank = X.n_rows;
+
+  arma::Col<T> x_biases;
+
+  if (with_biases) {
+    if (is_x_bias_last_row) // last row
+      x_biases = X.row(X.n_rows - 1).t();
+    else // first row
+      x_biases = X.row(0).t();
+  }
+
   T loss = 0;
   size_t nc = Conf.n_cols;
   #ifdef _OPENMP
@@ -249,26 +268,61 @@ T als_implicit(const dMappedCSC& Conf,
     if(p1 < p2) {
       auto idx = arma::uvec(&Conf.row_indices[p1], p2 - p1, false, true);
       arma::Col<T> confidence = arma::conv_to< arma::Col<T> >::from(arma::vec(&Conf.values[p1], p2 - p1));
-      const arma::Mat<T> X_nnz = X.cols(idx);
+      arma::Mat<T> X_nnz = X.cols(idx);
+      arma::Col<T> init = Y.col(i);
+      // if is_x_bias_last_row == true
+      // X_nnz = [1, ...]
+      // if is_x_bias_last_row == false
+      // X_nnz = [..., 1]
+      if (with_biases) {
+        X_nnz = drop_row<T>(X_nnz, is_x_bias_last_row);
+        confidence -= x_biases(idx);
+        init = drop_row<T>(init, !is_x_bias_last_row);
+      }
       arma::Col<T> Y_new;
 
       if(solver == CONJUGATE_GRADIENT) {
-        Y_new = cg_solver_implicit<T>(X_nnz, confidence, Y.col(i), cg_steps, XtX);
+        Y_new = cg_solver_implicit<T>(X_nnz, confidence, init, cg_steps, XtX);
       } else {
         const arma::Mat<T> lhs = XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
         const arma::Mat<T> rhs = X_nnz * confidence;
         if (solver == SEQ_COORDINATE_WISE_NNLS) {
-          Y_new = c_nnls<T>(lhs, rhs, Y.col(i), SCD_MAX_ITER, SCD_TOL);
+          Y_new = c_nnls<T>(lhs, rhs, init, SCD_MAX_ITER, SCD_TOL);
         } else { // CHOLESKY
           Y_new = solve(lhs, rhs, arma::solve_opts::fast );
         }
       }
 
-      Y.col(i) = Y_new;
-      loss += dot(square( 1 - (Y.col(i).t() * X_nnz)), confidence);
+      if (with_biases) {
+        if (is_x_bias_last_row) {
+          // X_nnz = [1, ..., x_bias]
+          // Y_new should be [y_bias, ...]
+          // Y.col(i) should be [y_bias, ..., 1]
+          Y.unsafe_col(i).head(rank - 1) = Y_new;
+
+        } else {
+          // X_nnz = [x_bias, ..., 1]
+          // Y_new should be [..., y_bias]
+          // Y.col(i) should be [1, ..., y_bias]
+          Y.unsafe_col(i).tail(rank - 1) = Y_new;
+        }
+      } else {
+        Y.unsafe_col(i) = Y_new;
+      }
+
+      loss += dot(square( 1 - (Y_new.t() * X_nnz)), confidence);
 
     } else {
-      Y.col(i).zeros();
+      if (with_biases) {
+        const arma::Col<T> z(rank - 1, arma::fill::zeros);
+        if (is_x_bias_last_row) {
+          Y.unsafe_col(i).head(rank - 1) = z;
+        } else {
+          Y.unsafe_col(i).tail(rank - 1) = z;
+        }
+      } else {
+        Y.unsafe_col(i).zeros();
+      }
     }
   }
 
@@ -287,11 +341,12 @@ double als_implicit_double(const Rcpp::S4 &m_csc_r,
                   unsigned n_threads,
                   unsigned solver,
                   unsigned cg_steps,
+                  const bool with_biases,
                   bool is_x_bias_last_row) {
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
   return (double)als_implicit<double>(
       Conf, X, Y, XtX, lambda, n_threads, solver, cg_steps,
-      is_x_bias_last_row
+      with_biases, is_x_bias_last_row
     );
 }
 
@@ -304,6 +359,7 @@ double als_implicit_float( const Rcpp::S4 &m_csc_r,
                   unsigned n_threads,
                   unsigned solver,
                   unsigned cg_steps,
+                  const bool with_biases,
                   bool is_x_bias_last_row) {
   const dMappedCSC Conf = extract_mapped_csc(m_csc_r);
   // get arma matrices which share memory with R "float" matrices
@@ -312,7 +368,7 @@ double als_implicit_float( const Rcpp::S4 &m_csc_r,
   arma::fmat XtX = extract_float_matrix(XtX_);
   return (double)als_implicit<float>(
       Conf, X, Y, XtX, lambda, n_threads, solver, cg_steps,
-      is_x_bias_last_row
+      with_biases, is_x_bias_last_row
     );
 }
 
