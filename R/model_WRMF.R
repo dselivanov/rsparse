@@ -85,15 +85,22 @@ WRMF = R6::R6Class(
                           ...) {
       stopifnot(is.null(init) || is.matrix(init))
       solver = match.arg(solver)
-      private$non_negative = ifelse(solver == "nnls", TRUE, FALSE)
       feedback = match.arg(feedback)
 
       if (feedback == 'implicit') {
         # FIXME
-        # now only support bias for explicit feedback
-        # with_user_item_bias = FALSE
+
+        if (solver == "conjugate_gradient" && with_user_item_bias == TRUE) {
+          msg = paste("'conjugate_gradient' is not supported for a model",
+            "`with_user_item_bias == TRUE`. Setting to 'cholesky'."
+          )
+          warning(msg)
+          solver = "cholesky"
+        }
         with_global_bias = FALSE
       }
+      private$non_negative = ifelse(solver == "nnls", TRUE, FALSE)
+
       if (private$non_negative && with_global_bias == TRUE) {
         logger$warn("setting `with_global_bias=FALSE` for 'nnls' solver")
         with_global_bias = FALSE
@@ -286,6 +293,7 @@ WRMF = R6::R6Class(
 
       # iterate
       for (i in seq_len(n_iter)) {
+
         # solve for items
         loss = private$solver(c_ui, private$U, self$components, TRUE, cnt_X=cnt_i)
         logger$info("iter %d (items) loss = %.4f", i, loss)
@@ -293,6 +301,7 @@ WRMF = R6::R6Class(
         # solve for users
         loss = private$solver(c_iu, self$components, private$U, FALSE, cnt_X=cnt_u)
         logger$info("iter %d (users) loss = %.4f", i, loss)
+
         if (loss_prev_iter / loss - 1 < convergence_tol) {
           logger$info("Converged after %d iterations", i)
           break
