@@ -295,11 +295,13 @@ WRMF = R6::R6Class(
       for (i in seq_len(n_iter)) {
 
         # solve for items
-        loss = private$solver(c_ui, private$U, self$components, TRUE, cnt_X=cnt_i)
+        loss = private$solver(c_ui, private$U, self$components,
+                              is_bias_last_row = TRUE, cnt_X=cnt_i)
         logger$info("iter %d (items) loss = %.4f", i, loss)
 
         # solve for users
-        loss = private$solver(c_iu, self$components, private$U, FALSE, cnt_X=cnt_u)
+        loss = private$solver(c_iu, self$components, private$U,
+                              is_bias_last_row = FALSE, cnt_X=cnt_u)
         logger$info("iter %d (users) loss = %.4f", i, loss)
 
         if (loss_prev_iter / loss - 1 < convergence_tol) {
@@ -312,8 +314,8 @@ WRMF = R6::R6Class(
 
       rank_ = ifelse(private$with_user_item_bias, private$rank - 1L, private$rank)
       ridge = fl(diag(x = private$lambda, nrow = rank_, ncol = rank_))
-      X = if (private$with_user_item_bias) tcrossprod(self$components[-1L, ]) else self$components
-      private$XtX = tcrossprod(X) + ridge
+      XX = if (private$with_user_item_bias) self$components[-1L, , drop = FALSE] else self$components
+      private$XtX = tcrossprod(XX) + ridge
 
       if (private$precision == "double")
         data.table::setattr(self$components, "dimnames", list(NULL, colnames(x)))
@@ -356,7 +358,14 @@ WRMF = R6::R6Class(
         res = float(0, nrow = private$rank, ncol = nrow(x))
       }
 
-      loss = private$solver(t(x), self$components, res, FALSE, NULL, avoid_cg=TRUE)
+      loss = private$solver(
+        t(x),
+        self$components,
+        res,
+        is_bias_last_row = FALSE,
+        XtX = private$XtX,
+        avoid_cg = TRUE
+      )
 
       res = t(res)
 
@@ -415,11 +424,11 @@ als_implicit = function(
     ridge = fl(diag(x = lambda, nrow = rank, ncol = rank))
     if (with_user_item_bias) {
       index_row_to_discard = ifelse(is_bias_last_row, nrow(X), 1L)
-      XtX = tcrossprod(X[-index_row_to_discard, ])
+      XX = X[-index_row_to_discard, , drop = FALSE]
     } else {
-      XtX = tcrossprod(X)
+      XX = X
     }
-    XtX = XtX + ridge
+    XtX = tcrossprod(XX) + ridge
   }
   # Y is modified in-place
   loss = solver(x, X, Y, XtX, lambda, n_threads, solver_code, cg_steps, with_user_item_bias, is_bias_last_row)
