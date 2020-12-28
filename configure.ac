@@ -57,13 +57,13 @@ fi
 AC_MSG_CHECKING([for macOS])
 RSysinfoName=$("${R_HOME}/bin/Rscript" --vanilla -e 'cat(Sys.info()[["sysname"]])')
 
-if test x"${RSysinfoName}" == x"Darwin"; then
+if test x"${RSysinfoName}" = x"Darwin"; then
     AC_MSG_RESULT([found])
     AC_MSG_CHECKING([for macOS Apple compiler])
 
     apple_compiler=$($CXX --version 2>&1 | grep -i -c -e 'apple llvm')
 
-    if test x"${apple_compiler}" == x"1"; then
+    if test x"${apple_compiler}" = x"1"; then
         AC_MSG_RESULT([found])
         AC_MSG_WARN([OpenMP unavailable and turned off.])
         can_use_openmp="no"
@@ -72,7 +72,7 @@ if test x"${RSysinfoName}" == x"Darwin"; then
         AC_MSG_CHECKING([for clang compiler])
         clang_compiler=$($CXX --version 2>&1 | grep -i -c -e 'clang ')
 
-        if test x"${clang_compiler}" == x"1"; then
+        if test x"${clang_compiler}" = x"1"; then
             AC_MSG_RESULT([found])
             AC_MSG_CHECKING([for OpenMP compatible version of clang])
             clang_version=$(${CXX} -v 2>&1 | awk '/^.*clang version/ {print $3}')
@@ -99,12 +99,12 @@ fi
 ## If and only if OpenMP is found, expand to $(SHLIB_OPENMP_CXXFLAGS)
 openmp_flag=""
 
-if test x"${can_use_openmp}" == x"yes"; then
+if test x"${can_use_openmp}" = x"yes"; then
     AC_MSG_CHECKING([for OpenMP])
     ## if R has -fopenmp we should be good
     allldflags=$(${R_HOME}/bin/R CMD config --ldflags)
     hasOpenMP=$(echo ${allldflags} | grep -- -fopenmp)
-    if test x"${hasOpenMP}" == x""; then
+    if test x"${hasOpenMP}" = x""; then
         AC_MSG_RESULT([missing])
     else
         AC_MSG_RESULT([found and suitable])

@@ -1,55 +1,49 @@
 #include <armadillo>
 
-#define TINY_NUM 1e-16
+#define EPS 1e-16
 
 template <class T>
-arma::Col<T> scd_ls_update(const arma::Mat<T> &WtW,
+arma::Col<T> scd_ls_update(const arma::Mat<T> &XtX,
                    arma::Col<T> &mu,
                    arma::uword max_iter,
                    double rel_tol,
                    const arma::Col<T> &initial) {
-  // Problem:  Aj = W * Hj
-  // Method: sequential coordinate-wise descent when loss function = square error
-  // WtW = W^T W
-  // WtAj = W^T Aj
-
   arma::Col<T> res = initial;
-  auto WtW_diag = WtW.diag();
+  T rel_diff, old_value, new_value, diff;
+  const arma::Col<T> XtX_diag = XtX.diag();
   for (auto t = 0; t < max_iter; t++) {
-    T rel_err = 0;
-    for (auto k = 0; k < WtW.n_cols; k++) {
-      T current = res(k);
-      auto update = current - mu(k) / WtW_diag.at(k);
-      if(update < 0) update = 0;
-      res(k) = update;
-      if (update != current) {
-        mu += (update - current) * WtW.col(k);
-        auto current_err = std::abs(current - update) / (std::abs(current) + TINY_NUM);
-        if (current_err > rel_err) rel_err = current_err;
+    rel_diff = 0;
+    for (auto k = 0; k < XtX.n_cols; k++) {
+      old_value = res(k);
+      new_value = old_value - mu(k) / XtX_diag(k);
+      if(new_value < 0) new_value = 0;
+      diff = new_value - old_value;
+      if (diff != 0) {
+        res(k) = new_value;
+        mu += diff * XtX.unsafe_col(k);
+        auto step_err = std::abs(diff) / (std::abs(old_value) + EPS);
+        if (step_err > rel_diff) rel_diff = step_err;
       }
     }
-    if (rel_err <= rel_tol) break;
+    if (rel_diff <= rel_tol) break;
   }
   return res;
 }
 
 template <class T>
-arma::Mat<T> c_nnls(const arma::Mat<T> &x,
-                    const arma::Mat<T> &y,
+arma::Col<T> c_nnls(const arma::Mat<T> &X,
+                    const arma::Col<T> &y,
+                    const arma::Col<T> &init,
                     arma::uword max_iter,
                     double rel_tol) {
-  arma::Mat<T> H(x.n_cols, y.n_cols, arma::fill::randu);
-  arma::Mat<T> Wt = x.t();
 
-  arma::Mat<T> WtW = Wt * x;
-  arma::Col<T> mu, sumW;
-
+  arma::Mat<T> Xt = X.t();
+  arma::Mat<T> XtX = Xt * X;
   // for stability: avoid divided by 0
-  WtW.diag() += TINY_NUM;
+  XtX.diag() += EPS;
+  arma::Col<T> mu = XtX * init - Xt * y;
 
-  for (auto j = 0; j < y.n_cols; j++) {
-    mu = WtW * H.col(j) - Wt * y.col(j);
-    H.col(j) = scd_ls_update<T>(WtW, mu, max_iter, rel_tol, H.col(j));
-  }
+  const arma::Col<T> H = scd_ls_update<T>(XtX, mu, max_iter, rel_tol, init);
+
   return (H);
 }

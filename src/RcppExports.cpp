@@ -367,17 +367,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// deep_copy
-SEXP deep_copy(SEXP x);
-RcppExport SEXP _rsparse_deep_copy(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(deep_copy(x));
-    return rcpp_result_gen;
-END_RCPP
-}
 // rankmf_solver_double
 void rankmf_solver_double(const Rcpp::S4& x_r, arma::Mat<double>& W, arma::Mat<double>& H, arma::Col<double>& W2_grad, arma::Col<double>& H2_grad, const Rcpp::S4& user_features_r, const Rcpp::S4& item_features_r, const arma::uword rank, const arma::uword n_updates, double learning_rate, double gamma, double lambda_user, double lambda_item_positive, double lambda_item_negative, const arma::uword n_threads, bool update_items, const arma::uword loss, const arma::uword kernel, arma::uword max_negative_samples, double margin, const arma::uword optimizer, const arma::uword report_progress);
 RcppExport SEXP _rsparse_rankmf_solver_double(SEXP x_rSEXP, SEXP WSEXP, SEXP HSEXP, SEXP W2_gradSEXP, SEXP H2_gradSEXP, SEXP user_features_rSEXP, SEXP item_features_rSEXP, SEXP rankSEXP, SEXP n_updatesSEXP, SEXP learning_rateSEXP, SEXP gammaSEXP, SEXP lambda_userSEXP, SEXP lambda_item_positiveSEXP, SEXP lambda_item_negativeSEXP, SEXP n_threadsSEXP, SEXP update_itemsSEXP, SEXP lossSEXP, SEXP kernelSEXP, SEXP max_negative_samplesSEXP, SEXP marginSEXP, SEXP optimizerSEXP, SEXP report_progressSEXP) {
@@ -474,12 +463,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // c_nnls_double
-arma::Mat<double> c_nnls_double(const arma::mat& x, const arma::mat& y, uint max_iter, double rel_tol);
+arma::Mat<double> c_nnls_double(const arma::mat& x, const arma::vec& y, uint max_iter, double rel_tol);
 RcppExport SEXP _rsparse_c_nnls_double(SEXP xSEXP, SEXP ySEXP, SEXP max_iterSEXP, SEXP rel_tolSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
     Rcpp::traits::input_parameter< uint >::type max_iter(max_iterSEXP);
     Rcpp::traits::input_parameter< double >::type rel_tol(rel_tolSEXP);
     rcpp_result_gen = Rcpp::wrap(c_nnls_double(x, y, max_iter, rel_tol));
@@ -511,6 +501,29 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// large_rand_matrix
+SEXP large_rand_matrix(SEXP nrow, SEXP ncol);
+RcppExport SEXP _rsparse_large_rand_matrix(SEXP nrowSEXP, SEXP ncolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type nrow(nrowSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type ncol(ncolSEXP);
+    rcpp_result_gen = Rcpp::wrap(large_rand_matrix(nrow, ncol));
+    return rcpp_result_gen;
+END_RCPP
+}
+// deep_copy
+SEXP deep_copy(SEXP x);
+RcppExport SEXP _rsparse_deep_copy(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(deep_copy(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_check_is_seq", (DL_FUNC) &_rsparse_check_is_seq, 1},
@@ -537,7 +550,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_als_explicit_float", (DL_FUNC) &_rsparse_als_explicit_float, 14},
     {"_rsparse_initialize_biases_double", (DL_FUNC) &_rsparse_initialize_biases_double, 8},
     {"_rsparse_initialize_biases_float", (DL_FUNC) &_rsparse_initialize_biases_float, 8},
-    {"_rsparse_deep_copy", (DL_FUNC) &_rsparse_deep_copy, 1},
     {"_rsparse_rankmf_solver_double", (DL_FUNC) &_rsparse_rankmf_solver_double, 22},
     {"_rsparse_rankmf_solver_float", (DL_FUNC) &_rsparse_rankmf_solver_float, 22},
     {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 7},
@@ -545,6 +557,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_c_nnls_double", (DL_FUNC) &_rsparse_c_nnls_double, 4},
     {"_rsparse_omp_thread_count", (DL_FUNC) &_rsparse_omp_thread_count, 0},
     {"_rsparse_cpp_make_sparse_approximation", (DL_FUNC) &_rsparse_cpp_make_sparse_approximation, 5},
+    {"_rsparse_large_rand_matrix", (DL_FUNC) &_rsparse_large_rand_matrix, 2},
+    {"_rsparse_deep_copy", (DL_FUNC) &_rsparse_deep_copy, 1},
     {NULL, NULL, 0}
 };
 

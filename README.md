@@ -1,11 +1,11 @@
 # rsparse <img src='man/figures/logo.png' align="right" height="128" />
-
-[![Travis-CI Build Status](https://travis-ci.org/rexyai/rsparse.svg?branch=master)](https://travis-ci.org/rexyai/rsparse)
+<!-- badges: start -->
+[![R build status](https://github.com/rexyai/rsparse/workflows/R-CMD-check/badge.svg)](https://github.com/rexyai/rsparse/actions)
 [![codecov](https://codecov.io/gh/rexyai/rsparse/branch/master/graph/badge.svg)](https://codecov.io/gh/rexyai/rsparse/branch/master)
 [![License](https://eddelbuettel.github.io/badges/GPL2+.svg)](http://www.gnu.org/licenses/gpl-2.0.html)
 [![Project Status](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
 <a href="https://www.rexy.ai"><img src="https://s3-eu-west-1.amazonaws.com/rexy.ai/images/favicon.ico" height="32" width="32"></a>
-
+<!-- badges: end -->
 
 `rsparse` is an R package for statistical learning primarily on **sparse matrices** -  **matrix factorizations, factorization machines, out-of-core regression**. Many of the implemented algorithms are particularly useful for **recommender systems** and **NLP**. 
 
@@ -95,7 +95,17 @@ Here is example of `rsparse::WRMF` on [lastfm360k](https://www.upf.edu/web/mtg/l
 
 We follow [mlapi](https://github.com/dselivanov/mlapi) conventions.
 
-# Configure
+# Release and configure
+
+## Making release
+
+Don't forget to add `DARMA_NO_DEBUG` to `PKG_CXXFLAGS` to skip bound checks (this has significant impact on NNLS solver)
+
+```
+PKG_CXXFLAGS = ... -DARMA_NO_DEBUG
+```
+
+## Configure
 
 Generate configure:
 

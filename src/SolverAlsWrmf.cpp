@@ -6,6 +6,8 @@
 #define CONJUGATE_GRADIENT 1
 #define SEQ_COORDINATE_WISE_NNLS 2
 
+#define SCD_MAX_ITER 10000
+#define SCD_TOL 1e-3
 #define CG_TOL 1e-10
 
 template <class T>
@@ -171,16 +173,16 @@ T als_explicit(const dMappedCSC& Conf,
       auto idx = arma::uvec(&Conf.row_indices[p1], p2 - p1, false, true);
       T lambda_use = lambda * (dynamic_lambda? static_cast<T>(p2-p1) : 1.);
       arma::Col<T> confidence = arma::conv_to< arma::Col<T> >::from(arma::vec(&Conf.values[p1], p2 - p1));
-      arma::Mat<T> X_nnz;
+      arma::Mat<T> X_nnz = X.cols(idx);
+      arma::Col<T> init = Y.col(i);
       // if is_x_bias_last_row == true
       // X_nnz = [1, ...]
       // if is_x_bias_last_row == false
       // X_nnz = [..., 1]
       if (with_biases) {
-        X_nnz = drop_row<T>(X.cols(idx), is_x_bias_last_row);
+        X_nnz = drop_row<T>(X_nnz, is_x_bias_last_row);
         confidence -= x_biases(idx);
-      } else {
-        X_nnz = X.cols(idx);
+        init = drop_row<T>(init, !is_x_bias_last_row);
       }
 
       arma::Col<T> Y_new;
@@ -240,39 +242,39 @@ T als_explicit(const dMappedCSC& Conf,
         if (solver == CHOLESKY) { // CHOLESKY
           Y_new = solve(lhs, rhs, arma::solve_opts::fast );
         } else if (solver == SEQ_COORDINATE_WISE_NNLS) { // SEQ_COORDINATE_WISE_NNLS
-          Y_new = c_nnls<T>(lhs, rhs, 10000, 1e-3);
+          Y_new = c_nnls<T>(lhs, rhs, init, SCD_MAX_ITER, SCD_TOL);
         }
       }
-      arma::Row<T> err;
+      arma::Row<T> diff;
 
       if (with_biases) {
         if (is_x_bias_last_row) {
           // X_nnz = [1, ..., x_bias]
           // Y_new should be [y_bias, ...]
           // Y.col(i) should be [y_bias, ..., 1]
-          Y.col(i).head(rank - 1) = Y_new;
+          Y.unsafe_col(i).head(rank - 1) = Y_new;
 
         } else {
           // X_nnz = [x_bias, ..., 1]
           // Y_new should be [..., y_bias]
           // Y.col(i) should be [1, ..., y_bias]
-          Y.col(i).tail(rank - 1) = Y_new;
+          Y.unsafe_col(i).tail(rank - 1) = Y_new;
         }
       } else {
-        Y.col(i) = Y_new;
+        Y.unsafe_col(i) = Y_new;
       }
-      err = confidence.t() - (Y_new.t() * X_nnz);
-      loss += arma::dot(err, err) + lambda_use * arma::dot(Y_new, Y_new);
+      diff = confidence.t() - (Y_new.t() * X_nnz);
+      loss += arma::dot(diff, diff) + lambda_use * arma::dot(Y_new, Y_new);
     } else {
       if (with_biases) {
         const arma::Col<T> z(rank - 1, arma::fill::zeros);
         if (is_x_bias_last_row) {
-          Y.col(i).head(rank - 1) = z;
+          Y.unsafe_col(i).head(rank - 1) = z;
         } else {
-          Y.col(i).tail(rank - 1) = z;
+          Y.unsafe_col(i).tail(rank - 1) = z;
         }
       } else {
-        Y.col(i).zeros();
+        Y.unsafe_col(i).zeros();
       }
     }
   }
@@ -342,7 +344,7 @@ T als_implicit(const dMappedCSC& Conf,
         const arma::Mat<T> lhs = XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
         const arma::Mat<T> rhs = X_nnz * confidence;
         if (solver == SEQ_COORDINATE_WISE_NNLS) {
-          Y_new = c_nnls<T>(lhs, rhs, 10000, 1e-3);
+          Y_new = c_nnls<T>(lhs, rhs, Y.col(i), SCD_MAX_ITER, SCD_TOL);
         } else { // CHOLESKY
           Y_new = solve(lhs, rhs, arma::solve_opts::fast );
         }
@@ -544,13 +546,4 @@ double initialize_biases_float(const Rcpp::S4 &m_csc_r,
                                   lambda, dynamic_lambda,
                                   non_negative,
                                   calculate_global_bias);
-}
-
-// [[Rcpp::export]]
-SEXP deep_copy(SEXP x) {
-  SEXP out = PROTECT(Rf_allocVector(REALSXP, Rf_xlength(x)));
-  if (Rf_xlength(x))
-    memcpy(REAL(out), REAL(x), (size_t)Rf_xlength(x)*sizeof(double));
-  UNPROTECT(1);
-  return out;
 }

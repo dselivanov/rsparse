@@ -96,14 +96,16 @@ WRMF = R6::R6Class(
       stopifnot(is.null(init) || is.matrix(init))
       solver = match.arg(solver)
       private$non_negative = ifelse(solver == "nnls", TRUE, FALSE)
-
-      precision = match.arg(precision)
       feedback = match.arg(feedback)
 
       if (feedback == 'implicit') {
         # FIXME
         # now only support bias for explicit feedback
         with_user_item_bias = FALSE
+        with_global_bias = FALSE
+      }
+      if (private$non_negative && with_global_bias == TRUE) {
+        logger$warn("setting `with_global_bias=FALSE` for 'nnls' solver")
         with_global_bias = FALSE
       }
       private$with_user_item_bias = with_user_item_bias
@@ -227,11 +229,7 @@ WRMF = R6::R6Class(
 
       logger$trace("initializing U")
       if (private$precision == "double") {
-        private$U = matrix(
-          rnorm(n_user * private$rank, 0, 0.01),
-          ncol = n_user,
-          nrow = private$rank
-        )
+        private$U = large_rand_matrix(private$rank, n_user)
         # for item biases
         if (private$with_user_item_bias) {
           private$U[1, ] = rep(1.0, n_user)
@@ -271,11 +269,7 @@ WRMF = R6::R6Class(
 
       if (is.null(self$components)) {
         if (private$precision == "double") {
-          self$components = matrix(
-            rnorm(n_item * private$rank, 0, 0.01),
-            ncol = n_item,
-            nrow = private$rank
-          )
+          self$components = large_rand_matrix(private$rank, n_item)
           # for user biases
           if (private$with_user_item_bias) {
             self$components[private$rank, ] = rep(1.0, n_item)
@@ -550,8 +544,8 @@ solver_explicit = function(x, X, Y, lambda = 0, non_negative = FALSE) {
     }
   }
   res = do.call(cbind, res)
-  loss = als_loss_explicit(x, X, res, lambda, getOption("rsparse_omp_threads", 1L))
-  data.table::setattr(res, "loss", loss)
+  # loss = als_loss_explicit(x, X, res, lambda, getOption("rsparse_omp_threads", 1L))
+  # data.table::setattr(res, "loss", loss)
   res
 }
 
@@ -585,8 +579,8 @@ solver_explicit_biases = function(x, X, Y, bias_index = 1L, lambda = 0, non_nega
   } else {
     res = rbind(ones, res, deparse.level = 0 )
   }
-  loss = als_loss_explicit(x, X, res, lambda, getOption("rsparse_omp_threads", 1L))
-  data.table::setattr(res, "loss", loss)
+  # loss = als_loss_explicit(x, X, res, lambda, getOption("rsparse_omp_threads", 1L))
+  # data.table::setattr(res, "loss", loss)
   res
 }
 
