@@ -358,6 +358,10 @@ WRMF = R6::R6Class(
         res = float(0, nrow = private$rank, ncol = nrow(x))
       }
 
+      if (private$with_user_item_bias) {
+        res[1, ] = ifelse(private$precision == "double", 1.0, float::fl(1.0))
+      }
+
       loss = private$solver(
         t(x),
         self$components,
