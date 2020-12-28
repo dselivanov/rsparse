@@ -133,6 +133,10 @@ cpp_make_sparse_approximation <- function(mat_template, X, Y, sparse_matrix_type
     .Call(`_rsparse_cpp_make_sparse_approximation`, mat_template, X, Y, sparse_matrix_type, n_threads)
 }
 
+convert_indptr_to_rows <- function(indptr, n) {
+    .Call(`_rsparse_convert_indptr_to_rows`, indptr, n)
+}
+
 large_rand_matrix <- function(nrow, ncol) {
     .Call(`_rsparse_large_rand_matrix`, nrow, ncol)
 }

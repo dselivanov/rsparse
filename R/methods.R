@@ -172,6 +172,8 @@ get_indices_integer = function(i, max_i, index_names) {
 #' m = as(m, "RsparseMatrix")
 #' inherits(m[1:2, ], "RsparseMatrix")
 #' inherits(m[1:2, 3:4], "RsparseMatrix")
+#' inherits(m[1, , drop=TRUE], "sparseVector")
+#' inherits(m[1, 1, drop=TRUE], "numeric")
 NULL
 
 subset_csr = function(x, i, j, drop = TRUE) {
@@ -267,8 +269,16 @@ subset_csr = function(x, i, j, drop = TRUE) {
   col_names = if(is.null(col_names) || !NCOL(col_names)) NULL else col_names[j]
   res@Dimnames = list(row_names, col_names)
 
-  if(isTRUE(drop) && (n_row == 1L || n_col == 1L))
-    res = as.vector(res)
+
+  if(isTRUE(drop) && (n_row == 1L || n_col == 1L)) {
+    if (n_row == 1L && n_col == 1L) {
+      res = ifelse(NROW(res@x), res@x, 0)
+    } else if (n_row == 1L) {
+      res = Matrix::sparseVector(res@x, res@j+1L, length=n_col)
+    } else {
+      res = Matrix::sparseVector(res@x, convert_indptr_to_rows(res@p, NROW(res@x)), length=n_row)
+    }
+  }
   res
 }
 
