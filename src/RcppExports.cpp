@@ -367,6 +367,40 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// solve_implicit_features_double
+arma::Mat<double> solve_implicit_features_double(const Rcpp::S4& m_csc_r, arma::mat& X, double lambda, bool dynamic_lambda, bool with_user_item_bias, bool non_negative, int n_threads);
+RcppExport SEXP _rsparse_solve_implicit_features_double(SEXP m_csc_rSEXP, SEXP XSEXP, SEXP lambdaSEXP, SEXP dynamic_lambdaSEXP, SEXP with_user_item_biasSEXP, SEXP non_negativeSEXP, SEXP n_threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csc_r(m_csc_rSEXP);
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< bool >::type dynamic_lambda(dynamic_lambdaSEXP);
+    Rcpp::traits::input_parameter< bool >::type with_user_item_bias(with_user_item_biasSEXP);
+    Rcpp::traits::input_parameter< bool >::type non_negative(non_negativeSEXP);
+    Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(solve_implicit_features_double(m_csc_r, X, lambda, dynamic_lambda, with_user_item_bias, non_negative, n_threads));
+    return rcpp_result_gen;
+END_RCPP
+}
+// solve_implicit_features_float
+Rcpp::S4 solve_implicit_features_float(const Rcpp::S4& m_csc_r, Rcpp::S4& X_, double lambda, bool dynamic_lambda, bool with_user_item_bias, bool non_negative, int n_threads);
+RcppExport SEXP _rsparse_solve_implicit_features_float(SEXP m_csc_rSEXP, SEXP X_SEXP, SEXP lambdaSEXP, SEXP dynamic_lambdaSEXP, SEXP with_user_item_biasSEXP, SEXP non_negativeSEXP, SEXP n_threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::S4& >::type m_csc_r(m_csc_rSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4& >::type X_(X_SEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< bool >::type dynamic_lambda(dynamic_lambdaSEXP);
+    Rcpp::traits::input_parameter< bool >::type with_user_item_bias(with_user_item_biasSEXP);
+    Rcpp::traits::input_parameter< bool >::type non_negative(non_negativeSEXP);
+    Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(solve_implicit_features_float(m_csc_r, X_, lambda, dynamic_lambda, with_user_item_bias, non_negative, n_threads));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rankmf_solver_double
 void rankmf_solver_double(const Rcpp::S4& x_r, arma::Mat<double>& W, arma::Mat<double>& H, arma::Col<double>& W2_grad, arma::Col<double>& H2_grad, const Rcpp::S4& user_features_r, const Rcpp::S4& item_features_r, const arma::uword rank, const arma::uword n_updates, double learning_rate, double gamma, double lambda_user, double lambda_item_positive, double lambda_item_negative, const arma::uword n_threads, bool update_items, const arma::uword loss, const arma::uword kernel, arma::uword max_negative_samples, double margin, const arma::uword optimizer, const arma::uword report_progress);
 RcppExport SEXP _rsparse_rankmf_solver_double(SEXP x_rSEXP, SEXP WSEXP, SEXP HSEXP, SEXP W2_gradSEXP, SEXP H2_gradSEXP, SEXP user_features_rSEXP, SEXP item_features_rSEXP, SEXP rankSEXP, SEXP n_updatesSEXP, SEXP learning_rateSEXP, SEXP gammaSEXP, SEXP lambda_userSEXP, SEXP lambda_item_positiveSEXP, SEXP lambda_item_negativeSEXP, SEXP n_threadsSEXP, SEXP update_itemsSEXP, SEXP lossSEXP, SEXP kernelSEXP, SEXP max_negative_samplesSEXP, SEXP marginSEXP, SEXP optimizerSEXP, SEXP report_progressSEXP) {
@@ -550,6 +584,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_als_explicit_float", (DL_FUNC) &_rsparse_als_explicit_float, 14},
     {"_rsparse_initialize_biases_double", (DL_FUNC) &_rsparse_initialize_biases_double, 8},
     {"_rsparse_initialize_biases_float", (DL_FUNC) &_rsparse_initialize_biases_float, 8},
+    {"_rsparse_solve_implicit_features_double", (DL_FUNC) &_rsparse_solve_implicit_features_double, 7},
+    {"_rsparse_solve_implicit_features_float", (DL_FUNC) &_rsparse_solve_implicit_features_float, 7},
     {"_rsparse_rankmf_solver_double", (DL_FUNC) &_rsparse_rankmf_solver_double, 22},
     {"_rsparse_rankmf_solver_float", (DL_FUNC) &_rsparse_rankmf_solver_float, 22},
     {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 7},

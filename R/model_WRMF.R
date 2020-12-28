@@ -340,20 +340,31 @@ WRMF = R6::R6Class(
         cnt_i = float::fl(cnt_i)
       }
 
+      if (private$with_implicit_features) {
+        if (private$precision == "double") {
+            solver_implicit_features = solve_implicit_features_double
+            weight_implicit = private$weight_implicit
+          } else {
+            solver_implicit_features = solve_implicit_features_float
+            weight_implicit = float::fl(private$weight_implicit)
+          }
+      }
+
+
       # iterate
       for (i in seq_len(n_iter)) {
         if (private$with_implicit_features) {
           self$components_i = solver_implicit_features(c_ui, private$U, private$lambda,
                                                        private$dynamic_lambda, private$with_user_item_bias,
-                                                       private$non_negative)
+                                                       private$non_negative, getOption("rsparse_omp_threads", 1L))
           U_i = solver_implicit_features(c_iu, self$components, private$lambda,
                                          private$dynamic_lambda, private$with_user_item_bias,
-                                         private$non_negative)
-          private$XtX_implicit = private$weight_implicit * tcrossprod(self$components_i)
-          XtX_implicit_u = private$weight_implicit * tcrossprod(U_i)
+                                         private$non_negative, getOption("rsparse_omp_threads", 1L))
+          private$XtX_implicit = weight_implicit * tcrossprod(self$components_i)
+          XtX_implicit_u = weight_implicit * tcrossprod(U_i)
           if (private$weight_implicit != 1.) {
-            self$components_i = private$weight_implicit * self$components_i
-            U_i = private$weight_implicit * U_i
+            self$components_i = weight_implicit * self$components_i
+            U_i = weight_implicit * U_i
           }
         }
 
@@ -378,10 +389,6 @@ WRMF = R6::R6Class(
 
       X = if (private$with_user_item_bias) tcrossprod(self$components[-1L, ]) else self$components
       private$XtX = tcrossprod(X) + ridge
-      if (private$precision == "float" && private$with_implicit_features) {
-        self$components_i = float::fl(self$components_i)
-        private$XtX_implicit = float::fl(private$XtX_implicit)
-      }
 
       if (private$precision == "double")
         data.table::setattr(self$components, "dimnames", list(NULL, colnames(x)))
@@ -582,16 +589,4 @@ solver_explicit_biases = function(x, X, Y, bias_index = 1L, lambda = 0, non_nega
   # loss = als_loss_explicit(x, X, res, lambda, getOption("rsparse_omp_threads", 1L))
   # data.table::setattr(res, "loss", loss)
   res
-}
-
-solver_implicit_features = function(x, X, lambda = 0, dynamic_lambda = TRUE, with_user_item_bias = FALSE, non_negative = FALSE) {
-  if (with_user_item_bias)
-    X = X[seq(2L, nrow(X) - 1L), , drop=FALSE]
-  ridge = diag(x = lambda * ifelse(dynamic_lambda, ncol(X), 1), nrow = nrow(X), ncol = nrow(X))
-  x@x = rep(1., length(x@x))
-  if (!non_negative) {
-    return(solve(tcrossprod(X) + ridge, X %*% x))
-  } else {
-    return(c_nnls_double(tcrossprod(X) + ridge, X %*% x, 10000L, 1e-3))
-  }
 }

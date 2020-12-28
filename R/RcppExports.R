@@ -97,6 +97,14 @@ initialize_biases_float <- function(m_csc_r, m_csr_r, user_bias, item_bias, lamb
     .Call(`_rsparse_initialize_biases_float`, m_csc_r, m_csr_r, user_bias, item_bias, lambda, dynamic_lambda, non_negative, calculate_global_bias)
 }
 
+solve_implicit_features_double <- function(m_csc_r, X, lambda, dynamic_lambda, with_user_item_bias, non_negative, n_threads) {
+    .Call(`_rsparse_solve_implicit_features_double`, m_csc_r, X, lambda, dynamic_lambda, with_user_item_bias, non_negative, n_threads)
+}
+
+solve_implicit_features_float <- function(m_csc_r, X_, lambda, dynamic_lambda, with_user_item_bias, non_negative, n_threads) {
+    .Call(`_rsparse_solve_implicit_features_float`, m_csc_r, X_, lambda, dynamic_lambda, with_user_item_bias, non_negative, n_threads)
+}
+
 rankmf_solver_double <- function(x_r, W, H, W2_grad, H2_grad, user_features_r, item_features_r, rank, n_updates, learning_rate = 0.01, gamma = 1, lambda_user = 0.0, lambda_item_positive = 0.0, lambda_item_negative = 0.0, n_threads = 1L, update_items = TRUE, loss = 0L, kernel = 0L, max_negative_samples = 50L, margin = 0.1, optimizer = 0L, report_progress = 10L) {
     invisible(.Call(`_rsparse_rankmf_solver_double`, x_r, W, H, W2_grad, H2_grad, user_features_r, item_features_r, rank, n_updates, learning_rate, gamma, lambda_user, lambda_item_positive, lambda_item_negative, n_threads, update_items, loss, kernel, max_negative_samples, margin, optimizer, report_progress))
 }

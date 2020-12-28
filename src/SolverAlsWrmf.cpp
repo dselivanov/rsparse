@@ -91,9 +91,9 @@ arma::Col<T> cg_solver_explicit_cofactor(const arma::Mat<T> &X_nnz,
   if (!exclude_first && !exclude_last)
     r += X_nnz_implicit_sum - XtX_implicit * x;
   else if (exclude_first)
-    r(arma::span(1, r.n_rows-1)) += X_nnz_implicit_sum - XtX_implicit * x(arma::span(1, r.n_rows-1));
+    r(arma::span(1, r.n_rows-1)) -= X_nnz_implicit_sum - XtX_implicit * x(arma::span(1, r.n_rows-1));
   else
-    r(arma::span(0, r.n_rows-2)) += X_nnz_implicit_sum - XtX_implicit * x(arma::span(0, r.n_rows-2));
+    r(arma::span(0, r.n_rows-2)) -= X_nnz_implicit_sum - XtX_implicit * x(arma::span(0, r.n_rows-2));
   arma::Col<T> p = r;
   double rsold, rsnew, alpha;
   rsold = arma::dot(r, r);
@@ -195,14 +195,14 @@ T als_explicit(const dMappedCSC& Conf,
       if (solver == CONJUGATE_GRADIENT) {
         if (!with_implicit_features) {
           if (with_biases) {
-            auto init = drop_row<T>(Y.col(i), !is_x_bias_last_row);
+            const arma::Col<T> init = drop_row<T>(Y.col(i), !is_x_bias_last_row);
             Y_new = cg_solver_explicit<T>(X_nnz, confidence, init, lambda_use, cg_steps);
           } else {
             Y_new = cg_solver_explicit<T>(X_nnz, confidence, Y.col(i), lambda_use, cg_steps);
           }
         } else {
           if (with_biases) {
-            auto init = drop_row<T>(Y.col(i), !is_x_bias_last_row);
+            const arma::Col<T> init = drop_row<T>(Y.col(i), !is_x_bias_last_row);
             Y_new = cg_solver_explicit_cofactor<T>(X_nnz, confidence, init,
                                                    XtX_implicit, arma::sum(X_implicit.cols(idx), 1),
                                                    lambda_use, !is_x_bias_last_row, is_x_bias_last_row, cg_steps);
@@ -546,4 +546,67 @@ double initialize_biases_float(const Rcpp::S4 &m_csc_r,
                                   lambda, dynamic_lambda,
                                   non_negative,
                                   calculate_global_bias);
+}
+
+template <class T>
+arma::Mat<T> solve_implicit_features(const dMappedCSC &ConfCSC,
+                                     arma::Mat<T> &X, T lambda,
+                                     bool dynamic_lambda,
+                                     bool with_user_item_bias,
+                                     bool non_negative,
+                                     int n_threads)
+{
+  arma::Mat<T> lhs;
+  arma::Mat<T> X_use;
+  if (!with_user_item_bias)
+    X_use = X;
+  else {
+    X_use = X.rows(1, X.n_rows-2);
+  }
+  lhs = X_use * X_use.t();
+  lhs.diag() += lambda * (dynamic_lambda? static_cast<T>(X_use.n_rows) : 1.);
+  arma::Mat<T> rhs(X_use.n_rows, ConfCSC.n_cols);
+  #pragma omp parallel for schedule(dynamic) num_threads(n_threads) shared(rhs, ConfCSC, X_use)
+  for (auto col = 0; col < ConfCSC.n_cols; col++) {
+    rhs.col(col) = arma::sum(X_use.cols(arma::uvec(&ConfCSC.row_indices[ConfCSC.col_ptrs[col]],
+                                                   ConfCSC.col_ptrs[col+1] - ConfCSC.col_ptrs[col], false, true)), 1);
+  }
+  if (!non_negative) {
+    return solve(lhs, rhs, arma::solve_opts::fast);
+  }
+  else
+    return c_nnls<T>(lhs, rhs, arma::Col<T>(X_use.n_rows, arma::fill::zeros), SCD_MAX_ITER, SCD_TOL);
+}
+
+// [[Rcpp::export]]
+arma::Mat<double> solve_implicit_features_double(const Rcpp::S4 &m_csc_r,
+                                                 arma::mat& X,
+                                                 double lambda,
+                                                 bool dynamic_lambda,
+                                                 bool with_user_item_bias,
+                                                 bool non_negative,
+                                                 int n_threads)
+{
+  const dMappedCSC ConfCSC = extract_mapped_csc(m_csc_r);
+  return solve_implicit_features<double>(ConfCSC, X, lambda, dynamic_lambda, with_user_item_bias, non_negative, n_threads);
+}
+
+// [[Rcpp::export]]
+Rcpp::S4 solve_implicit_features_float(const Rcpp::S4 &m_csc_r,
+                                       Rcpp::S4 &X_,
+                                       double lambda,
+                                       bool dynamic_lambda,
+                                       bool with_user_item_bias,
+                                       bool non_negative,
+                                       int n_threads)
+{
+  const dMappedCSC ConfCSC = extract_mapped_csc(m_csc_r);
+  arma::fmat X = extract_float_matrix(X_);
+  arma::Mat<float> res = solve_implicit_features<float>(ConfCSC, X, lambda, dynamic_lambda, with_user_item_bias, non_negative, n_threads);
+  Rcpp::IntegerMatrix res_as_int(res.n_rows, res.n_cols);
+  std::copy(res.memptr(), res.memptr() + (size_t)res.n_rows*(size_t)res.n_cols, (float*)(res_as_int.begin()));
+
+  Rcpp::S4 out("float32");
+  out.slot("Data") = res_as_int;
+  return out;
 }
