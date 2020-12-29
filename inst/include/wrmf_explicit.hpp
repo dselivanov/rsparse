@@ -1,15 +1,13 @@
+#include "nnls.hpp"
 #include "wrmf.hpp"
 #include "wrmf_utils.hpp"
-#include "nnls.hpp"
 
 // arma::Mat<float> drop_row(const arma::Mat<float> &X_nnz, const bool drop_last);
 // arma::Mat<double> drop_row(const arma::Mat<double> &X_nnz, const bool drop_last);
 
 template <class T>
-arma::Col<T> cg_solver_explicit(const arma::Mat<T> &X_nnz,
-                                const arma::Col<T> &confidence,
-                                const arma::Col<T> &x_old,
-                                T lambda,
+arma::Col<T> cg_solver_explicit(const arma::Mat<T>& X_nnz, const arma::Col<T>& confidence,
+                                const arma::Col<T>& x_old, T lambda,
                                 const arma::uword n_iter) {
   arma::Col<T> x = x_old;
 
@@ -19,9 +17,9 @@ arma::Col<T> cg_solver_explicit(const arma::Mat<T> &X_nnz,
   double rsold, rsnew, alpha;
   rsold = arma::dot(r, r);
 
-  for(auto k = 0; k < n_iter; k++) {
+  for (auto k = 0; k < n_iter; k++) {
     Ap = (X_nnz * (X_nnz.t() * p)) + lambda * p;
-    alpha =  rsold / arma::dot(p, Ap);
+    alpha = rsold / arma::dot(p, Ap);
     x += alpha * p;
     r -= alpha * Ap;
     rsnew = arma::dot(r, r);
@@ -32,18 +30,11 @@ arma::Col<T> cg_solver_explicit(const arma::Mat<T> &X_nnz,
   return x;
 }
 
-
 template <class T>
-T als_explicit(const dMappedCSC& Conf,
-               arma::Mat<T>& X,
-               arma::Mat<T>& Y,
-               const double lambda,
-               const unsigned n_threads,
-               const unsigned solver,
-               const unsigned cg_steps,
-               const bool dynamic_lambda,
-               const arma::Col<T>& cnt_X,
-               const bool with_biases,
+T als_explicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
+               const double lambda, const unsigned n_threads, const unsigned solver,
+               const unsigned cg_steps, const bool dynamic_lambda,
+               const arma::Col<T>& cnt_X, const bool with_biases,
                const bool is_x_bias_last_row) {
   /* Note about biases:
    * For user factors, the first row will be set to all ones
@@ -66,9 +57,9 @@ T als_explicit(const dMappedCSC& Conf,
   arma::Col<T> x_biases;
 
   if (with_biases) {
-    if (is_x_bias_last_row) // last row
+    if (is_x_bias_last_row)  // last row
       x_biases = X.row(X.n_rows - 1).t();
-    else // first row
+    else  // first row
       x_biases = X.row(0).t();
   }
 
@@ -77,15 +68,16 @@ T als_explicit(const dMappedCSC& Conf,
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE) reduction(+:loss)
 #endif
-  for(size_t i = 0; i < nc; i++) {
+  for (size_t i = 0; i < nc; i++) {
     arma::uword p1 = Conf.col_ptrs[i];
     arma::uword p2 = Conf.col_ptrs[i + 1];
     // catch situation when some columns in matrix are empty,
     // so p1 becomes equal to p2 or greater than number of columns
-    if(p1 < p2) {
+    if (p1 < p2) {
       const arma::uvec idx = arma::uvec(&Conf.row_indices[p1], p2 - p1, false, true);
-      T lambda_use = lambda * (dynamic_lambda? static_cast<T>(p2-p1) : 1.);
-      arma::Col<T> confidence = arma::conv_to< arma::Col<T> >::from(arma::vec(&Conf.values[p1], p2 - p1));
+      T lambda_use = lambda * (dynamic_lambda ? static_cast<T>(p2 - p1) : 1.);
+      arma::Col<T> confidence =
+          arma::conv_to<arma::Col<T> >::from(arma::vec(&Conf.values[p1], p2 - p1));
       arma::Mat<T> X_nnz = X.cols(idx);
       arma::Col<T> init = Y.col(i);
       // if is_x_bias_last_row == true
@@ -112,9 +104,9 @@ T als_explicit(const dMappedCSC& Conf,
         lhs.diag() += lambda_use;
         const arma::Mat<T> rhs = X_nnz * confidence;
 
-        if (solver == CHOLESKY) { // CHOLESKY
-          Y_new = solve(lhs, rhs, arma::solve_opts::fast );
-        } else if (solver == SEQ_COORDINATE_WISE_NNLS) { // SEQ_COORDINATE_WISE_NNLS
+        if (solver == CHOLESKY) {  // CHOLESKY
+          Y_new = solve(lhs, rhs, arma::solve_opts::fast);
+        } else if (solver == SEQ_COORDINATE_WISE_NNLS) {  // SEQ_COORDINATE_WISE_NNLS
           Y_new = c_nnls<T>(lhs, rhs, init, SCD_MAX_ITER, SCD_TOL);
         }
       }
@@ -152,7 +144,7 @@ T als_explicit(const dMappedCSC& Conf,
     }
   }
 
-  if(lambda > 0) {
+  if (lambda > 0) {
     if (with_biases) {
       // lambda applied to all learned parameters:
       // embeddings and biases

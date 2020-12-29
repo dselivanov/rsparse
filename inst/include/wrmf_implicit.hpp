@@ -1,16 +1,14 @@
+#include "nnls.hpp"
 #include "wrmf.hpp"
 #include "wrmf_utils.hpp"
-#include "nnls.hpp"
 
 // arma::Mat<float> drop_row(const arma::Mat<float> &X_nnz, const bool drop_last);
 // arma::Mat<double> drop_row(const arma::Mat<double> &X_nnz, const bool drop_last);
 
 template <class T>
-arma::Col<T> cg_solver_implicit(const arma::Mat<T> &X_nnz,
-                                const arma::Col<T> &confidence,
-                                const arma::Col<T> &x_old,
-                                const arma::uword n_iter,
-                                const arma::Mat<T> &XtX) {
+arma::Col<T> cg_solver_implicit(const arma::Mat<T>& X_nnz, const arma::Col<T>& confidence,
+                                const arma::Col<T>& x_old, const arma::uword n_iter,
+                                const arma::Mat<T>& XtX) {
   arma::Col<T> x = x_old;
   const arma::Col<T> confidence_1 = confidence - 1.0;
 
@@ -20,9 +18,9 @@ arma::Col<T> cg_solver_implicit(const arma::Mat<T> &X_nnz,
   double rsold, rsnew, alpha;
   rsold = arma::dot(r, r);
 
-  for(auto k = 0; k < n_iter; k++) {
+  for (auto k = 0; k < n_iter; k++) {
     Ap = XtX * p + X_nnz * (confidence_1 % (X_nnz.t() * p));
-    alpha =  rsold / dot(p, Ap);
+    alpha = rsold / dot(p, Ap);
     x += alpha * p;
     r -= alpha * Ap;
     rsnew = dot(r, r);
@@ -34,17 +32,10 @@ arma::Col<T> cg_solver_implicit(const arma::Mat<T> &X_nnz,
 }
 
 template <class T>
-T als_implicit(const dMappedCSC& Conf,
-               arma::Mat<T>& X,
-               arma::Mat<T>& Y,
-               const arma::Mat<T>& XtX,
-               double lambda,
-               unsigned n_threads,
-               unsigned solver,
-               unsigned cg_steps,
-               const bool with_biases,
+T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
+               const arma::Mat<T>& XtX, double lambda, unsigned n_threads,
+               unsigned solver, unsigned cg_steps, const bool with_biases,
                bool is_x_bias_last_row) {
-
   // if is_x_bias_last_row == true
   // X = [1, ..., x_bias]
   // Y = [y_bias, ..., 1]
@@ -58,9 +49,9 @@ T als_implicit(const dMappedCSC& Conf,
   arma::Mat<T> rhs_init;
 
   if (with_biases) {
-    if (is_x_bias_last_row) // last row
-      x_biases = X.row(X.n_rows - 1).t() ;
-    else // first row
+    if (is_x_bias_last_row)  // last row
+      x_biases = X.row(X.n_rows - 1).t();
+    else  // first row
       x_biases = X.row(0).t();
 
     // if we model bias then `rhs = X * C_u * (p_u - x_biases)`
@@ -101,13 +92,15 @@ T als_implicit(const dMappedCSC& Conf,
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE) reduction(+:loss)
 #endif
-  for(size_t i = 0; i < nc; i++) {
+  for (size_t i = 0; i < nc; i++) {
     arma::uword p1 = Conf.col_ptrs[i];
     arma::uword p2 = Conf.col_ptrs[i + 1];
-    // catch situation when some columns in matrix are empty, so p1 becomes equal to p2 or greater than number of columns
-    if(p1 < p2) {
+    // catch situation when some columns in matrix are empty, so p1 becomes equal to p2 or
+    // greater than number of columns
+    if (p1 < p2) {
       const arma::uvec idx = arma::uvec(&Conf.row_indices[p1], p2 - p1, false, true);
-      arma::Col<T> confidence = arma::conv_to< arma::Col<T> >::from(arma::vec(&Conf.values[p1], p2 - p1));
+      arma::Col<T> confidence =
+          arma::conv_to<arma::Col<T> >::from(arma::vec(&Conf.values[p1], p2 - p1));
       arma::Mat<T> X_nnz = X.cols(idx);
       arma::Col<T> init = Y.col(i);
       // if is_x_bias_last_row == true
@@ -120,10 +113,11 @@ T als_implicit(const dMappedCSC& Conf,
       }
       arma::Col<T> Y_new;
 
-      if(solver == CONJUGATE_GRADIENT) {
+      if (solver == CONJUGATE_GRADIENT) {
         Y_new = cg_solver_implicit<T>(X_nnz, confidence, init, cg_steps, XtX);
       } else {
-        const arma::Mat<T> lhs = XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
+        const arma::Mat<T> lhs =
+            XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
         arma::Mat<T> rhs;
         if (with_biases) {
           // now we need to update rhs with rhs_init and take into account
@@ -132,7 +126,8 @@ T als_implicit(const dMappedCSC& Conf,
           // first we reset contributions from items
           // where we considered p=0, but actually p=1 during rhs_init calculation
 
-          // rhs = rhs_init + X_nnz * x_biases(idx); // rhs_init - (X_nnz * (0 - x_biases(idx)))
+          // rhs = rhs_init + X_nnz * x_biases(idx); // rhs_init - (X_nnz * (0 -
+          // x_biases(idx)))
           // // element-wise row multiplication is equal
           // // to multiplying on diagonal matrix
           // rhs += (X_nnz.each_row() % confidence.t()) * \
@@ -147,8 +142,8 @@ T als_implicit(const dMappedCSC& Conf,
         }
         if (solver == SEQ_COORDINATE_WISE_NNLS) {
           Y_new = c_nnls<T>(lhs, rhs, init, SCD_MAX_ITER, SCD_TOL);
-        } else { // CHOLESKY
-          Y_new = solve(lhs, rhs, arma::solve_opts::fast );
+        } else {  // CHOLESKY
+          Y_new = solve(lhs, rhs, arma::solve_opts::fast);
         }
       }
 
@@ -169,8 +164,8 @@ T als_implicit(const dMappedCSC& Conf,
         Y.unsafe_col(i) = Y_new;
       }
 
-      loss += dot(square( 1 - (Y_new.t() * X_nnz)), confidence) +
-        lambda * arma::dot(Y_new, Y_new);
+      loss += dot(square(1 - (Y_new.t() * X_nnz)), confidence) +
+              lambda * arma::dot(Y_new, Y_new);
 
     } else {
       if (with_biases) {
@@ -186,7 +181,7 @@ T als_implicit(const dMappedCSC& Conf,
     }
   }
 
-  if(lambda > 0) {
+  if (lambda > 0) {
     if (with_biases) {
       // lambda applied to all learned parameters:
       // embeddings and biases
