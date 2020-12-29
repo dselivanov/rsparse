@@ -9,3 +9,6 @@ docs/
 ^cran-comments\.md$
 .github/
 ^\.github$
+^.clang-format$
+^Makefile$
+extradata/
