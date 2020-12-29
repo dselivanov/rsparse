@@ -359,7 +359,7 @@ WRMF = R6::R6Class(
       }
 
       if (private$with_user_item_bias) {
-        res[1, ] = ifelse(private$precision == "double", 1.0, float::fl(1.0))
+        res[1, ] = if(private$precision == "double") 1.0 else float::fl(1.0)
       }
 
       loss = private$solver(
