@@ -1,5 +1,7 @@
 #include <RcppArmadillo.h>
-#include "MappedSparseMatrices.h"
+#include "mapped_csc.hpp"
+#include "mapped_csr.hpp"
+
 #include <stdexcept>
 
 #ifdef _OPENMP
