@@ -13,5 +13,5 @@
 #define SEQ_COORDINATE_WISE_NNLS 2
 
 #define SCD_MAX_ITER 10000
-#define SCD_TOL 1e-3
+#define SCD_TOL 1e-4
 #define CG_TOL 1e-10
