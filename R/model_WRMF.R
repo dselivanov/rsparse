@@ -85,15 +85,22 @@ WRMF = R6::R6Class(
                           ...) {
       stopifnot(is.null(init) || is.matrix(init))
       solver = match.arg(solver)
-      private$non_negative = ifelse(solver == "nnls", TRUE, FALSE)
       feedback = match.arg(feedback)
 
       if (feedback == 'implicit') {
         # FIXME
-        # now only support bias for explicit feedback
-        with_user_item_bias = FALSE
+
+        if (solver == "conjugate_gradient" && with_user_item_bias == TRUE) {
+          msg = paste("'conjugate_gradient' is not supported for a model",
+            "`with_user_item_bias == TRUE`. Setting to 'cholesky'."
+          )
+          warning(msg)
+          solver = "cholesky"
+        }
         with_global_bias = FALSE
       }
+      private$non_negative = ifelse(solver == "nnls", TRUE, FALSE)
+
       if (private$non_negative && with_global_bias == TRUE) {
         logger$warn("setting `with_global_bias=FALSE` for 'nnls' solver")
         with_global_bias = FALSE
@@ -257,9 +264,10 @@ WRMF = R6::R6Class(
           item_bias = float(n_item)
         }
 
-        self$global_bias = private$init_user_item_bias(c_ui, c_iu, user_bias, item_bias)
+        global_bias = private$init_user_item_bias(c_ui, c_iu, user_bias, item_bias)
         self$components[1L, ] = item_bias
         private$U[private$rank, ] = user_bias
+        if(private$with_global_bias) self$global_bias = global_bias
       } else if (private$feedback == "explicit" && private$with_global_bias) {
         self$global_bias = mean(c_ui@x)
         c_ui@x = c_ui@x - self$global_bias
@@ -282,15 +290,23 @@ WRMF = R6::R6Class(
         cnt_u = float::fl(cnt_u)
         cnt_i = float::fl(cnt_i)
       }
+      private$cnt_u = cnt_u
 
       # iterate
       for (i in seq_len(n_iter)) {
-        # solve for items
-        loss = private$solver(c_ui, private$U, self$components, TRUE, cnt_X=cnt_i)
-        # solve for users
-        loss = private$solver(c_iu, self$components, private$U, FALSE, cnt_X=cnt_u)
 
-        logger$info("iter %d loss = %.4f", i, loss)
+        # solve for items
+        loss = private$solver(c_ui, private$U, self$components,
+                              is_bias_last_row = TRUE,
+                              cnt_X = cnt_i)
+        logger$info("iter %d (items) loss = %.4f", i, loss)
+
+        # solve for users
+        loss = private$solver(c_iu, self$components, private$U,
+                              is_bias_last_row = FALSE,
+                              cnt_X = cnt_u)
+        logger$info("iter %d (users) loss = %.4f", i, loss)
+
         if (loss_prev_iter / loss - 1 < convergence_tol) {
           logger$info("Converged after %d iterations", i)
           break
@@ -299,31 +315,28 @@ WRMF = R6::R6Class(
         loss_prev_iter = loss
       }
 
-      rank_ = ifelse(private$with_user_item_bias, private$rank - 1L, private$rank)
-      ridge = fl(diag(x = private$lambda, nrow = rank_, ncol = rank_))
-
-      X = if (private$with_user_item_bias) tcrossprod(self$components[-1L, ]) else self$components
-      private$XtX = tcrossprod(X) + ridge
-
       if (private$precision == "double")
         data.table::setattr(self$components, "dimnames", list(NULL, colnames(x)))
       else
         data.table::setattr(self$components@Data, "dimnames", list(NULL, colnames(x)))
 
-      res = t(private$U)
-      private$U = NULL
 
-      if (private$precision == "double")
-        setattr(res, "dimnames", list(rownames(x), NULL))
-      else
-        setattr(res@Data, "dimnames", list(rownames(x), NULL))
-      res
+      rank_ = ifelse(private$with_user_item_bias, private$rank - 1L, private$rank)
+      ridge = fl(diag(x = private$lambda, nrow = rank_, ncol = rank_))
+      XX = if (private$with_user_item_bias) self$components[-1L, , drop = FALSE] else self$components
+      private$XtX = tcrossprod(XX) + ridge
+
+      # call extra transform to ensure results from transform() and fit_transform()
+      # are the same (due to avoid_cg, etc)
+      # this adds some extra computation, but not a big deal though
+      self$transform(x)
     },
     # project new users into latent user space - just make ALS step given fixed items matrix
     #' @description create user embeddings for new input
     #' @param x user-item iteraction matrix
     #' @param ... not used at the moment
     transform = function(x, ...) {
+
       stopifnot(ncol(x) == ncol(self$components))
       if (private$feedback == "implicit" ) {
         logger$trace("WRMF$transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
@@ -346,7 +359,19 @@ WRMF = R6::R6Class(
         res = float(0, nrow = private$rank, ncol = nrow(x))
       }
 
-      loss = private$solver(t(x), self$components, res, FALSE, private$XtX, avoid_cg=TRUE)
+      if (private$with_user_item_bias) {
+        res[1, ] = if(private$precision == "double") 1.0 else float::fl(1.0)
+      }
+
+      loss = private$solver(
+        t(x),
+        self$components,
+        res,
+        is_bias_last_row = FALSE,
+        XtX = private$XtX,
+        cnt_X = private$cnt_u,
+        avoid_cg = TRUE
+      )
 
       res = t(res)
 
@@ -367,6 +392,7 @@ WRMF = R6::R6Class(
     dynamic_lambda = FALSE,
     rank = NULL,
     non_negative = NULL,
+    cnt_u = NULL,
     # user factor matrix = rank * n_users
     U = NULL,
     # item factor matrix = rank * n_items
@@ -404,15 +430,15 @@ als_implicit = function(
     rank = ifelse(with_user_item_bias, nrow(X) - 1L, nrow(X))
     ridge = fl(diag(x = lambda, nrow = rank, ncol = rank))
     if (with_user_item_bias) {
-      index_row_to_discard = ifelse(is_bias_last_row, rank, 1L)
-      XtX = tcrossprod(X[-index_row_to_discard, ])
+      index_row_to_discard = ifelse(is_bias_last_row, nrow(X), 1L)
+      XX = X[-index_row_to_discard, , drop = FALSE]
     } else {
-      XtX = tcrossprod(X)
+      XX = X
     }
-    XtX = XtX + ridge
+    XtX = tcrossprod(XX) + ridge
   }
   # Y is modified in-place
-  loss = solver(x, X, Y, XtX, lambda, n_threads, solver_code, cg_steps, is_bias_last_row)
+  loss = solver(x, X, Y, XtX, lambda, n_threads, solver_code, cg_steps, with_user_item_bias, is_bias_last_row)
 }
 
 als_explicit = function(
