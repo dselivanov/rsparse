@@ -290,18 +290,21 @@ WRMF = R6::R6Class(
         cnt_u = float::fl(cnt_u)
         cnt_i = float::fl(cnt_i)
       }
+      private$cnt_u = cnt_u
 
       # iterate
       for (i in seq_len(n_iter)) {
 
         # solve for items
         loss = private$solver(c_ui, private$U, self$components,
-                              is_bias_last_row = TRUE, cnt_X=cnt_i)
+                              is_bias_last_row = TRUE,
+                              cnt_X = cnt_i)
         logger$info("iter %d (items) loss = %.4f", i, loss)
 
         # solve for users
         loss = private$solver(c_iu, self$components, private$U,
-                              is_bias_last_row = FALSE, cnt_X=cnt_u)
+                              is_bias_last_row = FALSE,
+                              cnt_X = cnt_u)
         logger$info("iter %d (users) loss = %.4f", i, loss)
 
         if (loss_prev_iter / loss - 1 < convergence_tol) {
@@ -312,30 +315,28 @@ WRMF = R6::R6Class(
         loss_prev_iter = loss
       }
 
-      rank_ = ifelse(private$with_user_item_bias, private$rank - 1L, private$rank)
-      ridge = fl(diag(x = private$lambda, nrow = rank_, ncol = rank_))
-      XX = if (private$with_user_item_bias) self$components[-1L, , drop = FALSE] else self$components
-      private$XtX = tcrossprod(XX) + ridge
-
       if (private$precision == "double")
         data.table::setattr(self$components, "dimnames", list(NULL, colnames(x)))
       else
         data.table::setattr(self$components@Data, "dimnames", list(NULL, colnames(x)))
 
-      res = t(private$U)
-      private$U = NULL
 
-      if (private$precision == "double")
-        setattr(res, "dimnames", list(rownames(x), NULL))
-      else
-        setattr(res@Data, "dimnames", list(rownames(x), NULL))
-      res
+      rank_ = ifelse(private$with_user_item_bias, private$rank - 1L, private$rank)
+      ridge = fl(diag(x = private$lambda, nrow = rank_, ncol = rank_))
+      XX = if (private$with_user_item_bias) self$components[-1L, , drop = FALSE] else self$components
+      private$XtX = tcrossprod(XX) + ridge
+
+      # call extra transform to ensure results from transform() and fit_transform()
+      # are the same (due to avoid_cg, etc)
+      # this adds some extra computation, but not a big deal though
+      self$transform(x)
     },
     # project new users into latent user space - just make ALS step given fixed items matrix
     #' @description create user embeddings for new input
     #' @param x user-item iteraction matrix
     #' @param ... not used at the moment
     transform = function(x, ...) {
+
       stopifnot(ncol(x) == ncol(self$components))
       if (private$feedback == "implicit" ) {
         logger$trace("WRMF$transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
@@ -368,6 +369,7 @@ WRMF = R6::R6Class(
         res,
         is_bias_last_row = FALSE,
         XtX = private$XtX,
+        cnt_X = private$cnt_u,
         avoid_cg = TRUE
       )
 
@@ -390,6 +392,7 @@ WRMF = R6::R6Class(
     dynamic_lambda = FALSE,
     rank = NULL,
     non_negative = NULL,
+    cnt_u = NULL,
     # user factor matrix = rank * n_users
     U = NULL,
     # item factor matrix = rank * n_items
