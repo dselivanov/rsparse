@@ -1,6 +1,9 @@
 #include <algorithm>
 #include <unordered_map>
 #include "rsparse.h"
+#include <Rcpp.h>
+#include <Rcpp/unwindProtect.h>
+// [[Rcpp::plugins(unwindProtect)]]
 
 // [[Rcpp::export]]
 bool check_is_seq(Rcpp::IntegerVector indices) {
@@ -102,6 +105,38 @@ Rcpp::List copy_csr_rows_col_seq(Rcpp::IntegerVector indptr, Rcpp::IntegerVector
                             Rcpp::_["values"] = new_values);
 }
 
+struct VectorConstructorArgs {
+  bool as_integer = false;
+  bool from_cpp_vec = false;
+  size_t size = 0;
+  std::vector<int> *int_vec_from = NULL;
+  std::vector<double> *num_vec_from = NULL;
+};
+
+SEXP SafeRcppVector(void *args_)
+{
+  VectorConstructorArgs *args = (VectorConstructorArgs*)args_;
+  if (args->as_integer) {
+    if (args->from_cpp_vec) {
+      return Rcpp::IntegerVector(args->int_vec_from->begin(), args->int_vec_from->end());
+    }
+
+    else {
+      return Rcpp::IntegerVector(args->size);
+    }
+  }
+
+  else {
+    if (args->from_cpp_vec) {
+      return Rcpp::NumericVector(args->num_vec_from->begin(), args->num_vec_from->end());
+    }
+
+    else {
+      return Rcpp::NumericVector(args->size);
+    }
+  }
+}
+
 // [[Rcpp::export]]
 Rcpp::List copy_csr_arbitrary(Rcpp::IntegerVector indptr, Rcpp::IntegerVector indices,
                               Rcpp::NumericVector values, Rcpp::IntegerVector rows_take,
@@ -134,7 +169,13 @@ Rcpp::List copy_csr_arbitrary(Rcpp::IntegerVector indptr, Rcpp::IntegerVector in
     }
   }
 
-  Rcpp::IntegerVector new_indptr = Rcpp::IntegerVector(rows_take.size() + 1);
+  Rcpp::IntegerVector new_indptr;
+  VectorConstructorArgs args;
+  args.as_integer = true; args.from_cpp_vec = false; args.size = rows_take.size() + 1;
+  new_indptr = Rcpp::unwindProtect(SafeRcppVector, (void*)&args);
+  const char *oom_err_msg = "Could not allocate sufficient memory.\n";
+  if (!new_indptr.size())
+    Rcpp::stop(oom_err_msg);
   std::vector<int> new_indices;
   std::vector<double> new_values;
 
@@ -184,8 +225,17 @@ Rcpp::List copy_csr_arbitrary(Rcpp::IntegerVector indptr, Rcpp::IntegerVector in
                 new_values.begin() + new_indptr[row_ix]);
     }
   }
-  return Rcpp::List::create(
-      Rcpp::_["indptr"] = new_indptr,
-      Rcpp::_["indices"] = Rcpp::IntegerVector(new_indices.begin(), new_indices.end()),
-      Rcpp::_["values"] = Rcpp::NumericVector(new_values.begin(), new_values.end()));
+
+  Rcpp::List out;
+  out["indptr"] = new_indptr;
+  args.as_integer = true; args.from_cpp_vec = true; args.int_vec_from = &new_indices;
+  out["indices"] = Rcpp::unwindProtect(SafeRcppVector, (void*)&args);
+  if (Rf_xlength(out["indices"]) != new_indices.size())
+    Rcpp::stop(oom_err_msg);
+  new_indices.clear();
+  args.as_integer = false; args.from_cpp_vec = true; args.num_vec_from = &new_values;
+  out["values"] = Rcpp::unwindProtect(SafeRcppVector, (void*)&args);
+  if (Rf_xlength(out["values"]) != new_values.size())
+    Rcpp::stop(oom_err_msg);
+  return out;
 }
