@@ -302,3 +302,188 @@ check_dimensions_match = function(x, y, y_transposed = FALSE) {
 }
 
 # nocov end
+
+#' Conversions between matrix types
+#'
+#' @description Convenience functions for converting to different sparse matrix formats.
+#'
+#' @details The functions internally use as(x, "?sparseMatrix"), so they might work
+#' with other object classes if they register a conversion method for `Matrix` base
+#' types.
+#'
+#' When passed a vector, the functions `as.csr.matrix` and `as.coo.matrix` will
+#' assume that it is a row vector, while `as.csc.matrix` will assume it's a column vector.
+#'
+#' @param x A matrix which is to be converted to a different format.
+#' @param binary Whether the result should be a binary-only matrix (inheriting from
+#' class `nsparseMatrix` - these don't have slot `x`).
+#' Supported input types are:\itemize{
+#' \item Sparse matrices from `Matrix` package, in any format.
+#' \item Sparse vector from `Matrix` (class `dsparseVector`).
+#' \item Dense matrix from base R.
+#' \item Dense vector from base R (classes `numeric` and `integer`).
+#' \item Dense matrix or vector from package `float` (class `float32`).
+#' \item `data.frame` and `data.table`.
+#' }
+#'
+#' @return A sparse matrix, with format:\itemize{
+#' \item CSR (a.k.a. `RsparseMatrix`) when calling `as.csr.matrix`
+#' (class `dgRMatrix` with `binary=FALSE`, class `ngRMatrix` with `binary=TRUE`).
+#' \item CSC (a.k.a. `CsparseMatrix`) when calling `as.csc.matrix`
+#' (class `dgCMatrix` with `binary=FALSE`, class `ngCMatrix` with `binary=TRUE`).
+#' \item COO (a.k.a. `TsparseMatrix`) when calling `as.coo.matrix`
+#' (class `dgTMatrix` with `binary=FALSE`, class `ngTMatrix` with `binary=TRUE`).
+#' }
+#'
+#' @name casting
+#' @examples
+#' library(Matrix)
+#' library(rsparse)
+#'
+#' m.coo = as(matrix(1:3), "TsparseMatrix")
+#' as.csr.matrix(m.coo)
+#' as.csr.matrix(1:3) # <- assumes it's a row vector
+#' as.csc.matrix(1:3) # <- assumes it's a column vector
+#'
+#' library(float)
+#' m.f32 = float::fl(matrix(1:10, nrow=5))
+#' as.csr.matrix(m.f32)
+#'
+#' library(data.table)
+#' as.coo.matrix(data.table(col1=1:3))
+NULL
+
+#' @rdname casting
+#' @export
+as.csr.matrix = function(x, binary=FALSE) {
+  if ((inherits(x, "dgRMatrix") && !binary) || (inherits(x, "ngRMatrix") && binary))
+    return(x)
+
+  if (inherits(x, "float32"))
+    x = float::dbl(x)
+
+  if (inherits(x, c("numeric", "integer")))
+    x = matrix(x, nrow=1L)
+
+  if (inherits(x, c("data.frame", "tibble", "data.table")))
+    x = as.matrix(x)
+
+  if (inherits(x, "dsparseVector")) {
+    X.csr = new("dgRMatrix")
+    X.csr@Dim = c(1L, x@length)
+    X.csr@p = c(0L, length(x@i))
+    X.csr@j = x@i - 1L
+    X.csr@x = x@x
+    x = X.csr
+  }
+
+  if (!inherits(x, "RsparseMatrix"))
+    x = as(x, "RsparseMatrix")
+
+  if (!binary && !inherits(x, "dgRMatrix")) {
+    X.csr = new("dgRMatrix")
+    X.csr@Dim = x@Dim
+    X.csr@Dimnames = x@Dimnames
+    X.csr@p = x@p
+    X.csr@j = x@j
+    if (.hasSlot(x, "x"))
+      X.csr@x = as.numeric(x@x)
+    else
+      X.csr@x = rep(1., length(x@j))
+    x = X.csr
+  }
+
+  if (binary && !inherits(x, "ngRMatrix")) {
+    X.csr = new("ngRMatrix")
+    X.csr@Dim = x@Dim
+    X.csr@Dimnames = x@Dimnames
+    X.csr@p = x@p
+    X.csr@j = x@j
+    x = X.csr
+  }
+  return(x)
+}
+
+#' @rdname casting
+#' @export
+as.csc.matrix = function(x, binary=FALSE) {
+  if ((inherits(x, "dgCMatrix") && !binary) || (inherits(x, "ngCMatrix") && binary))
+    return(x)
+
+  if (inherits(x, "float32"))
+    x = float::dbl(x)
+
+  if (inherits(x, c("numeric", "integer", "data.frame", "tibble", "data.table")))
+    x = as.matrix(x)
+
+  if (!inherits(x, "CsparseMatrix"))
+    x = as(x, "CsparseMatrix")
+
+  if (!binary && !inherits(x, "dgCMatrix")) {
+    X.csc = new("dgCMatrix")
+    X.csc@Dim = x@Dim
+    X.csc@Dimnames = x@Dimnames
+    X.csc@p = x@p
+    X.csc@i = x@i
+    if (.hasSlot(x, "x"))
+      X.csc@x = as.numeric(x@x)
+    else
+      X.csc@x = rep(1., length(x@i))
+    x = X.csc
+  }
+
+  if (binary && !inherits(x, "ngCMatrix")) {
+    X.csc = new("ngCMatrix")
+    X.csc@Dim = x@Dim
+    X.csc@Dimnames = x@Dimnames
+    X.csc@p = x@p
+    X.csc@i = x@i
+    x = X.csc
+  }
+  return(x)
+}
+
+#' @rdname casting
+#' @export
+as.coo.matrix = function(x, binary=FALSE) {
+  if ((inherits(x, "dgTMatrix") && !binary) || (inherits(x, "ngTMatrix") && binary))
+    return(x)
+
+  if (inherits(x, "float32"))
+    x = float::dbl(x)
+
+  if (inherits(x, c("numeric", "integer")))
+    x = matrix(x, nrow=1L)
+
+  if (inherits(x, c("data.frame", "tibble", "data.table")))
+    x = as.matrix(x)
+
+  if (inherits(x, "dsparseVector"))
+    x = as.csr.matrix(x)
+
+  if (!inherits(x, "TsparseMatrix"))
+    x = as(x, "TsparseMatrix")
+
+  if (!binary && !inherits(x, "dgTMatrix")) {
+    X.coo = new("dgTMatrix")
+    X.coo@Dim = x@Dim
+    X.coo@Dimnames = x@Dimnames
+    X.coo@i = x@i
+    X.coo@j = x@j
+    if (.hasSlot(x, "x"))
+      X.coo@x = as.numeric(x@x)
+    else
+      X.coo@x = rep(1., length(x@j))
+    x = X.coo
+  }
+
+  if (binary && !inherits(x, "ngTMatrix")) {
+    X.coo = new("ngTMatrix")
+    X.coo@Dim = x@Dim
+    X.coo@Dimnames = x@Dimnames
+    X.coo@i = x@i
+    X.coo@j = x@j
+    x = X.coo
+  }
+  return(x)
+}
