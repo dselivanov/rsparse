@@ -60,7 +60,7 @@ MatrixFactorizationRecommender = R6::R6Class(
         not_recommend = as(not_recommend, "RsparseMatrix")
 
       uids = rownames(user_embeddings)
-      indices = find_top_product(user_embeddings, item_embeddings, k, not_recommend, items_exclude, self$global_bias)
+      indices = find_top_product(user_embeddings, item_embeddings, k, not_recommend, items_exclude, glob_mean=self$global_bias)
 
       data.table::setattr(indices, "dimnames", list(uids, NULL))
       data.table::setattr(indices, "ids", NULL)
