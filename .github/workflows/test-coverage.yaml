@@ -14,6 +14,9 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
+      - if: runner.os == 'macOS'
+        run: ln -s /usr/local/lib/gcc/10 /usr/local/gfortran/lib
+
       - uses: actions/checkout@v2
 
       - uses: r-lib/actions/setup-r@master
