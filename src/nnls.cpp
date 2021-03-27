@@ -2,7 +2,7 @@
 #include <RcppArmadillo.h>
 
 // [[Rcpp::export]]
-arma::Mat<double> c_nnls_double(const arma::mat& x, const arma::vec& y, uint max_iter,
+arma::Mat<double> c_nnls_double(const arma::mat& x, const arma::vec& y, unsigned int max_iter,
                                 double rel_tol) {
   auto n = y.size();
   Rcpp::NumericVector res(n);
