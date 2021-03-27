@@ -93,6 +93,22 @@ rankmf_solver_float <- function(x_r, W, H, W2_grad, H2_grad, user_features_r, it
     invisible(.Call(`_rsparse_rankmf_solver_float`, x_r, W, H, W2_grad, H2_grad, user_features_r, item_features_r, rank, n_updates, learning_rate, gamma, lambda_user, lambda_item_positive, lambda_item_negative, n_threads, update_items, loss, kernel, max_negative_samples, margin, optimizer, report_progress))
 }
 
+read_multi_label_R <- function(fname, ignore_zero_valued, sort_indices, text_is_base1, assume_no_qid) {
+    .Call(`_rsparse_read_multi_label_R`, fname, ignore_zero_valued, sort_indices, text_is_base1, assume_no_qid)
+}
+
+read_multi_label_from_str_R <- function(file_as_str, ignore_zero_valued, sort_indices, text_is_base1, assume_no_qid) {
+    .Call(`_rsparse_read_multi_label_from_str_R`, file_as_str, ignore_zero_valued, sort_indices, text_is_base1, assume_no_qid)
+}
+
+read_single_label_R <- function(fname, ignore_zero_valued, sort_indices, text_is_base1, assume_no_qid) {
+    .Call(`_rsparse_read_single_label_R`, fname, ignore_zero_valued, sort_indices, text_is_base1, assume_no_qid)
+}
+
+read_single_label_from_str_R <- function(file_as_str, ignore_zero_valued, sort_indices, text_is_base1, assume_no_qid) {
+    .Call(`_rsparse_read_single_label_from_str_R`, file_as_str, ignore_zero_valued, sort_indices, text_is_base1, assume_no_qid)
+}
+
 omp_thread_count <- function() {
     .Call(`_rsparse_omp_thread_count`)
 }
@@ -107,6 +123,30 @@ large_rand_matrix <- function(nrow, ncol) {
 
 deep_copy <- function(x) {
     .Call(`_rsparse_deep_copy`, x)
+}
+
+write_multi_label_R <- function(fname, indptr, indices, values, indptr_lab, indices_lab, qid, ncols, nclasses, ignore_zero_valued, sort_indices, text_is_base1, add_header, decimal_places, append) {
+    .Call(`_rsparse_write_multi_label_R`, fname, indptr, indices, values, indptr_lab, indices_lab, qid, ncols, nclasses, ignore_zero_valued, sort_indices, text_is_base1, add_header, decimal_places, append)
+}
+
+write_multi_label_to_str_R <- function(indptr, indices, values, indptr_lab, indices_lab, qid, ncols, nclasses, ignore_zero_valued, sort_indices, text_is_base1, add_header, decimal_places) {
+    .Call(`_rsparse_write_multi_label_to_str_R`, indptr, indices, values, indptr_lab, indices_lab, qid, ncols, nclasses, ignore_zero_valued, sort_indices, text_is_base1, add_header, decimal_places)
+}
+
+write_single_label_numeric_R <- function(fname, indptr, indices, values, labels, qid, ncols, nclasses, ignore_zero_valued, sort_indices, text_is_base1, add_header, decimal_places, append) {
+    .Call(`_rsparse_write_single_label_numeric_R`, fname, indptr, indices, values, labels, qid, ncols, nclasses, ignore_zero_valued, sort_indices, text_is_base1, add_header, decimal_places, append)
+}
+
+write_single_label_integer_R <- function(fname, indptr, indices, values, labels, qid, ncols, nclasses, ignore_zero_valued, sort_indices, text_is_base1, add_header, decimal_places, append) {
+    .Call(`_rsparse_write_single_label_integer_R`, fname, indptr, indices, values, labels, qid, ncols, nclasses, ignore_zero_valued, sort_indices, text_is_base1, add_header, decimal_places, append)
+}
+
+write_single_label_numeric_to_str_R <- function(indptr, indices, values, labels, qid, ncols, nclasses, ignore_zero_valued, sort_indices, text_is_base1, add_header, decimal_places) {
+    .Call(`_rsparse_write_single_label_numeric_to_str_R`, indptr, indices, values, labels, qid, ncols, nclasses, ignore_zero_valued, sort_indices, text_is_base1, add_header, decimal_places)
+}
+
+write_single_label_integer_to_str_R <- function(indptr, indices, values, labels, qid, ncols, nclasses, ignore_zero_valued, sort_indices, text_is_base1, add_header, decimal_places) {
+    .Call(`_rsparse_write_single_label_integer_to_str_R`, indptr, indices, values, labels, qid, ncols, nclasses, ignore_zero_valued, sort_indices, text_is_base1, add_header, decimal_places)
 }
 
 als_explicit_double <- function(m_csc_r, X, Y, cnt_X, lambda, n_threads, solver, cg_steps, dynamic_lambda, with_biases, is_x_bias_last_row) {

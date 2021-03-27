@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <unordered_map>
 #include "rsparse.h"
+#include "read_write.h"
 #include <Rcpp.h>
 #include <Rcpp/unwindProtect.h>
 // [[Rcpp::plugins(unwindProtect)]]
@@ -238,4 +239,111 @@ Rcpp::List copy_csr_arbitrary(Rcpp::IntegerVector indptr, Rcpp::IntegerVector in
   if (Rf_xlength(out["values"]) != new_values.size())
     Rcpp::stop(oom_err_msg);
   return out;
+}
+
+bool check_is_sorted(int* vec, size_t n)
+{
+  if (n <= 1)
+    return true;
+  if (vec[n-1] < vec[0])
+    return false;
+  for (size_t ix = 1; ix < n; ix++)
+    if (vec[ix] < vec[ix-1])
+      return false;
+  return true;
+}
+
+void sort_sparse_indices
+(
+  int *restrict indptr,
+  int *restrict indices,
+  double *values,
+  size_t nrows,
+  bool has_values
+)
+{
+  std::vector<size_t> argsorted;
+  std::vector<int> temp_indices;
+  std::vector<double> temp_values;
+  size_t ix1, ix2;
+  size_t n_this;
+
+  for (size_t ix = 1; ix <= nrows; ix++)
+  {
+    ix1 = indptr[ix-1];
+    ix2 = indptr[ix];
+    n_this = ix2 - ix1;
+    if (n_this)
+    {
+      if (!check_is_sorted(indices + ix1, n_this))
+      {
+        if (argsorted.size() < n_this) {
+          argsorted.resize(n_this);
+          temp_indices.resize(n_this);
+          if (has_values) temp_values.resize(n_this);
+        }
+        std::iota(argsorted.begin(), argsorted.begin() + n_this, (size_t)ix1);
+        std::sort(argsorted.begin(), argsorted.begin() + n_this,
+              [&indices](const size_t a, const size_t b){return indices[a] < indices[b];});
+        for (size_t ix = 0; ix < n_this; ix++)
+          temp_indices[ix] = indices[argsorted[ix]];
+        std::copy(temp_indices.begin(), temp_indices.begin() + n_this, indices + ix1);
+        if (has_values)
+        {
+          for (size_t ix = 0; ix < n_this; ix++)
+            temp_values[ix] = values[argsorted[ix]];
+          std::copy(temp_values.begin(), temp_values.begin() + n_this, values + ix1);
+        }
+      }
+    }
+  }
+}
+
+void sort_sparse_indices
+(
+  std::vector<int> &indptr,
+  std::vector<int> &indices,
+  std::vector<double> &values
+)
+{
+  sort_sparse_indices(
+    indptr.data(),
+    indices.data(),
+    values.data(),
+    indptr.size()-1,
+    values.size() > 0
+  );
+}
+
+void sort_sparse_indices
+(
+  int *indptr,
+  int *indices,
+  size_t nrows
+)
+{
+  sort_sparse_indices(
+    indptr,
+    indices,
+    (double*)NULL,
+    nrows,
+    false
+  );
+}
+
+void sort_sparse_indices
+(
+  int *indptr,
+  int *indices,
+  double *values,
+  size_t nrows
+)
+{
+  sort_sparse_indices(
+    indptr,
+    indices,
+    values,
+    nrows,
+    true
+  );
 }

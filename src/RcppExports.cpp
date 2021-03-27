@@ -354,6 +354,62 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// read_multi_label_R
+Rcpp::List read_multi_label_R(Rcpp::CharacterVector fname, const bool ignore_zero_valued, const bool sort_indices, const bool text_is_base1, const bool assume_no_qid);
+RcppExport SEXP _rsparse_read_multi_label_R(SEXP fnameSEXP, SEXP ignore_zero_valuedSEXP, SEXP sort_indicesSEXP, SEXP text_is_base1SEXP, SEXP assume_no_qidSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type fname(fnameSEXP);
+    Rcpp::traits::input_parameter< const bool >::type ignore_zero_valued(ignore_zero_valuedSEXP);
+    Rcpp::traits::input_parameter< const bool >::type sort_indices(sort_indicesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type text_is_base1(text_is_base1SEXP);
+    Rcpp::traits::input_parameter< const bool >::type assume_no_qid(assume_no_qidSEXP);
+    rcpp_result_gen = Rcpp::wrap(read_multi_label_R(fname, ignore_zero_valued, sort_indices, text_is_base1, assume_no_qid));
+    return rcpp_result_gen;
+END_RCPP
+}
+// read_multi_label_from_str_R
+Rcpp::List read_multi_label_from_str_R(Rcpp::CharacterVector file_as_str, const bool ignore_zero_valued, const bool sort_indices, const bool text_is_base1, const bool assume_no_qid);
+RcppExport SEXP _rsparse_read_multi_label_from_str_R(SEXP file_as_strSEXP, SEXP ignore_zero_valuedSEXP, SEXP sort_indicesSEXP, SEXP text_is_base1SEXP, SEXP assume_no_qidSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type file_as_str(file_as_strSEXP);
+    Rcpp::traits::input_parameter< const bool >::type ignore_zero_valued(ignore_zero_valuedSEXP);
+    Rcpp::traits::input_parameter< const bool >::type sort_indices(sort_indicesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type text_is_base1(text_is_base1SEXP);
+    Rcpp::traits::input_parameter< const bool >::type assume_no_qid(assume_no_qidSEXP);
+    rcpp_result_gen = Rcpp::wrap(read_multi_label_from_str_R(file_as_str, ignore_zero_valued, sort_indices, text_is_base1, assume_no_qid));
+    return rcpp_result_gen;
+END_RCPP
+}
+// read_single_label_R
+Rcpp::List read_single_label_R(Rcpp::CharacterVector fname, const bool ignore_zero_valued, const bool sort_indices, const bool text_is_base1, const bool assume_no_qid);
+RcppExport SEXP _rsparse_read_single_label_R(SEXP fnameSEXP, SEXP ignore_zero_valuedSEXP, SEXP sort_indicesSEXP, SEXP text_is_base1SEXP, SEXP assume_no_qidSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type fname(fnameSEXP);
+    Rcpp::traits::input_parameter< const bool >::type ignore_zero_valued(ignore_zero_valuedSEXP);
+    Rcpp::traits::input_parameter< const bool >::type sort_indices(sort_indicesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type text_is_base1(text_is_base1SEXP);
+    Rcpp::traits::input_parameter< const bool >::type assume_no_qid(assume_no_qidSEXP);
+    rcpp_result_gen = Rcpp::wrap(read_single_label_R(fname, ignore_zero_valued, sort_indices, text_is_base1, assume_no_qid));
+    return rcpp_result_gen;
+END_RCPP
+}
+// read_single_label_from_str_R
+Rcpp::List read_single_label_from_str_R(Rcpp::CharacterVector file_as_str, const bool ignore_zero_valued, const bool sort_indices, const bool text_is_base1, const bool assume_no_qid);
+RcppExport SEXP _rsparse_read_single_label_from_str_R(SEXP file_as_strSEXP, SEXP ignore_zero_valuedSEXP, SEXP sort_indicesSEXP, SEXP text_is_base1SEXP, SEXP assume_no_qidSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type file_as_str(file_as_strSEXP);
+    Rcpp::traits::input_parameter< const bool >::type ignore_zero_valued(ignore_zero_valuedSEXP);
+    Rcpp::traits::input_parameter< const bool >::type sort_indices(sort_indicesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type text_is_base1(text_is_base1SEXP);
+    Rcpp::traits::input_parameter< const bool >::type assume_no_qid(assume_no_qidSEXP);
+    rcpp_result_gen = Rcpp::wrap(read_single_label_from_str_R(file_as_str, ignore_zero_valued, sort_indices, text_is_base1, assume_no_qid));
+    return rcpp_result_gen;
+END_RCPP
+}
 // omp_thread_count
 int omp_thread_count();
 RcppExport SEXP _rsparse_omp_thread_count() {
@@ -399,6 +455,140 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
     rcpp_result_gen = Rcpp::wrap(deep_copy(x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// write_multi_label_R
+bool write_multi_label_R(Rcpp::CharacterVector fname, Rcpp::IntegerVector indptr, Rcpp::IntegerVector indices, Rcpp::NumericVector values, Rcpp::IntegerVector indptr_lab, Rcpp::IntegerVector indices_lab, Rcpp::IntegerVector qid, const int ncols, const int nclasses, const bool ignore_zero_valued, const bool sort_indices, const bool text_is_base1, const bool add_header, const int decimal_places, const bool append);
+RcppExport SEXP _rsparse_write_multi_label_R(SEXP fnameSEXP, SEXP indptrSEXP, SEXP indicesSEXP, SEXP valuesSEXP, SEXP indptr_labSEXP, SEXP indices_labSEXP, SEXP qidSEXP, SEXP ncolsSEXP, SEXP nclassesSEXP, SEXP ignore_zero_valuedSEXP, SEXP sort_indicesSEXP, SEXP text_is_base1SEXP, SEXP add_headerSEXP, SEXP decimal_placesSEXP, SEXP appendSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type fname(fnameSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr_lab(indptr_labSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices_lab(indices_labSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type qid(qidSEXP);
+    Rcpp::traits::input_parameter< const int >::type ncols(ncolsSEXP);
+    Rcpp::traits::input_parameter< const int >::type nclasses(nclassesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type ignore_zero_valued(ignore_zero_valuedSEXP);
+    Rcpp::traits::input_parameter< const bool >::type sort_indices(sort_indicesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type text_is_base1(text_is_base1SEXP);
+    Rcpp::traits::input_parameter< const bool >::type add_header(add_headerSEXP);
+    Rcpp::traits::input_parameter< const int >::type decimal_places(decimal_placesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type append(appendSEXP);
+    rcpp_result_gen = Rcpp::wrap(write_multi_label_R(fname, indptr, indices, values, indptr_lab, indices_lab, qid, ncols, nclasses, ignore_zero_valued, sort_indices, text_is_base1, add_header, decimal_places, append));
+    return rcpp_result_gen;
+END_RCPP
+}
+// write_multi_label_to_str_R
+Rcpp::List write_multi_label_to_str_R(Rcpp::IntegerVector indptr, Rcpp::IntegerVector indices, Rcpp::NumericVector values, Rcpp::IntegerVector indptr_lab, Rcpp::IntegerVector indices_lab, Rcpp::IntegerVector qid, const int ncols, const int nclasses, const bool ignore_zero_valued, const bool sort_indices, const bool text_is_base1, const bool add_header, const int decimal_places);
+RcppExport SEXP _rsparse_write_multi_label_to_str_R(SEXP indptrSEXP, SEXP indicesSEXP, SEXP valuesSEXP, SEXP indptr_labSEXP, SEXP indices_labSEXP, SEXP qidSEXP, SEXP ncolsSEXP, SEXP nclassesSEXP, SEXP ignore_zero_valuedSEXP, SEXP sort_indicesSEXP, SEXP text_is_base1SEXP, SEXP add_headerSEXP, SEXP decimal_placesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr_lab(indptr_labSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices_lab(indices_labSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type qid(qidSEXP);
+    Rcpp::traits::input_parameter< const int >::type ncols(ncolsSEXP);
+    Rcpp::traits::input_parameter< const int >::type nclasses(nclassesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type ignore_zero_valued(ignore_zero_valuedSEXP);
+    Rcpp::traits::input_parameter< const bool >::type sort_indices(sort_indicesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type text_is_base1(text_is_base1SEXP);
+    Rcpp::traits::input_parameter< const bool >::type add_header(add_headerSEXP);
+    Rcpp::traits::input_parameter< const int >::type decimal_places(decimal_placesSEXP);
+    rcpp_result_gen = Rcpp::wrap(write_multi_label_to_str_R(indptr, indices, values, indptr_lab, indices_lab, qid, ncols, nclasses, ignore_zero_valued, sort_indices, text_is_base1, add_header, decimal_places));
+    return rcpp_result_gen;
+END_RCPP
+}
+// write_single_label_numeric_R
+bool write_single_label_numeric_R(Rcpp::CharacterVector fname, Rcpp::IntegerVector indptr, Rcpp::IntegerVector indices, Rcpp::NumericVector values, Rcpp::NumericVector labels, Rcpp::IntegerVector qid, const int ncols, const int nclasses, const bool ignore_zero_valued, const bool sort_indices, const bool text_is_base1, const bool add_header, const int decimal_places, const bool append);
+RcppExport SEXP _rsparse_write_single_label_numeric_R(SEXP fnameSEXP, SEXP indptrSEXP, SEXP indicesSEXP, SEXP valuesSEXP, SEXP labelsSEXP, SEXP qidSEXP, SEXP ncolsSEXP, SEXP nclassesSEXP, SEXP ignore_zero_valuedSEXP, SEXP sort_indicesSEXP, SEXP text_is_base1SEXP, SEXP add_headerSEXP, SEXP decimal_placesSEXP, SEXP appendSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type fname(fnameSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type labels(labelsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type qid(qidSEXP);
+    Rcpp::traits::input_parameter< const int >::type ncols(ncolsSEXP);
+    Rcpp::traits::input_parameter< const int >::type nclasses(nclassesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type ignore_zero_valued(ignore_zero_valuedSEXP);
+    Rcpp::traits::input_parameter< const bool >::type sort_indices(sort_indicesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type text_is_base1(text_is_base1SEXP);
+    Rcpp::traits::input_parameter< const bool >::type add_header(add_headerSEXP);
+    Rcpp::traits::input_parameter< const int >::type decimal_places(decimal_placesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type append(appendSEXP);
+    rcpp_result_gen = Rcpp::wrap(write_single_label_numeric_R(fname, indptr, indices, values, labels, qid, ncols, nclasses, ignore_zero_valued, sort_indices, text_is_base1, add_header, decimal_places, append));
+    return rcpp_result_gen;
+END_RCPP
+}
+// write_single_label_integer_R
+bool write_single_label_integer_R(Rcpp::CharacterVector fname, Rcpp::IntegerVector indptr, Rcpp::IntegerVector indices, Rcpp::NumericVector values, Rcpp::IntegerVector labels, Rcpp::IntegerVector qid, const int ncols, const int nclasses, const bool ignore_zero_valued, const bool sort_indices, const bool text_is_base1, const bool add_header, const int decimal_places, const bool append);
+RcppExport SEXP _rsparse_write_single_label_integer_R(SEXP fnameSEXP, SEXP indptrSEXP, SEXP indicesSEXP, SEXP valuesSEXP, SEXP labelsSEXP, SEXP qidSEXP, SEXP ncolsSEXP, SEXP nclassesSEXP, SEXP ignore_zero_valuedSEXP, SEXP sort_indicesSEXP, SEXP text_is_base1SEXP, SEXP add_headerSEXP, SEXP decimal_placesSEXP, SEXP appendSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type fname(fnameSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type labels(labelsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type qid(qidSEXP);
+    Rcpp::traits::input_parameter< const int >::type ncols(ncolsSEXP);
+    Rcpp::traits::input_parameter< const int >::type nclasses(nclassesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type ignore_zero_valued(ignore_zero_valuedSEXP);
+    Rcpp::traits::input_parameter< const bool >::type sort_indices(sort_indicesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type text_is_base1(text_is_base1SEXP);
+    Rcpp::traits::input_parameter< const bool >::type add_header(add_headerSEXP);
+    Rcpp::traits::input_parameter< const int >::type decimal_places(decimal_placesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type append(appendSEXP);
+    rcpp_result_gen = Rcpp::wrap(write_single_label_integer_R(fname, indptr, indices, values, labels, qid, ncols, nclasses, ignore_zero_valued, sort_indices, text_is_base1, add_header, decimal_places, append));
+    return rcpp_result_gen;
+END_RCPP
+}
+// write_single_label_numeric_to_str_R
+Rcpp::List write_single_label_numeric_to_str_R(Rcpp::IntegerVector indptr, Rcpp::IntegerVector indices, Rcpp::NumericVector values, Rcpp::NumericVector labels, Rcpp::IntegerVector qid, const int ncols, const int nclasses, const bool ignore_zero_valued, const bool sort_indices, const bool text_is_base1, const bool add_header, const int decimal_places);
+RcppExport SEXP _rsparse_write_single_label_numeric_to_str_R(SEXP indptrSEXP, SEXP indicesSEXP, SEXP valuesSEXP, SEXP labelsSEXP, SEXP qidSEXP, SEXP ncolsSEXP, SEXP nclassesSEXP, SEXP ignore_zero_valuedSEXP, SEXP sort_indicesSEXP, SEXP text_is_base1SEXP, SEXP add_headerSEXP, SEXP decimal_placesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type labels(labelsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type qid(qidSEXP);
+    Rcpp::traits::input_parameter< const int >::type ncols(ncolsSEXP);
+    Rcpp::traits::input_parameter< const int >::type nclasses(nclassesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type ignore_zero_valued(ignore_zero_valuedSEXP);
+    Rcpp::traits::input_parameter< const bool >::type sort_indices(sort_indicesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type text_is_base1(text_is_base1SEXP);
+    Rcpp::traits::input_parameter< const bool >::type add_header(add_headerSEXP);
+    Rcpp::traits::input_parameter< const int >::type decimal_places(decimal_placesSEXP);
+    rcpp_result_gen = Rcpp::wrap(write_single_label_numeric_to_str_R(indptr, indices, values, labels, qid, ncols, nclasses, ignore_zero_valued, sort_indices, text_is_base1, add_header, decimal_places));
+    return rcpp_result_gen;
+END_RCPP
+}
+// write_single_label_integer_to_str_R
+Rcpp::List write_single_label_integer_to_str_R(Rcpp::IntegerVector indptr, Rcpp::IntegerVector indices, Rcpp::NumericVector values, Rcpp::IntegerVector labels, Rcpp::IntegerVector qid, const int ncols, const int nclasses, const bool ignore_zero_valued, const bool sort_indices, const bool text_is_base1, const bool add_header, const int decimal_places);
+RcppExport SEXP _rsparse_write_single_label_integer_to_str_R(SEXP indptrSEXP, SEXP indicesSEXP, SEXP valuesSEXP, SEXP labelsSEXP, SEXP qidSEXP, SEXP ncolsSEXP, SEXP nclassesSEXP, SEXP ignore_zero_valuedSEXP, SEXP sort_indicesSEXP, SEXP text_is_base1SEXP, SEXP add_headerSEXP, SEXP decimal_placesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type labels(labelsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type qid(qidSEXP);
+    Rcpp::traits::input_parameter< const int >::type ncols(ncolsSEXP);
+    Rcpp::traits::input_parameter< const int >::type nclasses(nclassesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type ignore_zero_valued(ignore_zero_valuedSEXP);
+    Rcpp::traits::input_parameter< const bool >::type sort_indices(sort_indicesSEXP);
+    Rcpp::traits::input_parameter< const bool >::type text_is_base1(text_is_base1SEXP);
+    Rcpp::traits::input_parameter< const bool >::type add_header(add_headerSEXP);
+    Rcpp::traits::input_parameter< const int >::type decimal_places(decimal_placesSEXP);
+    rcpp_result_gen = Rcpp::wrap(write_single_label_integer_to_str_R(indptr, indices, values, labels, qid, ncols, nclasses, ignore_zero_valued, sort_indices, text_is_base1, add_header, decimal_places));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -545,10 +735,20 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_c_nnls_double", (DL_FUNC) &_rsparse_c_nnls_double, 4},
     {"_rsparse_rankmf_solver_double", (DL_FUNC) &_rsparse_rankmf_solver_double, 22},
     {"_rsparse_rankmf_solver_float", (DL_FUNC) &_rsparse_rankmf_solver_float, 22},
+    {"_rsparse_read_multi_label_R", (DL_FUNC) &_rsparse_read_multi_label_R, 5},
+    {"_rsparse_read_multi_label_from_str_R", (DL_FUNC) &_rsparse_read_multi_label_from_str_R, 5},
+    {"_rsparse_read_single_label_R", (DL_FUNC) &_rsparse_read_single_label_R, 5},
+    {"_rsparse_read_single_label_from_str_R", (DL_FUNC) &_rsparse_read_single_label_from_str_R, 5},
     {"_rsparse_omp_thread_count", (DL_FUNC) &_rsparse_omp_thread_count, 0},
     {"_rsparse_cpp_make_sparse_approximation", (DL_FUNC) &_rsparse_cpp_make_sparse_approximation, 5},
     {"_rsparse_large_rand_matrix", (DL_FUNC) &_rsparse_large_rand_matrix, 2},
     {"_rsparse_deep_copy", (DL_FUNC) &_rsparse_deep_copy, 1},
+    {"_rsparse_write_multi_label_R", (DL_FUNC) &_rsparse_write_multi_label_R, 15},
+    {"_rsparse_write_multi_label_to_str_R", (DL_FUNC) &_rsparse_write_multi_label_to_str_R, 13},
+    {"_rsparse_write_single_label_numeric_R", (DL_FUNC) &_rsparse_write_single_label_numeric_R, 14},
+    {"_rsparse_write_single_label_integer_R", (DL_FUNC) &_rsparse_write_single_label_integer_R, 14},
+    {"_rsparse_write_single_label_numeric_to_str_R", (DL_FUNC) &_rsparse_write_single_label_numeric_to_str_R, 12},
+    {"_rsparse_write_single_label_integer_to_str_R", (DL_FUNC) &_rsparse_write_single_label_integer_to_str_R, 12},
     {"_rsparse_als_explicit_double", (DL_FUNC) &_rsparse_als_explicit_double, 11},
     {"_rsparse_als_explicit_float", (DL_FUNC) &_rsparse_als_explicit_float, 11},
     {"_rsparse_als_implicit_double", (DL_FUNC) &_rsparse_als_implicit_double, 10},

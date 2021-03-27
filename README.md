@@ -9,7 +9,7 @@
 
 `rsparse` is an R package for statistical learning primarily on **sparse matrices** -  **matrix factorizations, factorization machines, out-of-core regression**. Many of the implemented algorithms are particularly useful for **recommender systems** and **NLP**. 
 
-On top of that we provide some optimized routines to work on sparse matrices - multithreaded <dense, sparse> matrix multiplications and improved support for sparse matrices in CSR format (`Matrix::RsparseMatrix`), as well as convenience functions to convert between matrix types.
+On top of that we provide some optimized routines to work on sparse matrices - multithreaded <dense, sparse> matrix multiplications and improved support for sparse matrices in CSR format (`Matrix::RsparseMatrix`), as well as functionality for reading and writing sparse matrices in delimited text format (SVMLight / LibSVM), and convenience functions to convert between matrix types.
 
 We've paid some attention to the implementation details - we try to avoid data copies, utilize multiple threads via OpenMP and use SIMD where appropriate. Package **allows to work on datasets with millions of rows and millions of columns**.
 
@@ -55,6 +55,10 @@ See details in [Applications of the Conjugate Gradient Method for Implicit Feedb
 1. multithreaded `%*%` and `tcrossprod()` for `<dgRMatrix, matrix>`
 1. multithreaded `%*%` and `crossprod()` for `<matrix, dgCMatrix>`
 1. natively slice `CSR` matrices (`Matrix::RsparseMatrix`) without converting them to triplet / CSC
+
+### Reading and writing data
+
+1. Functions for reading and writing labelled sparse matrices in SVMLight / LibSVM formats (regression, classification, and ranking) as used by popular machine learning software, supporting features such as multi-label datasets, 'qid' parameter for ranking, comments in lines, among others.
 
 # Installation 
 
