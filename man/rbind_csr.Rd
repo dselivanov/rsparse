@@ -27,7 +27,13 @@ time, resulting in unnecessary allocations.
 that the inputs might have.
 }
 \examples{
-### TODO
+library(Matrix)
+library(rsparse)
+v = as(1:10, "sparseVector")
+rbind_csr(v, v, v)
+
+X = matrix(1:20, nrow=2)
+rbind_csr(X, v)
 }
 \seealso{
 \link{rbind2-method}

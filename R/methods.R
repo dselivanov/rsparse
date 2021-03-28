@@ -787,7 +787,13 @@ t_shallow = function(X) {
 #' the inputs concatenated by rows.
 #' @seealso \link{rbind2-method}
 #' @examples
-#' ### TODO
+#' library(Matrix)
+#' library(rsparse)
+#' v = as(1:10, "sparseVector")
+#' rbind_csr(v, v, v)
+#'
+#' X = matrix(1:20, nrow=2)
+#' rbind_csr(X, v)
 #' @export
 rbind_csr = function(...) {
 
