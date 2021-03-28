@@ -2,6 +2,10 @@
 % Please edit documentation in R/methods.R
 \name{operators}
 \alias{operators}
+\alias{*,RsparseMatrix,sparseMatrix-method}
+\alias{*,RsparseMatrix,matrix-method}
+\alias{+,RsparseMatrix,sparseMatrix-method}
+\alias{-,RsparseMatrix,sparseMatrix-method}
 \alias{*,RsparseMatrix,integer-method}
 \alias{*,RsparseMatrix,numeric-method}
 \alias{*,RsparseMatrix,logical-method}
@@ -21,6 +25,14 @@
 \alias{|,RsparseMatrix,logical-method}
 \title{Mathematical operators on CSR matrices}
 \usage{
+\S4method{*}{RsparseMatrix,sparseMatrix}(e1, e2)
+
+\S4method{*}{RsparseMatrix,matrix}(e1, e2)
+
+\S4method{+}{RsparseMatrix,sparseMatrix}(e1, e2)
+
+\S4method{-}{RsparseMatrix,sparseMatrix}(e1, e2)
+
 \S4method{*}{RsparseMatrix,integer}(e1, e2)
 
 \S4method{*}{RsparseMatrix,numeric}(e1, e2)
@@ -77,6 +89,7 @@ library(Matrix)
 library(rsparse)
 set.seed(1)
 X = as.csr.matrix(rsparsematrix(4, 3, .5))
+X + X
 X * 2
 X ^ 2
 ### here the result will be CSC

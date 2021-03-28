@@ -266,6 +266,89 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// is_same_ngRMatrix
+bool is_same_ngRMatrix(Rcpp::IntegerVector indptr1, Rcpp::IntegerVector indptr2, Rcpp::IntegerVector indices1, Rcpp::IntegerVector indices2);
+RcppExport SEXP _rsparse_is_same_ngRMatrix(SEXP indptr1SEXP, SEXP indptr2SEXP, SEXP indices1SEXP, SEXP indices2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr1(indptr1SEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr2(indptr2SEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices1(indices1SEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices2(indices2SEXP);
+    rcpp_result_gen = Rcpp::wrap(is_same_ngRMatrix(indptr1, indptr2, indices1, indices2));
+    return rcpp_result_gen;
+END_RCPP
+}
+// multiply_csr_elemwise
+Rcpp::List multiply_csr_elemwise(Rcpp::IntegerVector indptr1, Rcpp::IntegerVector indptr2, Rcpp::IntegerVector indices1, Rcpp::IntegerVector indices2, Rcpp::NumericVector values1, Rcpp::NumericVector values2);
+RcppExport SEXP _rsparse_multiply_csr_elemwise(SEXP indptr1SEXP, SEXP indptr2SEXP, SEXP indices1SEXP, SEXP indices2SEXP, SEXP values1SEXP, SEXP values2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr1(indptr1SEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr2(indptr2SEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices1(indices1SEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices2(indices2SEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values1(values1SEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values2(values2SEXP);
+    rcpp_result_gen = Rcpp::wrap(multiply_csr_elemwise(indptr1, indptr2, indices1, indices2, values1, values2));
+    return rcpp_result_gen;
+END_RCPP
+}
+// multiply_csr_by_dense_elemwise_double
+Rcpp::NumericVector multiply_csr_by_dense_elemwise_double(Rcpp::IntegerVector indptr, Rcpp::IntegerVector indices, Rcpp::NumericVector values, Rcpp::NumericVector dense_mat);
+RcppExport SEXP _rsparse_multiply_csr_by_dense_elemwise_double(SEXP indptrSEXP, SEXP indicesSEXP, SEXP valuesSEXP, SEXP dense_matSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type dense_mat(dense_matSEXP);
+    rcpp_result_gen = Rcpp::wrap(multiply_csr_by_dense_elemwise_double(indptr, indices, values, dense_mat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// multiply_csr_by_dense_elemwise_int
+Rcpp::NumericVector multiply_csr_by_dense_elemwise_int(Rcpp::IntegerVector indptr, Rcpp::IntegerVector indices, Rcpp::NumericVector values, Rcpp::IntegerVector dense_mat);
+RcppExport SEXP _rsparse_multiply_csr_by_dense_elemwise_int(SEXP indptrSEXP, SEXP indicesSEXP, SEXP valuesSEXP, SEXP dense_matSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type dense_mat(dense_matSEXP);
+    rcpp_result_gen = Rcpp::wrap(multiply_csr_by_dense_elemwise_int(indptr, indices, values, dense_mat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// multiply_csr_by_dense_elemwise_bool
+Rcpp::NumericVector multiply_csr_by_dense_elemwise_bool(Rcpp::IntegerVector indptr, Rcpp::IntegerVector indices, Rcpp::NumericVector values, Rcpp::LogicalVector dense_mat);
+RcppExport SEXP _rsparse_multiply_csr_by_dense_elemwise_bool(SEXP indptrSEXP, SEXP indicesSEXP, SEXP valuesSEXP, SEXP dense_matSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::LogicalVector >::type dense_mat(dense_matSEXP);
+    rcpp_result_gen = Rcpp::wrap(multiply_csr_by_dense_elemwise_bool(indptr, indices, values, dense_mat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// add_csr_elemwise
+Rcpp::List add_csr_elemwise(Rcpp::IntegerVector indptr1, Rcpp::IntegerVector indptr2, Rcpp::IntegerVector indices1, Rcpp::IntegerVector indices2, Rcpp::NumericVector values1, Rcpp::NumericVector values2, const bool substract);
+RcppExport SEXP _rsparse_add_csr_elemwise(SEXP indptr1SEXP, SEXP indptr2SEXP, SEXP indices1SEXP, SEXP indices2SEXP, SEXP values1SEXP, SEXP values2SEXP, SEXP substractSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr1(indptr1SEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr2(indptr2SEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices1(indices1SEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices2(indices2SEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values1(values1SEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values2(values2SEXP);
+    Rcpp::traits::input_parameter< const bool >::type substract(substractSEXP);
+    rcpp_result_gen = Rcpp::wrap(add_csr_elemwise(indptr1, indptr2, indices1, indices2, values1, values2, substract));
+    return rcpp_result_gen;
+END_RCPP
+}
 // csr_dense_tcrossprod
 Rcpp::NumericMatrix csr_dense_tcrossprod(const Rcpp::S4& x_csr_r, const arma::Mat<double>& y_transposed, int num_threads);
 RcppExport SEXP _rsparse_csr_dense_tcrossprod(SEXP x_csr_rSEXP, SEXP y_transposedSEXP, SEXP num_threadsSEXP) {
@@ -573,6 +656,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_repeat_indices_n_times", (DL_FUNC) &_rsparse_repeat_indices_n_times, 4},
     {"_rsparse_concat_indptr2", (DL_FUNC) &_rsparse_concat_indptr2, 2},
     {"_rsparse_concat_csr_batch", (DL_FUNC) &_rsparse_concat_csr_batch, 2},
+    {"_rsparse_is_same_ngRMatrix", (DL_FUNC) &_rsparse_is_same_ngRMatrix, 4},
+    {"_rsparse_multiply_csr_elemwise", (DL_FUNC) &_rsparse_multiply_csr_elemwise, 6},
+    {"_rsparse_multiply_csr_by_dense_elemwise_double", (DL_FUNC) &_rsparse_multiply_csr_by_dense_elemwise_double, 4},
+    {"_rsparse_multiply_csr_by_dense_elemwise_int", (DL_FUNC) &_rsparse_multiply_csr_by_dense_elemwise_int, 4},
+    {"_rsparse_multiply_csr_by_dense_elemwise_bool", (DL_FUNC) &_rsparse_multiply_csr_by_dense_elemwise_bool, 4},
+    {"_rsparse_add_csr_elemwise", (DL_FUNC) &_rsparse_add_csr_elemwise, 7},
     {"_rsparse_csr_dense_tcrossprod", (DL_FUNC) &_rsparse_csr_dense_tcrossprod, 3},
     {"_rsparse_dense_csc_prod", (DL_FUNC) &_rsparse_dense_csc_prod, 3},
     {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 7},

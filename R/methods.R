@@ -133,8 +133,6 @@ setMethod("crossprod", signature(x="float32", y="dgCMatrix"), function(x, y) {
   crossprod(float::dbl(x), y)
 })
 
-# nocov start
-
 #' @name operators
 #' @title Mathematical operators on CSR matrices
 #' @description Implements some mathematical operators for CSR matrices
@@ -152,11 +150,146 @@ setMethod("crossprod", signature(x="float32", y="dgCMatrix"), function(x, y) {
 #' library(rsparse)
 #' set.seed(1)
 #' X = as.csr.matrix(rsparsematrix(4, 3, .5))
+#' X + X
 #' X * 2
 #' X ^ 2
 #' ### here the result will be CSC
 #' X ^ c(1,2)
 NULL
+
+multiply_csr_by_csr = function(e1, e2) {
+  if (nrow(e1) != nrow(e2) || ncol(e1) != ncol(e2))
+    stop("Matrices must have the same dimensions in order to multiply them.")
+
+  if (inherits(e1, "nsparseMatrix") && inherits(e2, "nsparseMatrix")) {
+    if (is_same_ngRMatrix(e1@p, e2@p, e1@j, e2@j))
+      return(e1)
+  }
+  e1 = as.csr.matrix(e1)
+  e2 = as.csr.matrix(e2)
+  res = multiply_csr_elemwise(e1@p, e2@p, e1@j, e2@j, e1@x, e2@x)
+  out = new("dgRMatrix")
+  out@Dim = e1@Dim
+  out@Dimnames = e1@Dimnames
+  out@p = res$indptr
+  out@j = res$indices
+  out@x = res$values
+  return(out)
+}
+
+#' @rdname operators
+#' @export
+setMethod("*", signature(e1="RsparseMatrix", e2="sparseMatrix"), multiply_csr_by_csr)
+
+#' @rdname operators
+#' @export
+setMethod("*", signature(e1="ngRMatrix", e2="sparseMatrix"), multiply_csr_by_csr)
+
+#' @rdname operators
+#' @export
+setMethod("*", signature(e1="lgRMatrix", e2="sparseMatrix"), multiply_csr_by_csr)
+
+multiply_csr_by_dense = function(e1, e2) {
+  if (nrow(e1) != nrow(e2) || ncol(e1) != ncol(e2))
+    stop("Matrices must have the same dimensions in order to multiply them.")
+
+  e1 = as.csr.matrix(e1)
+  if (typeof(e2) == "double") {
+    res = multiply_csr_by_dense_elemwise_double(e1@p, e1@j, e1@x, e2)
+  } else if (typeof(e2) == "integer") {
+    res = multiply_csr_by_dense_elemwise_int(e1@p, e1@j, e1@x, e2)
+  } else if (typeof(e2) == "logical") {
+    res = multiply_csr_by_dense_elemwise_bool(e1@p, e1@j, e1@x, e2)
+  } else {
+    mode(e2) = "double"
+    return(e1 * e2)
+  }
+
+  out = e1
+  out@x = res
+  return(out)
+}
+
+#' @rdname operators
+#' @export
+setMethod("*", signature(e1="RsparseMatrix", e2="matrix"), multiply_csr_by_dense)
+
+#' @rdname operators
+#' @export
+setMethod("*", signature(e1="ngRMatrix", e2="matrix"), multiply_csr_by_dense)
+
+#' @rdname operators
+#' @export
+setMethod("*", signature(e1="lgRMatrix", e2="matrix"), multiply_csr_by_dense)
+
+add_csr_matrices = function(e1, e2, is_substraction=FALSE) {
+  if (nrow(e1) != nrow(e2) || ncol(e1) != ncol(e2))
+    stop("Matrices must have the same dimensions in order to add/substract them.")
+
+  if (inherits(e1, "nsparseMatrix") && inherits(e2, "nsparseMatrix")) {
+    if (is_same_ngRMatrix(e1@p, e2@p, e1@j, e2@j)) {
+      if (!is_substraction) {
+        return(e1)
+      } else {
+        out = new("ngRMatrix")
+        out@p = integer(length(e1@p))
+        out@Dim = e1@Dim
+        out@Dimnames = e1@Dimnames
+        return(out)
+      }
+    }
+  }
+  e1 = as.csr.matrix(e1)
+  e2 = as.csr.matrix(e2)
+  res = add_csr_elemwise(e1@p, e2@p, e1@j, e2@j, e1@x, e2@x, is_substraction)
+  out = new("dgRMatrix")
+  out@Dim = e1@Dim
+  out@Dimnames = e1@Dimnames
+  out@p = res$indptr
+  out@j = res$indices
+  out@x = res$values
+  return(out)
+}
+
+#' @rdname operators
+#' @export
+setMethod("+", signature(e1="RsparseMatrix", e2="sparseMatrix"), function(e1, e2) {
+  return(add_csr_matrices(e1, e2, FALSE))
+})
+
+#' @rdname operators
+#' @export
+setMethod("+", signature(e1="ngRMatrix", e2="sparseMatrix"), function(e1, e2) {
+  return(add_csr_matrices(e1, e2, FALSE))
+})
+
+#' @rdname operators
+#' @export
+setMethod("+", signature(e1="lgRMatrix", e2="sparseMatrix"), function(e1, e2) {
+  return(add_csr_matrices(e1, e2, FALSE))
+})
+
+
+#' @rdname operators
+#' @export
+setMethod("-", signature(e1="RsparseMatrix", e2="sparseMatrix"), function(e1, e2) {
+  return(add_csr_matrices(e1, e2, TRUE))
+})
+
+#' @rdname operators
+#' @export
+setMethod("-", signature(e1="ngRMatrix", e2="sparseMatrix"), function(e1, e2) {
+  return(add_csr_matrices(e1, e2, TRUE))
+})
+
+#' @rdname operators
+#' @export
+setMethod("-", signature(e1="lgRMatrix", e2="sparseMatrix"), function(e1, e2) {
+  return(add_csr_matrices(e1, e2, TRUE))
+})
+
+
+# nocov start
 
 #' @rdname operators
 #' @export

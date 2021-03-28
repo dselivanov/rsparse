@@ -81,6 +81,30 @@ concat_csr_batch <- function(objects, out) {
     .Call(`_rsparse_concat_csr_batch`, objects, out)
 }
 
+is_same_ngRMatrix <- function(indptr1, indptr2, indices1, indices2) {
+    .Call(`_rsparse_is_same_ngRMatrix`, indptr1, indptr2, indices1, indices2)
+}
+
+multiply_csr_elemwise <- function(indptr1, indptr2, indices1, indices2, values1, values2) {
+    .Call(`_rsparse_multiply_csr_elemwise`, indptr1, indptr2, indices1, indices2, values1, values2)
+}
+
+multiply_csr_by_dense_elemwise_double <- function(indptr, indices, values, dense_mat) {
+    .Call(`_rsparse_multiply_csr_by_dense_elemwise_double`, indptr, indices, values, dense_mat)
+}
+
+multiply_csr_by_dense_elemwise_int <- function(indptr, indices, values, dense_mat) {
+    .Call(`_rsparse_multiply_csr_by_dense_elemwise_int`, indptr, indices, values, dense_mat)
+}
+
+multiply_csr_by_dense_elemwise_bool <- function(indptr, indices, values, dense_mat) {
+    .Call(`_rsparse_multiply_csr_by_dense_elemwise_bool`, indptr, indices, values, dense_mat)
+}
+
+add_csr_elemwise <- function(indptr1, indptr2, indices1, indices2, values1, values2, substract) {
+    .Call(`_rsparse_add_csr_elemwise`, indptr1, indptr2, indices1, indices2, values1, values2, substract)
+}
+
 csr_dense_tcrossprod <- function(x_csr_r, y_transposed, num_threads = 1L) {
     .Call(`_rsparse_csr_dense_tcrossprod`, x_csr_r, y_transposed, num_threads)
 }
