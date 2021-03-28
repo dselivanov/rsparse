@@ -322,22 +322,25 @@ setMethod(`[`, signature(x = "RsparseMatrix", i = "index", j = "missing", drop="
 #' @export
 setMethod(`[`, signature(x = "RsparseMatrix", i = "missing", j = "missing", drop="logical"), subset_csr)
 
-
+#' @rdname slice
+#' @export
 setMethod(`[`, signature(x = "RsparseMatrix", i = "nsparseVector", j = "nsparseVector", drop="logical"), subset_csr)
 #' @rdname slice
 #' @export
-setMethod(`[`, signature(x = "RsparseMatrix", i = "missing", j = "nsparseVector"), subset_csr)
+setMethod(`[`, signature(x = "RsparseMatrix", i = "missing", j = "nsparseVector", drop="logical"), subset_csr)
 #' @rdname slice
 #' @export
-setMethod(`[`, signature(x = "RsparseMatrix", i = "nsparseVector", j = "missing"), subset_csr)
+setMethod(`[`, signature(x = "RsparseMatrix", i = "nsparseVector", j = "missing", drop="logical"), subset_csr)
 
-setMethod(`[`, signature(x = "RsparseMatrix", i = "nsparseVector", j = "nsparseVector"), subset_csr)
 #' @rdname slice
 #' @export
-setMethod(`[`, signature(x = "RsparseMatrix", i = "missing", j = "nsparseVector"), subset_csr)
+setMethod(`[`, signature(x = "RsparseMatrix", i = "nsparseVector", j = "nsparseVector", drop="missing"), subset_csr)
 #' @rdname slice
 #' @export
-setMethod(`[`, signature(x = "RsparseMatrix", i = "nsparseVector", j = "missing"), subset_csr)
+setMethod(`[`, signature(x = "RsparseMatrix", i = "missing", j = "nsparseVector", drop="missing"), subset_csr)
+#' @rdname slice
+#' @export
+setMethod(`[`, signature(x = "RsparseMatrix", i = "nsparseVector", j = "missing", drop="missing"), subset_csr)
 
 
 # nocov start
@@ -361,7 +364,7 @@ check_dimensions_match = function(x, y, y_transposed = FALSE) {
 #' @title Conversions between matrix types
 #' @description Convenience functions for converting to different sparse matrix formats,
 #' between pairs of classes which might not be supported in the `Matrix` package.
-#' 
+#'
 #' These come in the form of explicit functions 'as.<type>.matrix' (see below),
 #' as well as registered conversion methods to use along with `as(object, type)`, adding
 #' extra conversion routes which are missing in the `Matrix` package for output
@@ -411,7 +414,7 @@ check_dimensions_match = function(x, y, y_transposed = FALSE) {
 #'
 #' library(data.table)
 #' as.coo.matrix(data.table(col1=1:3))
-#' 
+#'
 #' ### Using the new conversion methods
 #' ### (these would fail if 'rsparse' is not loaded)
 #' as(matrix(1:3), "ngRMatrix")
@@ -774,7 +777,7 @@ t_shallow = function(X) {
 #' This is aimed at concatenating several CSR matrices or sparse vectors at a time,
 #' as it will be faster than calling `rbind` which will only concatenate one at a
 #' time, resulting in unnecessary allocations.
-#' 
+#'
 #' \bold{Important:} for the sake of speed, this function will omit any row or column names
 #' that the inputs might have.
 #' @param ... Inputs to concatenate. The function is aimed at CSR matrices (`dgRMatrix`,
@@ -787,7 +790,7 @@ t_shallow = function(X) {
 #' ### TODO
 #' @export
 rbind_csr = function(...) {
-  
+
   binary_types = c("nsparseMatrix", "nsparseVector")
   logical_types = c("lsparseMatrix", "lsparseVector", "logical")
   cast_csr_same = function(x) as.csr.matrix(x, binary=inherits(x, binary_types), logical=inherits(x, logical_types))
@@ -799,7 +802,7 @@ rbind_csr = function(...) {
     }
   }
   args = lapply(list(...), cast_if_not_csr)
-  
+
   if (length(args) == 0L) {
     return(new("dgRMatrix"))
   } else if (length(args) == 1L) {
@@ -807,7 +810,7 @@ rbind_csr = function(...) {
   } else if (length(args) == 2L) {
     return(rbind2(args[[1L]], args[[2L]]))
   }
-  
+
   is_binary = sapply(args, function(x) inherits(x, binary_types))
   is_logical = sapply(args, function(x) inherits(x, logical_types))
   is_numeric = !is_binary & !is_logical

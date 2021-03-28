@@ -12,3 +12,7 @@ docs/
 ^.clang-format$
 ^Makefile$
 extradata/
+src/*.so
+src/*.o
+src/*.dll
+deleteme/*

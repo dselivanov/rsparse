@@ -6,8 +6,12 @@
 \alias{[,RsparseMatrix,missing,index,logical-method}
 \alias{[,RsparseMatrix,index,missing,logical-method}
 \alias{[,RsparseMatrix,missing,missing,logical-method}
-\alias{[,RsparseMatrix,missing,nsparseVector,ANY-method}
-\alias{[,RsparseMatrix,nsparseVector,missing,ANY-method}
+\alias{[,RsparseMatrix,nsparseVector,nsparseVector,logical-method}
+\alias{[,RsparseMatrix,missing,nsparseVector,logical-method}
+\alias{[,RsparseMatrix,nsparseVector,missing,logical-method}
+\alias{[,RsparseMatrix,nsparseVector,nsparseVector,missing-method}
+\alias{[,RsparseMatrix,missing,nsparseVector,missing-method}
+\alias{[,RsparseMatrix,nsparseVector,missing,missing-method}
 \title{CSR Matrices Slicing}
 \usage{
 \S4method{[}{RsparseMatrix,index,index,logical}(x, i, j, drop = TRUE)
@@ -18,13 +22,17 @@
 
 \S4method{[}{RsparseMatrix,missing,missing,logical}(x, i, j, drop = TRUE)
 
-\S4method{[}{RsparseMatrix,missing,nsparseVector,ANY}(x, i, j, drop = TRUE)
+\S4method{[}{RsparseMatrix,nsparseVector,nsparseVector,logical}(x, i, j, drop = TRUE)
 
-\S4method{[}{RsparseMatrix,nsparseVector,missing,ANY}(x, i, j, drop = TRUE)
+\S4method{[}{RsparseMatrix,missing,nsparseVector,logical}(x, i, j, drop = TRUE)
 
-\S4method{[}{RsparseMatrix,missing,nsparseVector,ANY}(x, i, j, drop = TRUE)
+\S4method{[}{RsparseMatrix,nsparseVector,missing,logical}(x, i, j, drop = TRUE)
 
-\S4method{[}{RsparseMatrix,nsparseVector,missing,ANY}(x, i, j, drop = TRUE)
+\S4method{[}{RsparseMatrix,nsparseVector,nsparseVector,missing}(x, i, j, drop = TRUE)
+
+\S4method{[}{RsparseMatrix,missing,nsparseVector,missing}(x, i, j, drop = TRUE)
+
+\S4method{[}{RsparseMatrix,nsparseVector,missing,missing}(x, i, j, drop = TRUE)
 }
 \arguments{
 \item{x}{input \code{RsparseMatrix}}
