@@ -58,6 +58,7 @@ See details in [Applications of the Conjugate Gradient Method for Implicit Feedb
 1. rbind (concatenate by rows) `CSR` matrices and sparse vectors (e.g. `rbind(dgRMatrix, dgRMatrix), rbind(dgRMatrix, sparseVector)`).
 1. shallow transposes of CSR and CSC matrices by changing the type without touching the data.
 1. S4 conversions between pairs of matrix types which are not available directly from `Matrix` (e.g. `dgCMatrix` -> `ngRMatrix`).
+1. Syntactic sugar for mathematical operators between `<RsparseMatrix, constant>` and mathematical functions like `sqrt(RsparseMatrix)`.
 
 # Installation 
 

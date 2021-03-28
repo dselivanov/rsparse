@@ -133,6 +133,395 @@ setMethod("crossprod", signature(x="float32", y="dgCMatrix"), function(x, y) {
   crossprod(float::dbl(x), y)
 })
 
+# nocov start
+
+#' @name operators
+#' @title Mathematical operators on CSR matrices
+#' @description Implements some mathematical operators for CSR matrices
+#' (a.k.a. RsparseMatrix) for cases in which the right-hand side is a constant
+#' and the operation reduces to applying the operator elementwise on the non-zero
+#' entries only, doing so without converting the matrix to CSC in the process.
+#' @param e1 A CSR matrix.
+#' @param e2 Right-hand side of the operation. Must be a scalar (otherwise the
+#' matrix will get converted to CSC and will call the corresponding operator
+#' from the `Matrix` package.)
+#' @return A CSR matrix of class `dgRMatrix` (`lgRMatrix` for some of the logical
+#' operators).
+#' @examples
+#' library(Matrix)
+#' library(rsparse)
+#' set.seed(1)
+#' X = as.csr.matrix(rsparsematrix(4, 3, .5))
+#' X * 2
+#' X ^ 2
+#' ### here the result will be CSC
+#' X ^ c(1,2)
+NULL
+
+#' @rdname operators
+#' @export
+setMethod("*", signature(e1="RsparseMatrix", e2="integer"), function(e1, e2) {
+  if (NROW(e2) != 1L) {
+    e1 = as(e1, "CsparseMatrix")
+    return(e1 * e2)
+  }
+  e1 = as.csr.matrix(e1)
+  e1@x = e1@x * as.numeric(e2)
+  return(e1)
+})
+
+#' @rdname operators
+#' @export
+setMethod("*", signature(e1="RsparseMatrix", e2="numeric"), function(e1, e2) {
+  if (NROW(e2) != 1L) {
+    e1 = as(e1, "CsparseMatrix")
+    return(e1 * e2)
+  }
+  e1 = as.csr.matrix(e1)
+  e1@x = e1@x * e2
+  return(e1)
+})
+
+#' @rdname operators
+#' @export
+setMethod("*", signature(e1="RsparseMatrix", e2="logical"), function(e1, e2) {
+  if (NROW(e2) != 1L) {
+    e1 = as(e1, "CsparseMatrix")
+    return(e1 * e2)
+  }
+  e1 = as.csr.matrix(e1)
+  e1@x = e1@x * e2
+  return(e1)
+})
+
+#' @rdname operators
+#' @export
+setMethod("/", signature(e1="RsparseMatrix", e2="integer"), function(e1, e2) {
+  if (NROW(e2) != 1L || e2 == 0) {
+    e1 = as(e1, "CsparseMatrix")
+    return(e1 / e2)
+  }
+  e1 = as.csr.matrix(e1)
+  e1@x = e1@x / as.numeric(e2)
+  return(e1)
+})
+
+#' @rdname operators
+#' @export
+setMethod("/", signature(e1="RsparseMatrix", e2="numeric"), function(e1, e2) {
+  if (NROW(e2) != 1L || e2 == 0) {
+    e1 = as(e1, "CsparseMatrix")
+    return(e1 / e2)
+  }
+  e1 = as.csr.matrix(e1)
+  e1@x = e1@x / e2
+  return(e1)
+})
+
+#' @rdname operators
+#' @export
+setMethod("/", signature(e1="RsparseMatrix", e2="logical"), function(e1, e2) {
+  if (NROW(e2) != 1L || e2 == 0) {
+    e1 = as(e1, "CsparseMatrix")
+    return(e1 / e2)
+  }
+  e1 = as.csr.matrix(e1)
+  e1@x = e1@x / e2
+  return(e1)
+})
+
+#' @rdname operators
+#' @export
+setMethod("%/%", signature(e1="RsparseMatrix", e2="integer"), function(e1, e2) {
+  if (NROW(e2) != 1L || e2 == 0) {
+    e1 = as(e1, "CsparseMatrix")
+    return(e1 %/% e2)
+  }
+  e1 = as.csr.matrix(e1)
+  e1@x = e1@x %/% as.numeric(e2)
+  return(e1)
+})
+
+#' @rdname operators
+#' @export
+setMethod("%/%", signature(e1="RsparseMatrix", e2="numeric"), function(e1, e2) {
+  if (NROW(e2) != 1L || e2 == 0) {
+    e1 = as(e1, "CsparseMatrix")
+    return(e1 %/% e2)
+  }
+  e1 = as.csr.matrix(e1)
+  e1@x = e1@x %/% e2
+  return(e1)
+})
+
+#' @rdname operators
+#' @export
+setMethod("%/%", signature(e1="RsparseMatrix", e2="logical"), function(e1, e2) {
+  if (NROW(e2) != 1L || e2 == 0) {
+    e1 = as(e1, "CsparseMatrix")
+    return(e1 %/% e2)
+  }
+  e1 = as.csr.matrix(e1)
+  e1@x = e1@x %/% e2
+  return(e1)
+})
+
+#' @rdname operators
+#' @export
+setMethod("%%", signature(e1="RsparseMatrix", e2="integer"), function(e1, e2) {
+  if (NROW(e2) != 1L || e2 == 0) {
+    e1 = as(e1, "CsparseMatrix")
+    return(e1 %% e2)
+  }
+  e1 = as.csr.matrix(e1)
+  e1@x = e1@x %% as.numeric(e2)
+  return(e1)
+})
+
+#' @rdname operators
+#' @export
+setMethod("%%", signature(e1="RsparseMatrix", e2="numeric"), function(e1, e2) {
+  if (NROW(e2) != 1L || e2 == 0) {
+    e1 = as(e1, "CsparseMatrix")
+    return(e1 %% e2)
+  }
+  e1 = as.csr.matrix(e1)
+  e1@x = e1@x %% e2
+  return(e1)
+})
+
+#' @rdname operators
+#' @export
+setMethod("%%", signature(e1="RsparseMatrix", e2="logical"), function(e1, e2) {
+  if (NROW(e2) != 1L || e2 == 0) {
+    e1 = as(e1, "CsparseMatrix")
+    return(e1 %% e2)
+  }
+  e1 = as.csr.matrix(e1)
+  e1@x = e1@x %% e2
+  return(e1)
+})
+
+#' @rdname operators
+#' @export
+setMethod("^", signature(e1="RsparseMatrix", e2="integer"), function(e1, e2) {
+  if (NROW(e2) != 1L) {
+    e1 = as(e1, "CsparseMatrix")
+    return(e1 ^ e2)
+  }
+  e1 = as.csr.matrix(e1)
+  e1@x = e1@x ^ as.numeric(e2)
+  return(e1)
+})
+
+#' @rdname operators
+#' @export
+setMethod("^", signature(e1="RsparseMatrix", e2="numeric"), function(e1, e2) {
+  if (NROW(e2) != 1L) {
+    e1 = as(e1, "CsparseMatrix")
+    return(e1 ^ e2)
+  }
+  e1 = as.csr.matrix(e1)
+  e1@x = e1@x ^ e2
+  return(e1)
+})
+
+#' @rdname operators
+#' @export
+setMethod("^", signature(e1="RsparseMatrix", e2="logical"), function(e1, e2) {
+  if (NROW(e2) != 1L) {
+    e1 = as(e1, "CsparseMatrix")
+    return(e1 ^ e2)
+  }
+  e1 = as.csr.matrix(e1)
+  e1@x = e1@x ^ e2
+  return(e1)
+})
+
+#' @rdname operators
+#' @export
+setMethod("&", signature(e1="RsparseMatrix", e2="logical"), function(e1, e2) {
+  if (NROW(e2) != 1L || !isTRUE(e2)) {
+    e1 = as(e1, "CsparseMatrix")
+    return(e1 & e2)
+  }
+  e1 = as.csr.matrix(e1, logical=TRUE)
+  e1@x = e1@x & e2
+  return(e1)
+})
+
+#' @rdname operators
+#' @export
+setMethod("|", signature(e1="RsparseMatrix", e2="logical"), function(e1, e2) {
+  if (NROW(e2) != 1L || typeof(e2) != "logical" || !isFALSE(e2)) {
+    e1 = as(e1, "CsparseMatrix")
+    return(e1 | e2)
+  }
+  e1 = as.csr.matrix(e1, logical=TRUE)
+  e1@x = e1@x | e2
+  return(e1)
+})
+
+#' @name mathematical-functions
+#' @title Mathematical functions for CSR matrices
+#' @description Implements some mathematical functions for CSR matrices
+#' (a.k.a. "RsparseMatrix") without converting them to CSC matrices in the process.
+#'
+#' These functions reduce to applying the same function over the non-zero elements only,
+#' and as such do not benefit from any storage format conversion as done implicitly
+#' in the `Matrix` package.
+#' @param x A CSR matrix.
+#' @param digits See \link{round} and \link{signif}. If passing more than one value,
+#' will call the corresponding function from the `Matrix` package, which implies first
+#' converting `x` to CSC format.
+#' @return A CSR matrix in `dgRMatrix` format.
+#' @examples
+#' library(Matrix)
+#' library(rsparse)
+#' set.seed(1)
+#' X = as.csr.matrix(rsparsematrix(4, 3, .4))
+#' abs(X)
+#' sqrt(X^2)
+NULL
+
+#' @rdname mathematical-functions
+#' @export
+setMethod("sqrt", signature(x="RsparseMatrix"), function(x) {
+  x = as.csr.matrix(x)
+  x@x = sqrt(x@x)
+  return(x)
+})
+
+#' @rdname mathematical-functions
+#' @export
+setMethod("abs", signature(x="RsparseMatrix"), function(x) {
+  x = as.csr.matrix(x)
+  x@x = abs(x@x)
+  return(x)
+})
+
+#' @rdname mathematical-functions
+#' @export
+setMethod("log1p", signature(x="RsparseMatrix"), function(x) {
+  x = as.csr.matrix(x)
+  x@x = log1p(x@x)
+  return(x)
+})
+
+#' @rdname mathematical-functions
+#' @export
+setMethod("cos", signature(x="RsparseMatrix"), function(x) {
+  x = as.csr.matrix(x)
+  x@x = cos(x@x)
+  return(x)
+})
+
+#' @rdname mathematical-functions
+#' @export
+setMethod("tan", signature(x="RsparseMatrix"), function(x) {
+  x = as.csr.matrix(x)
+  x@x = tan(x@x)
+  return(x)
+})
+
+#' @rdname mathematical-functions
+#' @export
+setMethod("tanh", signature(x="RsparseMatrix"), function(x) {
+  x = as.csr.matrix(x)
+  x@x = tanh(x@x)
+  return(x)
+})
+
+#' @rdname mathematical-functions
+#' @export
+setMethod("tanpi", signature(x="RsparseMatrix"), function(x) {
+  x = as.csr.matrix(x)
+  x@x = tanpi(x@x)
+  return(x)
+})
+
+#' @rdname mathematical-functions
+#' @export
+setMethod("sinh", signature(x="RsparseMatrix"), function(x) {
+  x = as.csr.matrix(x)
+  x@x = sinh(x@x)
+  return(x)
+})
+
+#' @rdname mathematical-functions
+#' @export
+setMethod("atanh", signature(x="RsparseMatrix"), function(x) {
+  x = as.csr.matrix(x)
+  x@x = atanh(x@x)
+  return(x)
+})
+
+#' @rdname mathematical-functions
+#' @export
+setMethod("expm1", signature(x="RsparseMatrix"), function(x) {
+  x = as.csr.matrix(x)
+  x@x = expm1(x@x)
+  return(x)
+})
+
+#' @rdname mathematical-functions
+#' @export
+setMethod("sign", signature(x="RsparseMatrix"), function(x) {
+  x = as.csr.matrix(x)
+  x@x = sign(x@x)
+  return(x)
+})
+
+#' @rdname mathematical-functions
+#' @export
+setMethod("ceiling", signature(x="RsparseMatrix"), function(x) {
+  x = as.csr.matrix(x)
+  x@x = ceiling(x@x)
+  return(x)
+})
+
+#' @rdname mathematical-functions
+#' @export
+setMethod("floor", signature(x="RsparseMatrix"), function(x) {
+  x = as.csr.matrix(x)
+  x@x = floor(x@x)
+  return(x)
+})
+
+#' @rdname mathematical-functions
+#' @export
+setMethod("trunc", signature(x="RsparseMatrix"), function(x) {
+  x = as.csr.matrix(x)
+  x@x = trunc(x@x)
+  return(x)
+})
+
+#' @rdname mathematical-functions
+#' @export
+setMethod("round", signature(x="RsparseMatrix", digits="ANY"), function(x, digits) {
+  if (!missing(digits) && NROW(digits) != 1L) {
+    x = as(x, "CsparseMatrix")
+    return(round(x, digits))
+  }
+  x = as.csr.matrix(x)
+  x@x = round(x@x, digits)
+  return(x)
+})
+
+#' @rdname mathematical-functions
+#' @export
+setMethod("signif", signature(x="RsparseMatrix", digits="ANY"), function(x, digits) {
+  if (!missing(digits) && NROW(digits) != 1L) {
+    x = as(x, "CsparseMatrix")
+    return(signif(x, digits))
+  }
+  x = as.csr.matrix(x)
+  x@x = signif(x@x, digits)
+  return(x)
+})
+
+# nocov end
+
 get_indices_integer = function(i, max_i, index_names) {
 
   if (inherits(i, "nsparseVector")) {
@@ -845,6 +1234,8 @@ rbind_csr = function(...) {
   }
   out@Dim = as.integer(c(nrows, ncols))
   out@Dimnames = list(NULL, NULL)
+  if (!nrows || !ncols)
+    return(out)
 
   out = concat_csr_batch(args, out)
   return(out)
