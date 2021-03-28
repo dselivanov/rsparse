@@ -9,7 +9,7 @@
 
 `rsparse` is an R package for statistical learning primarily on **sparse matrices** -  **matrix factorizations, factorization machines, out-of-core regression**. Many of the implemented algorithms are particularly useful for **recommender systems** and **NLP**. 
 
-On top of that we provide some optimized routines to work on sparse matrices - multithreaded <dense, sparse> matrix multiplications and improved support for sparse matrices in CSR format (`Matrix::RsparseMatrix`), as well as convenience functions to convert between matrix types.
+On top of that we provide some optimized routines to work on sparse matrices - multithreaded <dense, sparse> matrix multiplications and improved support for sparse matrices in CSR format (`Matrix::RsparseMatrix`) by adding methods that are missing from the `Matrix` package, as well as convenience functions to convert between matrix types.
 
 We've paid some attention to the implementation details - we try to avoid data copies, utilize multiple threads via OpenMP and use SIMD where appropriate. Package **allows to work on datasets with millions of rows and millions of columns**.
 
@@ -52,9 +52,12 @@ See details in [Applications of the Conjugate Gradient Method for Implicit Feedb
 
 ### Optimized matrix operations
 
-1. multithreaded `%*%` and `tcrossprod()` for `<dgRMatrix, matrix>`
-1. multithreaded `%*%` and `crossprod()` for `<matrix, dgCMatrix>`
-1. natively slice `CSR` matrices (`Matrix::RsparseMatrix`) without converting them to triplet / CSC
+1. multithreaded `%*%` and `tcrossprod()` for `<dgRMatrix, matrix>`.
+1. multithreaded `%*%` and `crossprod()` for `<matrix, dgCMatrix>`.
+1. natively slice `CSR` matrices (`Matrix::RsparseMatrix`) without converting them to triplet / CSC.
+1. rbind (concatenate by rows) `CSR` matrices and sparse vectors (e.g. `rbind(dgRMatrix, dgRMatrix), rbind(dgRMatrix, sparseVector)`).
+1. shallow transposes of CSR and CSC matrices by changing the type without touching the data.
+1. S4 conversions between pairs of matrix types which are not available directly from `Matrix` (e.g. `dgCMatrix` -> `ngRMatrix`).
 
 # Installation 
 

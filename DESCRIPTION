@@ -14,8 +14,9 @@ Description: Implements many algorithms for statistical learning on
   sparse matrices - matrix factorizations, matrix completion, 
   elastic net regressions, factorization machines. 
   Also 'rsparse' enhances 'Matrix' package by providing methods for 
-  multithreaded <sparse, dense> matrix products and native slicing of 
-  the sparse matrices in Compressed Sparse Row (CSR) format.
+  multithreaded <sparse, dense> matrix products, native slicing of 
+  the sparse matrices in Compressed Sparse Row (CSR) format, and rbinding
+  (concatenation by rows) of CSR matrices.
   List of the algorithms for regression problems:
   1) Elastic Net regression via Follow The Proximally-Regularized Leader (FTRL) 
   Stochastic Gradient Descent (SGD), as per McMahan et al(, <doi:10.1145/2487575.2488200>)

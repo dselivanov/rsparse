@@ -6,6 +6,8 @@
 \alias{[,RsparseMatrix,missing,index,logical-method}
 \alias{[,RsparseMatrix,index,missing,logical-method}
 \alias{[,RsparseMatrix,missing,missing,logical-method}
+\alias{[,RsparseMatrix,missing,nsparseVector,ANY-method}
+\alias{[,RsparseMatrix,nsparseVector,missing,ANY-method}
 \title{CSR Matrices Slicing}
 \usage{
 \S4method{[}{RsparseMatrix,index,index,logical}(x, i, j, drop = TRUE)
@@ -15,6 +17,14 @@
 \S4method{[}{RsparseMatrix,index,missing,logical}(x, i, j, drop = TRUE)
 
 \S4method{[}{RsparseMatrix,missing,missing,logical}(x, i, j, drop = TRUE)
+
+\S4method{[}{RsparseMatrix,missing,nsparseVector,ANY}(x, i, j, drop = TRUE)
+
+\S4method{[}{RsparseMatrix,nsparseVector,missing,ANY}(x, i, j, drop = TRUE)
+
+\S4method{[}{RsparseMatrix,missing,nsparseVector,ANY}(x, i, j, drop = TRUE)
+
+\S4method{[}{RsparseMatrix,nsparseVector,missing,ANY}(x, i, j, drop = TRUE)
 }
 \arguments{
 \item{x}{input \code{RsparseMatrix}}

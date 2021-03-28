@@ -185,7 +185,6 @@ bool check_is_seq(Rcpp::IntegerVector indices);
 RcppExport SEXP _rsparse_check_is_seq(SEXP indicesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
     rcpp_result_gen = Rcpp::wrap(check_is_seq(indices));
     return rcpp_result_gen;
@@ -196,7 +195,6 @@ Rcpp::List copy_csr_rows(Rcpp::IntegerVector indptr, Rcpp::IntegerVector indices
 RcppExport SEXP _rsparse_copy_csr_rows(SEXP indptrSEXP, SEXP indicesSEXP, SEXP valuesSEXP, SEXP rows_takeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
@@ -210,7 +208,6 @@ Rcpp::List copy_csr_rows_col_seq(Rcpp::IntegerVector indptr, Rcpp::IntegerVector
 RcppExport SEXP _rsparse_copy_csr_rows_col_seq(SEXP indptrSEXP, SEXP indicesSEXP, SEXP valuesSEXP, SEXP rows_takeSEXP, SEXP cols_takeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
@@ -225,13 +222,47 @@ Rcpp::List copy_csr_arbitrary(Rcpp::IntegerVector indptr, Rcpp::IntegerVector in
 RcppExport SEXP _rsparse_copy_csr_arbitrary(SEXP indptrSEXP, SEXP indicesSEXP, SEXP valuesSEXP, SEXP rows_takeSEXP, SEXP cols_takeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type rows_take(rows_takeSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type cols_take(cols_takeSEXP);
     rcpp_result_gen = Rcpp::wrap(copy_csr_arbitrary(indptr, indices, values, rows_take, cols_take));
+    return rcpp_result_gen;
+END_RCPP
+}
+// repeat_indices_n_times
+Rcpp::IntegerVector repeat_indices_n_times(Rcpp::IntegerVector indices, Rcpp::IntegerVector remainder, int ix_length, int desired_length);
+RcppExport SEXP _rsparse_repeat_indices_n_times(SEXP indicesSEXP, SEXP remainderSEXP, SEXP ix_lengthSEXP, SEXP desired_lengthSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type remainder(remainderSEXP);
+    Rcpp::traits::input_parameter< int >::type ix_length(ix_lengthSEXP);
+    Rcpp::traits::input_parameter< int >::type desired_length(desired_lengthSEXP);
+    rcpp_result_gen = Rcpp::wrap(repeat_indices_n_times(indices, remainder, ix_length, desired_length));
+    return rcpp_result_gen;
+END_RCPP
+}
+// concat_indptr2
+Rcpp::IntegerVector concat_indptr2(Rcpp::IntegerVector ptr1, Rcpp::IntegerVector ptr2);
+RcppExport SEXP _rsparse_concat_indptr2(SEXP ptr1SEXP, SEXP ptr2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type ptr1(ptr1SEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type ptr2(ptr2SEXP);
+    rcpp_result_gen = Rcpp::wrap(concat_indptr2(ptr1, ptr2));
+    return rcpp_result_gen;
+END_RCPP
+}
+// concat_csr_batch
+Rcpp::S4 concat_csr_batch(Rcpp::ListOf<Rcpp::S4> objects, Rcpp::S4 out);
+RcppExport SEXP _rsparse_concat_csr_batch(SEXP objectsSEXP, SEXP outSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::ListOf<Rcpp::S4> >::type objects(objectsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::S4 >::type out(outSEXP);
+    rcpp_result_gen = Rcpp::wrap(concat_csr_batch(objects, out));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -539,6 +570,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_copy_csr_rows", (DL_FUNC) &_rsparse_copy_csr_rows, 4},
     {"_rsparse_copy_csr_rows_col_seq", (DL_FUNC) &_rsparse_copy_csr_rows_col_seq, 5},
     {"_rsparse_copy_csr_arbitrary", (DL_FUNC) &_rsparse_copy_csr_arbitrary, 5},
+    {"_rsparse_repeat_indices_n_times", (DL_FUNC) &_rsparse_repeat_indices_n_times, 4},
+    {"_rsparse_concat_indptr2", (DL_FUNC) &_rsparse_concat_indptr2, 2},
+    {"_rsparse_concat_csr_batch", (DL_FUNC) &_rsparse_concat_csr_batch, 2},
     {"_rsparse_csr_dense_tcrossprod", (DL_FUNC) &_rsparse_csr_dense_tcrossprod, 3},
     {"_rsparse_dense_csc_prod", (DL_FUNC) &_rsparse_dense_csc_prod, 3},
     {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 7},

@@ -69,6 +69,18 @@ copy_csr_arbitrary <- function(indptr, indices, values, rows_take, cols_take) {
     .Call(`_rsparse_copy_csr_arbitrary`, indptr, indices, values, rows_take, cols_take)
 }
 
+repeat_indices_n_times <- function(indices, remainder, ix_length, desired_length) {
+    .Call(`_rsparse_repeat_indices_n_times`, indices, remainder, ix_length, desired_length)
+}
+
+concat_indptr2 <- function(ptr1, ptr2) {
+    .Call(`_rsparse_concat_indptr2`, ptr1, ptr2)
+}
+
+concat_csr_batch <- function(objects, out) {
+    .Call(`_rsparse_concat_csr_batch`, objects, out)
+}
+
 csr_dense_tcrossprod <- function(x_csr_r, y_transposed, num_threads = 1L) {
     .Call(`_rsparse_csr_dense_tcrossprod`, x_csr_r, y_transposed, num_threads)
 }

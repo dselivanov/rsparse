@@ -106,9 +106,21 @@ test_that("RsparseMatrix subset with boolean", {
   expect_equal(m[, long_vec_cols], as(m_csc[, long_vec_cols], "RsparseMatrix"))
   expect_equal(m[c(TRUE, FALSE, TRUE), ], as(m_csc[c(TRUE, FALSE, TRUE), ], "RsparseMatrix"))
   expect_equal(m[, c(TRUE, FALSE, TRUE)], as(m_csc[, c(TRUE, FALSE, TRUE)], "RsparseMatrix"))
+  expect_equal(m[as(c(TRUE, FALSE, TRUE), "nsparseVector"), ], as(m_csc[c(TRUE, FALSE, TRUE), ], "RsparseMatrix"))
+  expect_equal(m[, as(c(TRUE, FALSE, TRUE), "nsparseVector")], as(m_csc[, c(TRUE, FALSE, TRUE)], "RsparseMatrix"))
 
   expect_equal(m[FALSE, ], as(m_csc[FALSE, ], "RsparseMatrix"))
   expect_equal(m[, FALSE], as(m_csc[, FALSE], "RsparseMatrix"))
   expect_equal(m[FALSE, FALSE], as(m_csc[FALSE, FALSE], "RsparseMatrix"))
   expect_equal(m[TRUE, TRUE], as(m_csc[TRUE, TRUE], "RsparseMatrix"))
+})
+
+test_that("RsparseMatrix other classes", {
+  m_bin = as.csr.matrix(m, binary=TRUE)
+  m_bool = as(as(as.csc.matrix(m), "lgCMatrix"), "RsparseMatrix")
+  m_tri = as(new("dtTMatrix", x= c(3,7), i= 0:1, j=3:2, Dim= as.integer(c(4,4))), "RsparseMatrix")
+
+  expect_equal(as.matrix(m_bin[1:10, 4:20]), as.matrix(m_bin)[1:10, 4:20])
+  expect_equal(as.matrix(m_bool[1:10, 4:20]), as.matrix(m_bool)[1:10, 4:20])
+  expect_equal(as.matrix(m_tri[1:2, 2:3]), as.matrix(m_tri)[1:2, 2:3])
 })

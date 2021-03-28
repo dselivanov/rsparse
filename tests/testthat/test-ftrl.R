@@ -11,7 +11,7 @@ y = sample(c(0, 1), N_SMPL, TRUE)
 x = sample(c(-1, 1), NNZ, TRUE)
 odd = seq(1, 99, 2)
 x[i %in% which(y == 1) & j %in% odd] = 1
-m = sparseMatrix(i = i, j = j, x = x, dims = c(N_SMPL, N_FEAT), giveCsparse = FALSE)
+m = sparseMatrix(i = i, j = j, x = x, dims = c(N_SMPL, N_FEAT), repr = "T")
 x = as(m, "RsparseMatrix")
 
 

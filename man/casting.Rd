@@ -7,38 +7,50 @@
 \alias{as.coo.matrix}
 \title{Conversions between matrix types}
 \usage{
-as.csr.matrix(x, binary = FALSE)
+as.csr.matrix(x, binary = FALSE, logical = FALSE)
 
-as.csc.matrix(x, binary = FALSE)
+as.csc.matrix(x, binary = FALSE, logical = FALSE)
 
-as.coo.matrix(x, binary = FALSE)
+as.coo.matrix(x, binary = FALSE, logical = FALSE)
 }
 \arguments{
-\item{x}{A matrix which is to be converted to a different format.}
+\item{x}{A matrix which is to be converted to a different format.
+
+Supported input types are:\itemize{
+\item Sparse matrices from `Matrix` package, in any format.
+\item Sparse vectors from `Matrix` in any format.
+\item Dense matrices from base R (class `matrix`).
+\item Dense vectors from base R (classes `numeric`, `integer`, `logical`).
+\item Dense matrix or vector from package `float` (class `float32`).
+\item `data.frame`, `data.table`, and `tibble`.
+}}
 
 \item{binary}{Whether the result should be a binary-only matrix (inheriting from
 class `nsparseMatrix` - these don't have slot `x`).
-Supported input types are:\itemize{
-\item Sparse matrices from `Matrix` package, in any format.
-\item Sparse vector from `Matrix` (class `dsparseVector`).
-\item Dense matrix from base R.
-\item Dense vector from base R (classes `numeric` and `integer`).
-\item Dense matrix or vector from package `float` (class `float32`).
-\item `data.frame` and `data.table`.
-}}
+Can only pass one of `binary` or `logical`.}
+
+\item{logical}{Whether the result should be a matrix with logical (boolean) type
+(inheriting from `lsparseMatrix`).
+Can only pass one of `binary` or `logical`.}
 }
 \value{
 A sparse matrix, with format:\itemize{
 \item CSR (a.k.a. `RsparseMatrix`) when calling `as.csr.matrix`
-(class `dgRMatrix` with `binary=FALSE`, class `ngRMatrix` with `binary=TRUE`).
+(class `dgRMatrix`, `ngRMatrix`, or `lgRMatrix`, depending on parameters `binary` and `logical`).
 \item CSC (a.k.a. `CsparseMatrix`) when calling `as.csc.matrix`
-(class `dgCMatrix` with `binary=FALSE`, class `ngCMatrix` with `binary=TRUE`).
+(class `dgCMatrix`, `ngCMatrix`, or `lgCMatrix`, depending on parameters `binary` and `logical`).
 \item COO (a.k.a. `TsparseMatrix`) when calling `as.coo.matrix`
-(class `dgTMatrix` with `binary=FALSE`, class `ngTMatrix` with `binary=TRUE`).
+(class `dgTMatrix`, `ngTMatrix`, or `lgTMatrix`, depending on parameters `binary` and `logical`).
 }
 }
 \description{
-Convenience functions for converting to different sparse matrix formats.
+Convenience functions for converting to different sparse matrix formats,
+between pairs of classes which might not be supported in the `Matrix` package.
+
+These come in the form of explicit functions 'as.<type>.matrix' (see below),
+as well as registered conversion methods to use along with `as(object, type)`, adding
+extra conversion routes which are missing in the `Matrix` package for output
+types `dgRMatrix`, `lgRMatrix`, and `ngRMatrix`.
 }
 \details{
 The functions internally use as(x, "?sparseMatrix"), so they might work
@@ -63,4 +75,9 @@ as.csr.matrix(m.f32)
 
 library(data.table)
 as.coo.matrix(data.table(col1=1:3))
+
+### Using the new conversion methods
+### (these would fail if 'rsparse' is not loaded)
+as(matrix(1:3), "ngRMatrix")
+as(as.csc.matrix(m.coo), "dgRMatrix")
 }
