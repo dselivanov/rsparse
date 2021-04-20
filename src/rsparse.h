@@ -3,6 +3,8 @@
 #include "mapped_csr.hpp"
 
 #include <stdexcept>
+#include <limits>
+#include <cmath>
 
 #ifdef _OPENMP
 #include <omp.h>

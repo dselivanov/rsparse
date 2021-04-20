@@ -31,11 +31,68 @@ arma::Col<T> cg_solver_implicit(const arma::Mat<T>& X_nnz, const arma::Col<T>& c
   return x;
 }
 
+/* FIXME: 'global_bias_base' used like this has very poor numerical precision and ends up making things worse */
+template <class T>
+arma::Col<T> cg_solver_implicit_global_bias(const arma::Mat<T>& X_nnz, const arma::Col<T>& confidence,
+                                            const arma::Col<T>& x_old, const arma::uword n_iter,
+                                            const arma::Mat<T>& XtX,   const arma::Col<T> global_bias_base,
+                                            T global_bias) {
+  arma::Col<T> x = x_old;
+  const arma::Col<T> confidence_1 = confidence - 1.0;
+
+  arma::Col<T> Ap;
+  arma::Col<T> r = X_nnz * (confidence - (confidence_1 % (X_nnz.t() * x + global_bias))) - XtX * x + global_bias_base;
+  arma::Col<T> p = r;
+  double rsold, rsnew, alpha;
+  rsold = arma::dot(r, r);
+
+  for (auto k = 0; k < n_iter; k++) {
+    Ap = XtX * p + X_nnz * (confidence_1 % (X_nnz.t() * p));
+    alpha = rsold / dot(p, Ap);
+    x += alpha * p;
+    r -= alpha * Ap;
+    rsnew = dot(r, r);
+    if (rsnew < CG_TOL) break;
+    p = r + p * (rsnew / rsold);
+    rsold = rsnew;
+  }
+  return x;
+}
+
+template <class T>
+arma::Col<T> cg_solver_implicit_user_item_bias(const arma::Mat<T>& X_nnz, const arma::Col<T>& confidence,
+                                               const arma::Col<T>& x_old, const arma::uword n_iter,
+                                               const arma::Mat<T>& XtX,   const arma::Col<T> &rhs_init,
+                                               const arma::Col<T> &x_biases, T global_bias) {
+  arma::Col<T> x = x_old;
+  const arma::Col<T> confidence_1 = confidence - 1.0;
+
+  arma::Col<T> Ap;
+  arma::Col<T> r = X_nnz * (confidence - (confidence_1 % (X_nnz.t() * x + x_biases + global_bias)))
+                    - XtX * x + rhs_init;
+  arma::Col<T> p = r;
+  double rsold, rsnew, alpha;
+  rsold = arma::dot(r, r);
+
+  for (auto k = 0; k < n_iter; k++) {
+    Ap = XtX * p + X_nnz * (confidence_1 % (X_nnz.t() * p));
+    alpha = rsold / dot(p, Ap);
+    x += alpha * p;
+    r -= alpha * Ap;
+    rsnew = dot(r, r);
+    if (rsnew < CG_TOL) break;
+    p = r + p * (rsnew / rsold);
+    rsold = rsnew;
+  }
+  return x;
+}
+
 template <class T>
 T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
-               const arma::Mat<T>& XtX, double lambda, unsigned n_threads,
-               unsigned solver, unsigned cg_steps, const bool with_biases,
-               bool is_x_bias_last_row) {
+               const arma::Mat<T>& XtX, double lambda, int n_threads,
+               const unsigned int solver, unsigned int cg_steps, const bool with_biases,
+               const bool is_x_bias_last_row, double global_bias,
+               arma::Col<T> &global_bias_base, const bool initialize_bias_base) {
   // if is_x_bias_last_row == true
   // X = [1, ..., x_bias]
   // Y = [y_bias, ..., 1]
@@ -47,6 +104,12 @@ T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
 
   arma::Col<T> x_biases;
   arma::Mat<T> rhs_init;
+
+  if (global_bias < std::sqrt(std::numeric_limits<T>::epsilon()))
+    global_bias = 0;
+
+  if (global_bias && initialize_bias_base && !with_biases)
+    global_bias_base = arma::sum(X, 1) * (-global_bias);
 
   if (with_biases) {
     if (is_x_bias_last_row)  // last row
@@ -78,16 +141,27 @@ T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
     //    X_nnz_user * 1 * (0 - x_biases_nnz_user) +
     //    X_nnz_user * C_nnz_user * (1 - x_biases_nnz_user)
 
-    // here we do following:
-    // drop row with "ones" placeholder for convenient ALS form
-    rhs_init = drop_row<T>(X, is_x_bias_last_row);
-    // p = 0
-    // C = 1 (so we omit multiplication on eye matrix)
-    // rhs = X * eye * (0 - x_biases) = -X * x_biases
-    rhs_init *= -x_biases;
+    if (!global_bias) {
+      // here we do following:
+      // drop row with "ones" placeholder for convenient ALS form
+      rhs_init = drop_row<T>(X, is_x_bias_last_row);
+      // p = 0
+      // C = 1 (so we omit multiplication on eye matrix)
+      // rhs = X * eye * (0 - x_biases) = -X * x_biases
+      rhs_init *= -x_biases;
+    }
+
+    else {
+      rhs_init = - (drop_row<T>(X, is_x_bias_last_row) * (x_biases + global_bias));
+    }
   }
 
-  T loss = 0;
+  else if (global_bias) {
+    rhs_init = arma::Mat<T>(&global_bias_base[0], rank - (int)with_biases, 1, false, true);
+  }
+
+
+  double loss = 0;
   size_t nc = Conf.n_cols;
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE) reduction(+:loss)
@@ -114,7 +188,15 @@ T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
       arma::Col<T> Y_new;
 
       if (solver == CONJUGATE_GRADIENT) {
-        Y_new = cg_solver_implicit<T>(X_nnz, confidence, init, cg_steps, XtX);
+        if (!with_biases && !global_bias)
+          Y_new = cg_solver_implicit<T>(X_nnz, confidence, init, cg_steps, XtX);
+        else if (with_biases)
+          Y_new = cg_solver_implicit_user_item_bias<T>(X_nnz, confidence, init, cg_steps, XtX,
+                                                       rhs_init, x_biases(idx), global_bias);
+        else
+          Y_new = cg_solver_implicit_global_bias<T>(X_nnz, confidence, init, cg_steps, XtX,
+                                                    rhs_init, global_bias);
+
       } else {
         const arma::Mat<T> lhs =
             XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
@@ -137,6 +219,8 @@ T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
           // expression above can be simplified further:
           rhs = rhs_init + X_nnz * (confidence - x_biases(idx) % (confidence - 1));
 
+        } else if (global_bias) {
+          rhs = X_nnz * confidence + rhs_init;
         } else {
           rhs = X_nnz * confidence;
         }
