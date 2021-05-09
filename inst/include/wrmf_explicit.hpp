@@ -32,8 +32,8 @@ arma::Col<T> cg_solver_explicit(const arma::Mat<T>& X_nnz, const arma::Col<T>& c
 
 template <class T>
 T als_explicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
-               const double lambda, const unsigned n_threads, const unsigned solver,
-               const unsigned cg_steps, const bool dynamic_lambda,
+               const double lambda, const int n_threads, const unsigned int solver,
+               const unsigned int cg_steps, const bool dynamic_lambda,
                const arma::Col<T>& cnt_X, const bool with_biases,
                const bool is_x_bias_last_row) {
   /* Note about biases:
@@ -63,7 +63,7 @@ T als_explicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
       x_biases = X.row(0).t();
   }
 
-  T loss = 0;
+  double loss = 0;
   size_t nc = Conf.n_cols;
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE) reduction(+:loss)

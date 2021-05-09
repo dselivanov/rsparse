@@ -16,8 +16,7 @@ y = sample(c(0, 1), 1000, TRUE)
 x = sample(c(-1, 1), 1000 * 100, TRUE)
 odd = seq(1, 99, 2)
 x[i \%in\% which(y == 1) & j \%in\% odd] = 1
-m = sparseMatrix(i = i, j = j, x = x, dims = c(1000, 1000), giveCsparse = FALSE)
-x = as(m, "RsparseMatrix")
+x = sparseMatrix(i = i, j = j, x = x, dims = c(1000, 1000), repr="R")
 
 ftrl = FTRL$new(learning_rate = 0.01, learning_rate_decay = 0.1,
 lambda = 10, l1_ratio = 1, dropout = 0)
@@ -26,7 +25,7 @@ ftrl$partial_fit(x, y)
 w = ftrl$coef()
 head(w)
 sum(w != 0)
-p = ftrl$predict(m)
+p = ftrl$predict(x)
 }
 \section{Methods}{
 \subsection{Public methods}{

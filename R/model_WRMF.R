@@ -87,18 +87,6 @@ WRMF = R6::R6Class(
       solver = match.arg(solver)
       feedback = match.arg(feedback)
 
-      if (feedback == 'implicit') {
-        # FIXME
-
-        if (solver == "conjugate_gradient" && with_user_item_bias == TRUE) {
-          msg = paste("'conjugate_gradient' is not supported for a model",
-            "`with_user_item_bias == TRUE`. Setting to 'cholesky'."
-          )
-          warning(msg)
-          solver = "cholesky"
-        }
-        with_global_bias = FALSE
-      }
       private$non_negative = ifelse(solver == "nnls", TRUE, FALSE)
 
       if (private$non_negative && with_global_bias == TRUE) {
@@ -141,7 +129,10 @@ WRMF = R6::R6Class(
             precision = private$precision,
             with_user_item_bias = private$with_user_item_bias,
             is_bias_last_row = is_bias_last_row,
-            XtX = XtX)
+            global_bias = self$global_bias,
+            initialize_bias_base = !avoid_cg,
+            XtX = XtX,
+            global_bias_base = self$global_bias_base)
         } else {
           als_explicit(
             x, X, Y, cnt_X,
@@ -162,7 +153,8 @@ WRMF = R6::R6Class(
                      initialize_biases_double,
                      initialize_biases_float)
         FUN(c_ui, c_iu, user_bias, item_bias, private$lambda, private$dynamic_lambda,
-            private$non_negative, private$with_global_bias)
+            private$non_negative, private$with_global_bias, feedback == "explicit",
+            private$solver_code != 1)
       }
 
       self$components = init
@@ -211,28 +203,43 @@ WRMF = R6::R6Class(
         private$U = large_rand_matrix(private$rank, n_user)
         # for item biases
         if (private$with_user_item_bias) {
-          private$U[1, ] = rep(1.0, n_user)
+          private$U[1L, ] = rep(1.0, n_user)
         }
       } else {
         private$U = flrnorm(private$rank, n_user, 0, 0.01)
         if (private$with_user_item_bias) {
-          private$U[1, ] = float::fl(rep(1.0, n_user))
+          private$U[1L, ] = float::fl(rep(1.0, n_user))
         }
       }
 
       if (is.null(self$components)) {
-        if (private$precision == "double") {
-          self$components = large_rand_matrix(private$rank, n_item)
-          # for user biases
-          if (private$with_user_item_bias) {
-            self$components[private$rank, ] = rep(1.0, n_item)
+
+        if (private$solver_code == 1L) { ### <- cholesky
+          if (private$precision == "double") {
+            self$components = matrix(0, private$rank, n_item)
+            if (private$with_user_item_bias) {
+              self$components[private$rank, ] = rep(1.0, n_item)
+            }
+          } else {
+            self$components = float::float(0, private$rank, n_item)
+            if (private$with_user_item_bias) {
+              self$components[private$rank, ] = float::fl(rep(1.0, n_item))
+            }
           }
-        } else {
-          self$components = flrnorm(private$rank, n_item, 0, 0.01)
-          if (private$with_user_item_bias) {
-            self$components[private$rank, ] = float::fl(rep(1.0, n_item))
+          } else {
+            if (private$precision == "double") {
+              self$components = large_rand_matrix(private$rank, n_item)
+              # for user biases
+              if (private$with_user_item_bias) {
+                self$components[private$rank, ] = rep(1.0, n_item)
+              }
+            } else {
+              self$components = flrnorm(private$rank, n_item, 0, 0.01)
+              if (private$with_user_item_bias) {
+                self$components[private$rank, ] = float::fl(rep(1.0, n_item))
+              }
+            }
           }
-        }
       } else {
         stopifnot(is.matrix(self$components) || is.float(self$components))
         stopifnot(ncol(self$components) == n_item)
@@ -268,10 +275,23 @@ WRMF = R6::R6Class(
         self$components[1L, ] = item_bias
         private$U[private$rank, ] = user_bias
         if(private$with_global_bias) self$global_bias = global_bias
-      } else if (private$feedback == "explicit" && private$with_global_bias) {
-        self$global_bias = mean(c_ui@x)
-        c_ui@x = c_ui@x - self$global_bias
-        c_iu@x = c_iu@x - self$global_bias
+      } else if (private$with_global_bias) {
+        if (private$feedback == "explicit") {
+          self$global_bias = mean(c_ui@x)
+          c_ui@x = c_ui@x - self$global_bias
+          c_iu@x = c_iu@x - self$global_bias
+        } else {
+          s = sum(c_ui@x)
+          self$global_bias = s / (s + as.numeric(nrow(c_ui))*as.numeric(ncol(c_ui)) - length(c_ui@x))
+        }
+      }
+
+      if (private$feedback == "implicit") {
+        size_global_bias_base = ifelse(private$with_user_item_bias, 0L, private$rank-1L)
+        if (private$precision == "double")
+          self$global_bias_base = numeric(size_global_bias_base)
+        else
+          self$global_bias_base = float(size_global_bias_base)
       }
 
       logger$info("starting factorization with %d threads", getOption("rsparse_omp_threads", 1L))
@@ -350,7 +370,7 @@ WRMF = R6::R6Class(
 
       x = as(x, "CsparseMatrix")
       x = private$preprocess(x)
-      if (self$global_bias != 0.)
+      if (self$global_bias != 0. && private$feedback == "explicit")
         x@x = x@x - self$global_bias
 
       if (private$precision == "double") {
@@ -420,7 +440,10 @@ als_implicit = function(
   precision,
   with_user_item_bias,
   is_bias_last_row,
-  XtX = NULL) {
+  initialize_bias_base,
+  global_bias = 0.,
+  XtX = NULL,
+  global_bias_base = NULL) {
 
   solver = ifelse(precision == "float",
                   als_implicit_float,
@@ -437,8 +460,15 @@ als_implicit = function(
     }
     XtX = tcrossprod(XX) + ridge
   }
+  if (is.null(global_bias_base)) {
+    global_bias_base = numeric()
+    if (precision == "float")
+      global_bias_base = float::fl(global_bias_base)
+  }
   # Y is modified in-place
-  loss = solver(x, X, Y, XtX, lambda, n_threads, solver_code, cg_steps, with_user_item_bias, is_bias_last_row)
+  loss = solver(x, X, Y, XtX, lambda, n_threads, solver_code, cg_steps,
+                with_user_item_bias, is_bias_last_row, global_bias,
+                global_bias_base, initialize_bias_base)
 }
 
 als_explicit = function(
