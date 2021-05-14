@@ -8,13 +8,12 @@ double initialize_biases_double(const Rcpp::S4& m_csc_r, const Rcpp::S4& m_csr_r
                                 arma::Col<double>& item_bias, double lambda,
                                 bool dynamic_lambda, bool non_negative,
                                 bool calculate_global_bias = false,
-                                bool is_explicit_feedback = false,
-                                const bool initialize_item_biases = false) {
+                                bool is_explicit_feedback = false) {
   dMappedCSC ConfCSC = extract_mapped_csc(m_csc_r);
   dMappedCSC ConfCSR = extract_mapped_csc(m_csr_r);
   return initialize_biases<double>(ConfCSC, ConfCSR, user_bias, item_bias, lambda,
                                    dynamic_lambda, non_negative, calculate_global_bias,
-                                   is_explicit_feedback, initialize_item_biases);
+                                   is_explicit_feedback);
 }
 
 // [[Rcpp::export]]
@@ -22,8 +21,7 @@ double initialize_biases_float(const Rcpp::S4& m_csc_r, const Rcpp::S4& m_csr_r,
                                Rcpp::S4& user_bias, Rcpp::S4& item_bias, double lambda,
                                bool dynamic_lambda, bool non_negative,
                                bool calculate_global_bias = false,
-                               bool is_explicit_feedback = false,
-                                const bool initialize_item_biases = false) {
+                               bool is_explicit_feedback = false) {
   dMappedCSC ConfCSC = extract_mapped_csc(m_csc_r);
   dMappedCSC ConfCSR = extract_mapped_csc(m_csr_r);
 
@@ -32,6 +30,5 @@ double initialize_biases_float(const Rcpp::S4& m_csc_r, const Rcpp::S4& m_csr_r,
 
   return initialize_biases<float>(ConfCSC, ConfCSR, user_bias_arma, item_bias_arma,
                                   lambda, dynamic_lambda, non_negative,
-                                  calculate_global_bias, is_explicit_feedback,
-                                  initialize_item_biases);
+                                  calculate_global_bias, is_explicit_feedback);
 }

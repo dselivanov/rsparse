@@ -153,8 +153,7 @@ WRMF = R6::R6Class(
                      initialize_biases_double,
                      initialize_biases_float)
         FUN(c_ui, c_iu, user_bias, item_bias, private$lambda, private$dynamic_lambda,
-            private$non_negative, private$with_global_bias, feedback == "explicit",
-            private$solver_code != 1)
+            private$non_negative, private$with_global_bias, feedback == "explicit")
       }
 
       self$components = init
