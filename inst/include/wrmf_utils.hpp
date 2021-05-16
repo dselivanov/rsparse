@@ -98,8 +98,8 @@ double initialize_biases_implicit(dMappedCSC& ConfCSC, dMappedCSC& ConfCSR,
   const int n_items = ConfCSR.n_rows;
   std::vector<double> user_means(n_users);
   std::vector<double> item_means(n_items);
-  std::vector<double> user_adjustment(n_users, DBL_EPSILON); /* <- avoid division by zero */
-  std::vector<double> item_adjustment(n_items, DBL_EPSILON); /* <- avoid division by zero */
+  std::vector<double> user_adjustment(n_users);
+  std::vector<double> item_adjustment(n_items);
   for (int row = 0; row < n_users; row++) {
     for (int ix = ConfCSR.col_ptrs[row]; ix < ConfCSR.col_ptrs[row + 1]; ix++)
       user_adjustment[row] += ConfCSR.values[ix];
