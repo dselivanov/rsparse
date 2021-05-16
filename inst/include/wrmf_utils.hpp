@@ -118,7 +118,6 @@ double initialize_biases_implicit(dMappedCSC& ConfCSC, dMappedCSC& ConfCSR,
       item_means[col] = item_adjustment[col] / (item_adjustment[col] + (double)(n_users - (ConfCSC.col_ptrs[col + 1] - ConfCSC.col_ptrs[col])));
       item_adjustment[col] += (double)(n_users - (ConfCSC.col_ptrs[col + 1] - ConfCSC.col_ptrs[col]));
       item_adjustment[col] /= item_adjustment[col] + lambda;
-
     } else {
       item_means[col] = 0;
       item_adjustment[col] = (double)n_users / ((double)n_users + lambda);
