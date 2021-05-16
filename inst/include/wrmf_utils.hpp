@@ -1,5 +1,4 @@
 #include "wrmf.hpp"
-#include <float.h>
 
 template <class T>
 arma::Mat<T> drop_row(const arma::Mat<T>& X_nnz, const bool drop_last) {
