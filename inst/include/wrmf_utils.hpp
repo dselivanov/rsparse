@@ -102,16 +102,16 @@ double initialize_biases_implicit(dMappedCSC& ConfCSC, dMappedCSC& ConfCSR,
   std::vector<double> item_adjustment(n_items, DBL_EPSILON); /* <- avoid division by zero */
   for (int row = 0; row < n_users; row++) {
     for (int ix = ConfCSR.col_ptrs[row]; ix < ConfCSR.col_ptrs[row + 1]; ix++)
-      user_means[row] += (ConfCSR.values[ix] * (1. - user_means[row])) / (user_adjustment[row] += ConfCSR.values[ix]);
+      user_adjustment[row] += ConfCSR.values[ix];
     user_adjustment[row] /= (user_adjustment[row] + (n_items - (ConfCSR.col_ptrs[row + 1] - ConfCSR.col_ptrs[row])));
-    user_means[row] *= user_adjustment[row];
+    user_means[row] = user_adjustment[row];
     user_adjustment[row] *= (user_adjustment[row] / (user_adjustment[row] + lambda));
   }
   for (int col = 0; col < n_items; col++) {
     for (int ix = ConfCSC.col_ptrs[col]; ix < ConfCSC.col_ptrs[col + 1]; ix++)
-      item_means[col] += (ConfCSC.values[ix] * (1. - item_means[col])) / (item_adjustment[col] += ConfCSC.values[ix]);
+      item_adjustment[col] += ConfCSC.values[ix];
     item_adjustment[col] /= (item_adjustment[col] + (n_users - (ConfCSC.col_ptrs[col + 1] - ConfCSC.col_ptrs[col])));
-    item_means[col] *= item_adjustment[col];
+    item_means[col] = item_adjustment[col];
     item_adjustment[col] *= (item_adjustment[col] / (item_adjustment[col] + lambda));
   }
 
