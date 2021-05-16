@@ -98,22 +98,31 @@ double initialize_biases_implicit(dMappedCSC& ConfCSC, dMappedCSC& ConfCSR,
   const int n_items = ConfCSR.n_rows;
   std::vector<double> user_means(n_users);
   std::vector<double> item_means(n_items);
-  /* FIXME: some tests will fail if these are initialized to zeros. Find out why. */
-  std::vector<double> user_adjustment(n_users, DBL_EPSILON);
-  std::vector<double> item_adjustment(n_items, DBL_EPSILON);
+  std::vector<double> user_adjustment(n_users);
+  std::vector<double> item_adjustment(n_items);
   for (int row = 0; row < n_users; row++) {
-    for (int ix = ConfCSR.col_ptrs[row]; ix < ConfCSR.col_ptrs[row + 1]; ix++)
-      user_adjustment[row] += ConfCSR.values[ix];
-    user_adjustment[row] /= (user_adjustment[row] + (n_items - (ConfCSR.col_ptrs[row + 1] - ConfCSR.col_ptrs[row])));
-    user_means[row] = user_adjustment[row];
-    user_adjustment[row] *= (user_adjustment[row] / (user_adjustment[row] + lambda));
+    if (ConfCSR.col_ptrs[row + 1] > ConfCSR.col_ptrs[row]) {
+      for (int ix = ConfCSR.col_ptrs[row]; ix < ConfCSR.col_ptrs[row + 1]; ix++)
+        user_adjustment[row] += ConfCSR.values[ix];
+      user_adjustment[row] /= (user_adjustment[row] + (n_items - (ConfCSR.col_ptrs[row + 1] - ConfCSR.col_ptrs[row])));
+      user_means[row] = user_adjustment[row];
+      user_adjustment[row] *= (user_adjustment[row] / (user_adjustment[row] + lambda));
+    } else {
+      user_means[row] = 0;
+      user_adjustment[row] = (double)n_items / ((double)n_items + lambda);
+    }
   }
   for (int col = 0; col < n_items; col++) {
-    for (int ix = ConfCSC.col_ptrs[col]; ix < ConfCSC.col_ptrs[col + 1]; ix++)
-      item_adjustment[col] += ConfCSC.values[ix];
-    item_adjustment[col] /= (item_adjustment[col] + (n_users - (ConfCSC.col_ptrs[col + 1] - ConfCSC.col_ptrs[col])));
-    item_means[col] = item_adjustment[col];
-    item_adjustment[col] *= (item_adjustment[col] / (item_adjustment[col] + lambda));
+    if (ConfCSC.col_ptrs[col + 1] > ConfCSC.col_ptrs[col]) {
+      for (int ix = ConfCSC.col_ptrs[col]; ix < ConfCSC.col_ptrs[col + 1]; ix++)
+        item_adjustment[col] += ConfCSC.values[ix];
+      item_adjustment[col] /= (item_adjustment[col] + (n_users - (ConfCSC.col_ptrs[col + 1] - ConfCSC.col_ptrs[col])));
+      item_means[col] = item_adjustment[col];
+      item_adjustment[col] *= (item_adjustment[col] / (item_adjustment[col] + lambda));
+    } else {
+      item_means[col] = 0;
+      item_adjustment[col] = (double)n_users / ((double)n_users + lambda);
+    }
   }
 
 
