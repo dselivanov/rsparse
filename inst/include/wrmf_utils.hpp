@@ -103,9 +103,9 @@ double initialize_biases_implicit(dMappedCSC& ConfCSC, dMappedCSC& ConfCSR,
     if (ConfCSR.col_ptrs[row + 1] > ConfCSR.col_ptrs[row]) {
       for (int ix = ConfCSR.col_ptrs[row]; ix < ConfCSR.col_ptrs[row + 1]; ix++)
         user_adjustment[row] += ConfCSR.values[ix];
-      user_adjustment[row] /= (user_adjustment[row] + (n_items - (ConfCSR.col_ptrs[row + 1] - ConfCSR.col_ptrs[row])));
-      user_means[row] = user_adjustment[row];
-      user_adjustment[row] *= (user_adjustment[row] / (user_adjustment[row] + lambda));
+      user_means[row] = user_adjustment[row] / (user_adjustment[row] + (double)(n_items - (ConfCSR.col_ptrs[row + 1] - ConfCSR.col_ptrs[row])));
+      user_adjustment[row] += (double)(n_items - (ConfCSR.col_ptrs[row + 1] - ConfCSR.col_ptrs[row]));
+      user_adjustment[row] /= user_adjustment[row] + lambda;
     } else {
       user_means[row] = 0;
       user_adjustment[row] = (double)n_items / ((double)n_items + lambda);
@@ -115,9 +115,10 @@ double initialize_biases_implicit(dMappedCSC& ConfCSC, dMappedCSC& ConfCSR,
     if (ConfCSC.col_ptrs[col + 1] > ConfCSC.col_ptrs[col]) {
       for (int ix = ConfCSC.col_ptrs[col]; ix < ConfCSC.col_ptrs[col + 1]; ix++)
         item_adjustment[col] += ConfCSC.values[ix];
-      item_adjustment[col] /= (item_adjustment[col] + (n_users - (ConfCSC.col_ptrs[col + 1] - ConfCSC.col_ptrs[col])));
-      item_means[col] = item_adjustment[col];
-      item_adjustment[col] *= (item_adjustment[col] / (item_adjustment[col] + lambda));
+      item_means[col] = item_adjustment[col] / (item_adjustment[col] + (double)(n_users - (ConfCSC.col_ptrs[col + 1] - ConfCSC.col_ptrs[col])));
+      item_adjustment[col] += (double)(n_users - (ConfCSC.col_ptrs[col + 1] - ConfCSC.col_ptrs[col]));
+      item_adjustment[col] /= item_adjustment[col] + lambda;
+
     } else {
       item_means[col] = 0;
       item_adjustment[col] = (double)n_users / ((double)n_users + lambda);
