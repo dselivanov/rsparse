@@ -148,10 +148,9 @@ double initialize_biases_implicit(dMappedCSC& ConfCSC, dMappedCSC& ConfCSR,
 
     /* user biases */
     bias_mean = 0;
-    if (iter > 0) {
-      for (int col = 0; col < n_items; col++)
-        bias_mean += (item_bias[col] - bias_mean) / (T)(col + 1);
-    }
+    for (int col = 0; col < n_items; col++)
+      bias_mean += (item_bias[col] - bias_mean) / (T)(col + 1);
+
     for (int row = 0; row < n_users; row++) {
       wsum = n_items;
       bias_this = bias_mean;
