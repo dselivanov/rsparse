@@ -184,9 +184,9 @@ WRMF = R6::R6Class(
         })
       }
 
-      c_ui = as(x, "CsparseMatrix")
+      c_ui = MatrixExtra::as.csc.matrix(x)
       c_ui = private$preprocess(c_ui)
-      c_iu = t(c_ui)
+      c_iu = MatrixExtra::t_shallow(MatrixExtra::as.csr.matrix(x))
       # store item_ids in order to use them in predict method
       private$item_ids = colnames(c_ui)
 
@@ -353,11 +353,22 @@ WRMF = R6::R6Class(
     },
     # project new users into latent user space - just make ALS step given fixed items matrix
     #' @description create user embeddings for new input
-    #' @param x user-item iteraction matrix
+    #' @param x user-item iteraction matrix (preferrably as `dgRMatrix`)
     #' @param ... not used at the moment
     transform = function(x, ...) {
 
       stopifnot(ncol(x) == ncol(self$components))
+      if (inherits(x, "RsparseMatrix")) {
+        x = MatrixExtra::t_shallow(x)
+        x = MatrixExtra::as.csc.matrix(x)
+      } else if (inherits(x, "CsparseMatrix")) {
+        x = MatrixExtra::t_deep(x)
+        x = MatrixExtra::as.csc.matrix(x)
+      } else {
+        x = MatrixExtra::as.csr.matrix(x)
+        x = MatrixExtra::t_shallow(x)
+      }
+
       if (private$feedback == "implicit" ) {
         logger$trace("WRMF$transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
         blas_threads_keep = RhpcBLASctl::blas_get_num_procs()
@@ -368,15 +379,14 @@ WRMF = R6::R6Class(
         })
       }
 
-      x = as(x, "CsparseMatrix")
       x = private$preprocess(x)
       if (self$global_bias != 0. && private$feedback == "explicit")
         x@x = x@x - self$global_bias
 
       if (private$precision == "double") {
-        res = matrix(0, nrow = private$rank, ncol = nrow(x))
+        res = matrix(0, nrow = private$rank, ncol = ncol(x))
       } else {
-        res = float(0, nrow = private$rank, ncol = nrow(x))
+        res = float(0, nrow = private$rank, ncol = ncol(x))
       }
 
       if (private$with_user_item_bias) {
@@ -384,7 +394,7 @@ WRMF = R6::R6Class(
       }
 
       loss = private$solver(
-        t(x),
+        x,
         self$components,
         res,
         is_bias_last_row = FALSE,
@@ -396,9 +406,9 @@ WRMF = R6::R6Class(
       res = t(res)
 
       if (private$precision == "double")
-        setattr(res, "dimnames", list(rownames(x), NULL))
+        setattr(res, "dimnames", list(colnames(x), NULL))
       else
-        setattr(res@Data, "dimnames", list(rownames(x), NULL))
+        setattr(res@Data, "dimnames", list(colnames(x), NULL))
 
       res
     }

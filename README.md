@@ -9,8 +9,6 @@
 
 `rsparse` is an R package for statistical learning primarily on **sparse matrices** -  **matrix factorizations, factorization machines, out-of-core regression**. Many of the implemented algorithms are particularly useful for **recommender systems** and **NLP**. 
 
-On top of that we provide some optimized routines to work on sparse matrices - multithreaded <dense, sparse> matrix multiplications and improved support for sparse matrices in CSR format (`Matrix::RsparseMatrix`), as well as convenience functions to convert between matrix types.
-
 We've paid some attention to the implementation details - we try to avoid data copies, utilize multiple threads via OpenMP and use SIMD where appropriate. Package **allows to work on datasets with millions of rows and millions of columns**.
 
 
@@ -50,11 +48,9 @@ See details in [Applications of the Conjugate Gradient Method for Implicit Feedb
     * This is usually used to train word embeddings, but actually also very useful for recommender systems.
 1. Matrix scaling as descibed in [EigenRec: Generalizing PureSVD for Effective and Efficient Top-N Recommendations](https://arxiv.org/pdf/1511.06033.pdf)
 
-### Optimized matrix operations
+*********************
 
-1. multithreaded `%*%` and `tcrossprod()` for `<dgRMatrix, matrix>`
-1. multithreaded `%*%` and `crossprod()` for `<matrix, dgCMatrix>`
-1. natively slice `CSR` matrices (`Matrix::RsparseMatrix`) without converting them to triplet / CSC
+_Note: the optimized matrix operations which `rparse` used to offer have been moved to a [separate package](https://github.com/david-cortes/MatrixExtra)_
 
 # Installation 
 

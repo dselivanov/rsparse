@@ -170,7 +170,7 @@ create user embeddings for new input
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{x}}{user-item iteraction matrix}
+\item{\code{x}}{user-item iteraction matrix (preferrably as `dgRMatrix`)}
 
 \item{\code{...}}{not used at the moment}
 }

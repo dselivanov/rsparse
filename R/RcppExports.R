@@ -53,30 +53,6 @@ arma_kmeans <- function(x, k, seed_mode, n_iter, verbose, result) {
     .Call(`_rsparse_arma_kmeans`, x, k, seed_mode, n_iter, verbose, result)
 }
 
-check_is_seq <- function(indices) {
-    .Call(`_rsparse_check_is_seq`, indices)
-}
-
-copy_csr_rows <- function(indptr, indices, values, rows_take) {
-    .Call(`_rsparse_copy_csr_rows`, indptr, indices, values, rows_take)
-}
-
-copy_csr_rows_col_seq <- function(indptr, indices, values, rows_take, cols_take) {
-    .Call(`_rsparse_copy_csr_rows_col_seq`, indptr, indices, values, rows_take, cols_take)
-}
-
-copy_csr_arbitrary <- function(indptr, indices, values, rows_take, cols_take) {
-    .Call(`_rsparse_copy_csr_arbitrary`, indptr, indices, values, rows_take, cols_take)
-}
-
-csr_dense_tcrossprod <- function(x_csr_r, y_transposed, num_threads = 1L) {
-    .Call(`_rsparse_csr_dense_tcrossprod`, x_csr_r, y_transposed, num_threads)
-}
-
-dense_csc_prod <- function(x_r, y_csc_r, num_threads = 1L) {
-    .Call(`_rsparse_dense_csc_prod`, x_r, y_csc_r, num_threads)
-}
-
 top_product <- function(x, y, k, n_threads, not_recommend_r, exclude, glob_mean = 0.) {
     .Call(`_rsparse_top_product`, x, y, k, n_threads, not_recommend_r, exclude, glob_mean)
 }

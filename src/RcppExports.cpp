@@ -180,87 +180,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// check_is_seq
-bool check_is_seq(Rcpp::IntegerVector indices);
-RcppExport SEXP _rsparse_check_is_seq(SEXP indicesSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
-    rcpp_result_gen = Rcpp::wrap(check_is_seq(indices));
-    return rcpp_result_gen;
-END_RCPP
-}
-// copy_csr_rows
-Rcpp::List copy_csr_rows(Rcpp::IntegerVector indptr, Rcpp::IntegerVector indices, Rcpp::NumericVector values, Rcpp::IntegerVector rows_take);
-RcppExport SEXP _rsparse_copy_csr_rows(SEXP indptrSEXP, SEXP indicesSEXP, SEXP valuesSEXP, SEXP rows_takeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type rows_take(rows_takeSEXP);
-    rcpp_result_gen = Rcpp::wrap(copy_csr_rows(indptr, indices, values, rows_take));
-    return rcpp_result_gen;
-END_RCPP
-}
-// copy_csr_rows_col_seq
-Rcpp::List copy_csr_rows_col_seq(Rcpp::IntegerVector indptr, Rcpp::IntegerVector indices, Rcpp::NumericVector values, Rcpp::IntegerVector rows_take, Rcpp::IntegerVector cols_take);
-RcppExport SEXP _rsparse_copy_csr_rows_col_seq(SEXP indptrSEXP, SEXP indicesSEXP, SEXP valuesSEXP, SEXP rows_takeSEXP, SEXP cols_takeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type rows_take(rows_takeSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type cols_take(cols_takeSEXP);
-    rcpp_result_gen = Rcpp::wrap(copy_csr_rows_col_seq(indptr, indices, values, rows_take, cols_take));
-    return rcpp_result_gen;
-END_RCPP
-}
-// copy_csr_arbitrary
-Rcpp::List copy_csr_arbitrary(Rcpp::IntegerVector indptr, Rcpp::IntegerVector indices, Rcpp::NumericVector values, Rcpp::IntegerVector rows_take, Rcpp::IntegerVector cols_take);
-RcppExport SEXP _rsparse_copy_csr_arbitrary(SEXP indptrSEXP, SEXP indicesSEXP, SEXP valuesSEXP, SEXP rows_takeSEXP, SEXP cols_takeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indptr(indptrSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type indices(indicesSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type values(valuesSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type rows_take(rows_takeSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type cols_take(cols_takeSEXP);
-    rcpp_result_gen = Rcpp::wrap(copy_csr_arbitrary(indptr, indices, values, rows_take, cols_take));
-    return rcpp_result_gen;
-END_RCPP
-}
-// csr_dense_tcrossprod
-Rcpp::NumericMatrix csr_dense_tcrossprod(const Rcpp::S4& x_csr_r, const arma::Mat<double>& y_transposed, int num_threads);
-RcppExport SEXP _rsparse_csr_dense_tcrossprod(SEXP x_csr_rSEXP, SEXP y_transposedSEXP, SEXP num_threadsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Rcpp::S4& >::type x_csr_r(x_csr_rSEXP);
-    Rcpp::traits::input_parameter< const arma::Mat<double>& >::type y_transposed(y_transposedSEXP);
-    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(csr_dense_tcrossprod(x_csr_r, y_transposed, num_threads));
-    return rcpp_result_gen;
-END_RCPP
-}
-// dense_csc_prod
-Rcpp::NumericMatrix dense_csc_prod(const Rcpp::NumericMatrix& x_r, const Rcpp::S4& y_csc_r, int num_threads);
-RcppExport SEXP _rsparse_dense_csc_prod(SEXP x_rSEXP, SEXP y_csc_rSEXP, SEXP num_threadsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type x_r(x_rSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::S4& >::type y_csc_r(y_csc_rSEXP);
-    Rcpp::traits::input_parameter< int >::type num_threads(num_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(dense_csc_prod(x_r, y_csc_r, num_threads));
-    return rcpp_result_gen;
-END_RCPP
-}
 // top_product
 Rcpp::IntegerMatrix top_product(const arma::mat& x, const arma::mat& y, unsigned k, unsigned n_threads, const Rcpp::S4& not_recommend_r, const Rcpp::IntegerVector& exclude, const double glob_mean);
 RcppExport SEXP _rsparse_top_product(SEXP xSEXP, SEXP ySEXP, SEXP kSEXP, SEXP n_threadsSEXP, SEXP not_recommend_rSEXP, SEXP excludeSEXP, SEXP glob_meanSEXP) {
@@ -545,12 +464,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_fm_partial_fit", (DL_FUNC) &_rsparse_fm_partial_fit, 6},
     {"_rsparse_is_invalid_ptr", (DL_FUNC) &_rsparse_is_invalid_ptr, 1},
     {"_rsparse_arma_kmeans", (DL_FUNC) &_rsparse_arma_kmeans, 6},
-    {"_rsparse_check_is_seq", (DL_FUNC) &_rsparse_check_is_seq, 1},
-    {"_rsparse_copy_csr_rows", (DL_FUNC) &_rsparse_copy_csr_rows, 4},
-    {"_rsparse_copy_csr_rows_col_seq", (DL_FUNC) &_rsparse_copy_csr_rows_col_seq, 5},
-    {"_rsparse_copy_csr_arbitrary", (DL_FUNC) &_rsparse_copy_csr_arbitrary, 5},
-    {"_rsparse_csr_dense_tcrossprod", (DL_FUNC) &_rsparse_csr_dense_tcrossprod, 3},
-    {"_rsparse_dense_csc_prod", (DL_FUNC) &_rsparse_dense_csc_prod, 3},
     {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 7},
     {"_rsparse_c_nnls_double", (DL_FUNC) &_rsparse_c_nnls_double, 4},
     {"_rsparse_rankmf_solver_double", (DL_FUNC) &_rsparse_rankmf_solver_double, 22},
