@@ -39,8 +39,9 @@ arma::Col<T> cd_solver_explicit(const arma::Mat<T>& X_nnz, const arma::Col<T>& c
   T diff, x_old, crit, div;
   T rsq;
 
+  /* This is not guaranteed to make it converge, but putting more is too slow */
   if (cd_until_conv)
-    n_iter = X_nnz.n_rows * X_nnz.n_rows;
+    n_iter = X_nnz.n_rows;
 
   for (auto t = 0; t < n_iter; t++) {
     if (cd_until_conv && t > 3 || X_nnz.n_rows <= 3) {
