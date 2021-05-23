@@ -69,14 +69,16 @@ creates WRMF model
 \if{html}{\out{<div class="r">}}\preformatted{WRMF$new(
   rank = 10L,
   lambda = 0,
+  lambda_l1 = 0,
   dynamic_lambda = TRUE,
   init = NULL,
   preprocess = identity,
   feedback = c("implicit", "explicit"),
-  solver = c("conjugate_gradient", "cholesky", "nnls"),
+  solver = c("conjugate_gradient", "cholesky", "nnls", "coordinate_descent"),
   with_user_item_bias = FALSE,
   with_global_bias = FALSE,
   cg_steps = 3L,
+  cd_steps = as.integer(max(1, rank/10)),
   precision = c("double", "float"),
   ...
 )}\if{html}{\out{</div>}}
@@ -87,7 +89,10 @@ creates WRMF model
 \describe{
 \item{\code{rank}}{size of the latent dimension}
 
-\item{\code{lambda}}{regularization parameter}
+\item{\code{lambda}}{regularization parameter on the l2 norm of the model matrices}
+
+\item{\code{lambda_l1}}{regularization parameter on the l1 norm of the model matrices.
+Currently available only for explicit feedback with coordinate descent solver.}
 
 \item{\code{dynamic_lambda}}{whether `lambda` is to be scaled according to the number}
 
@@ -105,11 +110,12 @@ Note that it will not automatically add +1 to the weights of the positive entrie
 \item{\code{feedback}}{\code{character} - feedback type - one of \code{c("implicit", "explicit")}}
 
 \item{\code{solver}}{\code{character} - solver name.
-One of \code{c("conjugate_gradient", "cholesky", "nnls")}.
+One of \code{c("conjugate_gradient", "cholesky", "nnls", "coordinate_descent")}.
 Usually approximate \code{"conjugate_gradient"} is significantly faster and solution is
 on par with \code{"cholesky"}.
 \code{"nnls"} performs non-negative matrix factorization (NNMF) - restricts
-user and item embeddings to be non-negative.}
+user and item embeddings to be non-negative.
+\code{"coordinate_descent"} can use l1 regularization. Only available for explicit feedback.}
 
 \item{\code{with_user_item_bias}}{\code{bool} controls if  model should calculate user and item biases.
 At the moment only implemented for \code{"explicit"} feedback.}
@@ -118,8 +124,13 @@ At the moment only implemented for \code{"explicit"} feedback.}
 At the moment only implemented for \code{"explicit"} feedback.}
 
 \item{\code{cg_steps}}{\code{integer > 0} - max number of internal steps in conjugate gradient
-(if "conjugate_gradient" solver used). \code{cg_steps = 3} by default.
+(if "conjugate_gradient" solver is used). \code{cg_steps = 3} by default.
 Controls precision of linear equation solution at the each ALS step. Usually no need to tune this parameter}
+
+\item{\code{cd_steps}}{\code{integer > 0} - number of internal steps in coordinate descent
+(if "coordinate_descent" solver is used).
+Using l1 regularization might require a larger number of cd steps per iteration in order
+to reach convergence.}
 
 \item{\code{precision}}{one of \code{c("double", "float")}. Should embedding matrices be
 numeric or float (from \code{float} package). The latter is usually 2x faster and

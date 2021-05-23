@@ -85,12 +85,12 @@ deep_copy <- function(x) {
     .Call(`_rsparse_deep_copy`, x)
 }
 
-als_explicit_double <- function(m_csc_r, X, Y, cnt_X, lambda, n_threads, solver, cg_steps, dynamic_lambda, with_biases, is_x_bias_last_row) {
-    .Call(`_rsparse_als_explicit_double`, m_csc_r, X, Y, cnt_X, lambda, n_threads, solver, cg_steps, dynamic_lambda, with_biases, is_x_bias_last_row)
+als_explicit_double <- function(m_csc_r, X, Y, cnt_X, lambda, lambda_l1, n_threads, solver, cg_steps, cd_steps, dynamic_lambda, with_biases, is_x_bias_last_row) {
+    .Call(`_rsparse_als_explicit_double`, m_csc_r, X, Y, cnt_X, lambda, lambda_l1, n_threads, solver, cg_steps, cd_steps, dynamic_lambda, with_biases, is_x_bias_last_row)
 }
 
-als_explicit_float <- function(m_csc_r, X_, Y_, cnt_X_, lambda, n_threads, solver, cg_steps, dynamic_lambda, with_biases, is_x_bias_last_row) {
-    .Call(`_rsparse_als_explicit_float`, m_csc_r, X_, Y_, cnt_X_, lambda, n_threads, solver, cg_steps, dynamic_lambda, with_biases, is_x_bias_last_row)
+als_explicit_float <- function(m_csc_r, X_, Y_, cnt_X_, lambda, lambda_l1, n_threads, solver, cg_steps, cd_steps, dynamic_lambda, with_biases, is_x_bias_last_row) {
+    .Call(`_rsparse_als_explicit_float`, m_csc_r, X_, Y_, cnt_X_, lambda, lambda_l1, n_threads, solver, cg_steps, cd_steps, dynamic_lambda, with_biases, is_x_bias_last_row)
 }
 
 als_implicit_double <- function(m_csc_r, X, Y, XtX, lambda, n_threads, solver, cg_steps, with_biases, is_x_bias_last_row, global_bias, global_bias_base, initialize_bias_base) {

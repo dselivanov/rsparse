@@ -41,7 +41,9 @@ WRMF = R6::R6Class(
   public = list(
     #' @description creates WRMF model
     #' @param rank size of the latent dimension
-    #' @param lambda regularization parameter
+    #' @param lambda regularization parameter on the l2 norm of the model matrices
+    #' @param lambda_l1 regularization parameter on the l1 norm of the model matrices.
+    #' Currently available only for explicit feedback with coordinate descent solver.
     #' @param dynamic_lambda whether `lambda` is to be scaled according to the number
     #  of non-missing entries for each row/column (only applicable to the explicit-feedback model).
     #' @param init initialization of item embeddings
@@ -55,37 +57,49 @@ WRMF = R6::R6Class(
     #' Note that it will not automatically add +1 to the weights of the positive entries.
     #' @param feedback \code{character} - feedback type - one of \code{c("implicit", "explicit")}
     #' @param solver \code{character} - solver name.
-    #' One of \code{c("conjugate_gradient", "cholesky", "nnls")}.
+    #' One of \code{c("conjugate_gradient", "cholesky", "nnls", "coordinate_descent")}.
     #' Usually approximate \code{"conjugate_gradient"} is significantly faster and solution is
     #' on par with \code{"cholesky"}.
     #' \code{"nnls"} performs non-negative matrix factorization (NNMF) - restricts
     #' user and item embeddings to be non-negative.
+    #' \code{"coordinate_descent"} can use l1 regularization. Only available for explicit feedback.
     #' @param with_user_item_bias \code{bool} controls if  model should calculate user and item biases.
     #' At the moment only implemented for \code{"explicit"} feedback.
     #' @param with_global_bias \code{bool} controls if model should calculate global biases (mean).
     #' At the moment only implemented for \code{"explicit"} feedback.
     #' @param cg_steps \code{integer > 0} - max number of internal steps in conjugate gradient
-    #' (if "conjugate_gradient" solver used). \code{cg_steps = 3} by default.
+    #' (if "conjugate_gradient" solver is used). \code{cg_steps = 3} by default.
     #' Controls precision of linear equation solution at the each ALS step. Usually no need to tune this parameter
+    #' @param cd_steps \code{integer > 0} - number of internal steps in coordinate descent
+    #' (if "coordinate_descent" solver is used).
+    #' Using l1 regularization might require a larger number of cd steps per iteration in order
+    #' to reach convergence.
     #' @param precision one of \code{c("double", "float")}. Should embedding matrices be
     #' numeric or float (from \code{float} package). The latter is usually 2x faster and
     #' consumes less RAM. BUT \code{float} matrices are not "base" objects. Use carefully.
     #' @param ... not used at the moment
     initialize = function(rank = 10L,
                           lambda = 0,
+                          lambda_l1 = 0,
                           dynamic_lambda = TRUE,
                           init = NULL,
                           preprocess = identity,
                           feedback = c("implicit", "explicit"),
-                          solver = c("conjugate_gradient", "cholesky", "nnls"),
+                          solver = c("conjugate_gradient", "cholesky", "nnls", "coordinate_descent"),
                           with_user_item_bias = FALSE,
                           with_global_bias = FALSE,
                           cg_steps = 3L,
+                          cd_steps = as.integer(max(1, rank / 10)),
                           precision = c("double", "float"),
                           ...) {
       stopifnot(is.null(init) || is.matrix(init))
       solver = match.arg(solver)
       feedback = match.arg(feedback)
+
+      if (solver == "coordinate_descent" && feedback == "implicit")
+        stop("'coordinate_descent' solver is only available for explicit feedback.")
+      if (lambda_l1 && solver != "coordinate_descent")
+        stop("l1 regularization is only available with solver='coordinate_descent'.")
 
       private$non_negative = ifelse(solver == "nnls", TRUE, FALSE)
 
@@ -98,16 +112,20 @@ WRMF = R6::R6Class(
       private$with_global_bias = with_global_bias
       self$global_bias = 0
 
-      solver_codes = c("cholesky", "conjugate_gradient", "nnls")
+      solver_codes = c("cholesky", "conjugate_gradient", "nnls", "coordinate_descent")
       private$solver_code = match(solver, solver_codes) - 1L
 
       private$precision = match.arg(precision)
       private$feedback = feedback
       private$lambda = as.numeric(lambda)
+      private$lambda_l1 = as.numeric(lambda_l1)
       private$dynamic_lambda = as.logical(dynamic_lambda)[1L]
 
       stopifnot(is.integer(cg_steps) && length(cg_steps) == 1)
       private$cg_steps = cg_steps
+
+      stopifnot(is.integer(cd_steps) && length(cd_steps) == 1)
+      private$cd_steps = cd_steps
 
       n_threads = getOption("rsparse_omp_threads", 1L)
       private$solver = function(x, X, Y, is_bias_last_row, XtX = NULL, cnt_X=NULL, avoid_cg = FALSE) {
@@ -137,9 +155,11 @@ WRMF = R6::R6Class(
           als_explicit(
             x, X, Y, cnt_X,
             lambda = private$lambda,
+            lambda_l1 = private$lambda_l1,
             n_threads = n_threads,
             solver_code = solver_use,
             cg_steps = private$cg_steps,
+            cd_steps = private$cd_steps,
             dynamic_lambda = private$dynamic_lambda,
             precision = private$precision,
             with_user_item_bias = private$with_user_item_bias,
@@ -417,8 +437,10 @@ WRMF = R6::R6Class(
   private = list(
     solver_code = NULL,
     cg_steps = NULL,
+    cd_steps = NULL,
     scorers = NULL,
     lambda = NULL,
+    lambda_l1 = NULL,
     dynamic_lambda = FALSE,
     rank = NULL,
     non_negative = NULL,
@@ -484,9 +506,11 @@ als_implicit = function(
 als_explicit = function(
   x, X, Y, cnt_X,
   lambda,
+  lambda_l1,
   n_threads,
   solver_code,
   cg_steps,
+  cd_steps,
   dynamic_lambda,
   precision,
   with_user_item_bias,
@@ -497,7 +521,7 @@ als_explicit = function(
                   als_explicit_double)
 
   # Y is modified in-place
-  loss = solver(x, X, Y, cnt_X, lambda, n_threads, solver_code, cg_steps, dynamic_lambda, with_user_item_bias, is_bias_last_row)
+  loss = solver(x, X, Y, cnt_X, lambda, lambda_l1, n_threads, solver_code, cg_steps, cd_steps, dynamic_lambda, with_user_item_bias, is_bias_last_row)
 }
 
 solver_explicit = function(x, X, Y, lambda = 0, non_negative = FALSE) {

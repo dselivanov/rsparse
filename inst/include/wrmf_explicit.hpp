@@ -31,9 +31,38 @@ arma::Col<T> cg_solver_explicit(const arma::Mat<T>& X_nnz, const arma::Col<T>& c
 }
 
 template <class T>
+arma::Col<T> cd_solver_explicit(const arma::Mat<T>& X_nnz, const arma::Col<T>& confidence,
+                                arma::Col<T>& res, const T lambda, const T lambda_l1,
+                                const arma::uword n_iter) {
+  arma::Col<T> r = confidence - X_nnz.t() * res;
+  arma::Col<T> xk;
+  T diff, x_old, crit, div;
+
+  for (auto t = 0; t < n_iter; t++) {
+    for (auto k = 0; k < X_nnz.n_rows; k++) {
+      xk = X_nnz.row(k).t();
+      div = arma::dot(xk, xk) + lambda;
+      x_old = res(k);
+      diff = (arma::dot(xk, r) - lambda * x_old) / div;
+
+      crit = (x_old + diff) * div;
+      if (std::fabs(crit) > lambda_l1) {
+        diff -= (lambda_l1 * (T)(crit >= 0)) / div;
+        res(k) += diff;
+        r -= diff * xk;
+      } else {
+        res(k) = 0;
+        r -= x_old * xk;
+      }
+    }
+  }
+  return res;
+}
+
+template <class T>
 T als_explicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
-               const double lambda, const int n_threads, const unsigned int solver,
-               const unsigned int cg_steps, const bool dynamic_lambda,
+               const double lambda, const double lambda_l1, const int n_threads, const unsigned int solver,
+               const unsigned int cg_steps, const unsigned int cd_steps, const bool dynamic_lambda,
                const arma::Col<T>& cnt_X, const bool with_biases,
                const bool is_x_bias_last_row) {
   /* Note about biases:
@@ -99,6 +128,9 @@ T als_explicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
       // Y_new should be [..., y_bias]
       if (solver == CONJUGATE_GRADIENT) {
         Y_new = cg_solver_explicit<T>(X_nnz, confidence, init, lambda_use, cg_steps);
+      } else if (solver == COORDINATE_DESCENT) {
+        T lambda_l1_use = lambda_l1 * (dynamic_lambda ? static_cast<T>(p2 - p1) : 1.);
+        Y_new = cd_solver_explicit<T>(X_nnz, confidence, init, lambda_use, lambda_l1_use, cd_steps);
       } else {
         arma::Mat<T> lhs = X_nnz * X_nnz.t();
         lhs.diag() += lambda_use;
