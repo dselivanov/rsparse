@@ -139,7 +139,7 @@ T als_explicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
         if (solver == CHOLESKY) {  // CHOLESKY
           Y_new = solve(lhs, rhs, arma::solve_opts::fast);
         } else if (solver == SEQ_COORDINATE_WISE_NNLS) {  // SEQ_COORDINATE_WISE_NNLS
-          Y_new = c_nnls<T>(lhs, rhs, init, SCD_MAX_ITER, SCD_TOL);
+          Y_new = c_nnls<T>(lhs, rhs, init, SCD_MAX_ITER, SCD_TOL, lambda_l1);
         }
       }
       arma::Row<T> diff;

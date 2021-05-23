@@ -43,7 +43,7 @@ WRMF = R6::R6Class(
     #' @param rank size of the latent dimension
     #' @param lambda regularization parameter on the l2 norm of the model matrices
     #' @param lambda_l1 regularization parameter on the l1 norm of the model matrices.
-    #' Currently available only for explicit feedback with coordinate descent solver.
+    #' Currently available only for nnls and coordinate descent solvers.
     #' @param dynamic_lambda whether `lambda` is to be scaled according to the number
     #  of non-missing entries for each row/column (only applicable to the explicit-feedback model).
     #' @param init initialization of item embeddings
@@ -61,7 +61,7 @@ WRMF = R6::R6Class(
     #' Usually approximate \code{"conjugate_gradient"} is significantly faster and solution is
     #' on par with \code{"cholesky"}.
     #' \code{"nnls"} performs non-negative matrix factorization (NNMF) - restricts
-    #' user and item embeddings to be non-negative.
+    #' user and item embeddings to be non-negative. Can use l1 regularization.
     #' \code{"coordinate_descent"} can use l1 regularization. Only available for explicit feedback.
     #' @param with_user_item_bias \code{bool} controls if  model should calculate user and item biases.
     #' At the moment only implemented for \code{"explicit"} feedback.
@@ -98,7 +98,7 @@ WRMF = R6::R6Class(
 
       if (solver == "coordinate_descent" && feedback == "implicit")
         stop("'coordinate_descent' solver is only available for explicit feedback.")
-      if (lambda_l1 && solver != "coordinate_descent")
+      if (lambda_l1 && !(solver %in% c("nnls", "coordinate_descent")))
         stop("l1 regularization is only available with solver='coordinate_descent'.")
 
       private$non_negative = ifelse(solver == "nnls", TRUE, FALSE)
@@ -141,6 +141,7 @@ WRMF = R6::R6Class(
           als_implicit(
             x, X, Y,
             lambda = private$lambda,
+            lambda_l1 = private$lambda_l1,
             n_threads = n_threads,
             solver_code = solver_use,
             cg_steps = private$cg_steps,
@@ -466,6 +467,7 @@ WRMF = R6::R6Class(
 als_implicit = function(
   x, X, Y,
   lambda,
+  lambda_l1,
   n_threads,
   solver_code,
   cg_steps,
@@ -498,7 +500,7 @@ als_implicit = function(
       global_bias_base = float::fl(global_bias_base)
   }
   # Y is modified in-place
-  loss = solver(x, X, Y, XtX, lambda, n_threads, solver_code, cg_steps,
+  loss = solver(x, X, Y, XtX, lambda, lambda_l1, n_threads, solver_code, cg_steps,
                 with_user_item_bias, is_bias_last_row, global_bias,
                 global_bias_base, initialize_bias_base)
 }
@@ -539,7 +541,7 @@ solver_explicit = function(x, X, Y, lambda = 0, non_negative = FALSE) {
     X_nnz = X[, ind_nnz, drop = F]
     XtX = tcrossprod(X_nnz) + ridge
     if (non_negative) {
-      res[[i]] = c_nnls_double(XtX, X_nnz %*% x_nnz, 10000L, 1e-3)
+      res[[i]] = c_nnls_double(XtX, X_nnz %*% x_nnz, 10000L, 1e-3, 0)
     } else {
       res[[i]] = solve(XtX, X_nnz %*% x_nnz)
     }
@@ -569,7 +571,7 @@ solver_explicit_biases = function(x, X, Y, bias_index = 1L, lambda = 0, non_nega
     X_nnz =  X[-x_bias_index, ind_nnz, drop = F]
     XtX = tcrossprod(X_nnz) + ridge
     if (non_negative) {
-      res[[i]] = c_nnls_double(XtX, X_nnz %*% x_nnz, 10000L, 1e-3)
+      res[[i]] = c_nnls_double(XtX, X_nnz %*% x_nnz, 10000L, 1e-3, 0)
     } else {
       res[[i]] = solve(XtX, X_nnz %*% x_nnz)
     }

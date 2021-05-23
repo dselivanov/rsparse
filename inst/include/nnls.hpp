@@ -5,8 +5,10 @@
 template <class T>
 arma::Col<T> scd_ls_update(const arma::Mat<T>& XtX, arma::Col<T>& mu,
                            arma::uword max_iter, double rel_tol,
-                           const arma::Col<T>& initial) {
+                           const arma::Col<T>& initial, double lambda_l1) {
   arma::Col<T> res = initial;
+  if (lambda_l1)
+    mu -= lambda_l1;
   T rel_diff, old_value, new_value, diff;
   const arma::Col<T> XtX_diag = XtX.diag();
   for (auto t = 0; t < max_iter; t++) {
@@ -30,14 +32,15 @@ arma::Col<T> scd_ls_update(const arma::Mat<T>& XtX, arma::Col<T>& mu,
 
 template <class T>
 arma::Col<T> c_nnls(const arma::Mat<T>& X, const arma::Col<T>& y,
-                    const arma::Col<T>& init, arma::uword max_iter, double rel_tol) {
+                    const arma::Col<T>& init, arma::uword max_iter,
+                    double rel_tol, double lambda_l1) {
   arma::Mat<T> Xt = X.t();
   arma::Mat<T> XtX = Xt * X;
   // for stability: avoid divided by 0
   XtX.diag() += EPS;
   arma::Col<T> mu = XtX * init - Xt * y;
 
-  const arma::Col<T> H = scd_ls_update<T>(XtX, mu, max_iter, rel_tol, init);
+  const arma::Col<T> H = scd_ls_update<T>(XtX, mu, max_iter, rel_tol, init, lambda_l1);
 
   return (H);
 }

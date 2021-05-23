@@ -198,8 +198,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // c_nnls_double
-arma::Mat<double> c_nnls_double(const arma::mat& x, const arma::vec& y, unsigned int max_iter, double rel_tol);
-RcppExport SEXP _rsparse_c_nnls_double(SEXP xSEXP, SEXP ySEXP, SEXP max_iterSEXP, SEXP rel_tolSEXP) {
+arma::Mat<double> c_nnls_double(const arma::mat& x, const arma::vec& y, unsigned int max_iter, double rel_tol, double lambda_l1);
+RcppExport SEXP _rsparse_c_nnls_double(SEXP xSEXP, SEXP ySEXP, SEXP max_iterSEXP, SEXP rel_tolSEXP, SEXP lambda_l1SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -207,7 +207,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
     Rcpp::traits::input_parameter< unsigned int >::type max_iter(max_iterSEXP);
     Rcpp::traits::input_parameter< double >::type rel_tol(rel_tolSEXP);
-    rcpp_result_gen = Rcpp::wrap(c_nnls_double(x, y, max_iter, rel_tol));
+    Rcpp::traits::input_parameter< double >::type lambda_l1(lambda_l1SEXP);
+    rcpp_result_gen = Rcpp::wrap(c_nnls_double(x, y, max_iter, rel_tol, lambda_l1));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -368,8 +369,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // als_implicit_double
-double als_implicit_double(const Rcpp::S4& m_csc_r, arma::mat& X, arma::mat& Y, const arma::mat& XtX, double lambda, int n_threads, const unsigned int solver, const unsigned int cg_steps, const bool with_biases, const bool is_x_bias_last_row, const double global_bias, arma::vec& global_bias_base, const bool initialize_bias_base);
-RcppExport SEXP _rsparse_als_implicit_double(SEXP m_csc_rSEXP, SEXP XSEXP, SEXP YSEXP, SEXP XtXSEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP, SEXP with_biasesSEXP, SEXP is_x_bias_last_rowSEXP, SEXP global_biasSEXP, SEXP global_bias_baseSEXP, SEXP initialize_bias_baseSEXP) {
+double als_implicit_double(const Rcpp::S4& m_csc_r, arma::mat& X, arma::mat& Y, const arma::mat& XtX, double lambda, double lambda_l1, int n_threads, const unsigned int solver, const unsigned int cg_steps, const bool with_biases, const bool is_x_bias_last_row, const double global_bias, arma::vec& global_bias_base, const bool initialize_bias_base);
+RcppExport SEXP _rsparse_als_implicit_double(SEXP m_csc_rSEXP, SEXP XSEXP, SEXP YSEXP, SEXP XtXSEXP, SEXP lambdaSEXP, SEXP lambda_l1SEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP, SEXP with_biasesSEXP, SEXP is_x_bias_last_rowSEXP, SEXP global_biasSEXP, SEXP global_bias_baseSEXP, SEXP initialize_bias_baseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -378,6 +379,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat& >::type Y(YSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type XtX(XtXSEXP);
     Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda_l1(lambda_l1SEXP);
     Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
     Rcpp::traits::input_parameter< const unsigned int >::type solver(solverSEXP);
     Rcpp::traits::input_parameter< const unsigned int >::type cg_steps(cg_stepsSEXP);
@@ -386,13 +388,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type global_bias(global_biasSEXP);
     Rcpp::traits::input_parameter< arma::vec& >::type global_bias_base(global_bias_baseSEXP);
     Rcpp::traits::input_parameter< const bool >::type initialize_bias_base(initialize_bias_baseSEXP);
-    rcpp_result_gen = Rcpp::wrap(als_implicit_double(m_csc_r, X, Y, XtX, lambda, n_threads, solver, cg_steps, with_biases, is_x_bias_last_row, global_bias, global_bias_base, initialize_bias_base));
+    rcpp_result_gen = Rcpp::wrap(als_implicit_double(m_csc_r, X, Y, XtX, lambda, lambda_l1, n_threads, solver, cg_steps, with_biases, is_x_bias_last_row, global_bias, global_bias_base, initialize_bias_base));
     return rcpp_result_gen;
 END_RCPP
 }
 // als_implicit_float
-double als_implicit_float(const Rcpp::S4& m_csc_r, Rcpp::S4& X_, Rcpp::S4& Y_, Rcpp::S4& XtX_, double lambda, int n_threads, const unsigned int solver, const unsigned int cg_steps, const bool with_biases, const bool is_x_bias_last_row, const double global_bias, Rcpp::S4& global_bias_base_, const bool initialize_bias_base);
-RcppExport SEXP _rsparse_als_implicit_float(SEXP m_csc_rSEXP, SEXP X_SEXP, SEXP Y_SEXP, SEXP XtX_SEXP, SEXP lambdaSEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP, SEXP with_biasesSEXP, SEXP is_x_bias_last_rowSEXP, SEXP global_biasSEXP, SEXP global_bias_base_SEXP, SEXP initialize_bias_baseSEXP) {
+double als_implicit_float(const Rcpp::S4& m_csc_r, Rcpp::S4& X_, Rcpp::S4& Y_, Rcpp::S4& XtX_, double lambda, double lambda_l1, int n_threads, const unsigned int solver, const unsigned int cg_steps, const bool with_biases, const bool is_x_bias_last_row, const double global_bias, Rcpp::S4& global_bias_base_, const bool initialize_bias_base);
+RcppExport SEXP _rsparse_als_implicit_float(SEXP m_csc_rSEXP, SEXP X_SEXP, SEXP Y_SEXP, SEXP XtX_SEXP, SEXP lambdaSEXP, SEXP lambda_l1SEXP, SEXP n_threadsSEXP, SEXP solverSEXP, SEXP cg_stepsSEXP, SEXP with_biasesSEXP, SEXP is_x_bias_last_rowSEXP, SEXP global_biasSEXP, SEXP global_bias_base_SEXP, SEXP initialize_bias_baseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -401,6 +403,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::S4& >::type Y_(Y_SEXP);
     Rcpp::traits::input_parameter< Rcpp::S4& >::type XtX_(XtX_SEXP);
     Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda_l1(lambda_l1SEXP);
     Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
     Rcpp::traits::input_parameter< const unsigned int >::type solver(solverSEXP);
     Rcpp::traits::input_parameter< const unsigned int >::type cg_steps(cg_stepsSEXP);
@@ -409,7 +412,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type global_bias(global_biasSEXP);
     Rcpp::traits::input_parameter< Rcpp::S4& >::type global_bias_base_(global_bias_base_SEXP);
     Rcpp::traits::input_parameter< const bool >::type initialize_bias_base(initialize_bias_baseSEXP);
-    rcpp_result_gen = Rcpp::wrap(als_implicit_float(m_csc_r, X_, Y_, XtX_, lambda, n_threads, solver, cg_steps, with_biases, is_x_bias_last_row, global_bias, global_bias_base_, initialize_bias_base));
+    rcpp_result_gen = Rcpp::wrap(als_implicit_float(m_csc_r, X_, Y_, XtX_, lambda, lambda_l1, n_threads, solver, cg_steps, with_biases, is_x_bias_last_row, global_bias, global_bias_base_, initialize_bias_base));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -469,7 +472,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_is_invalid_ptr", (DL_FUNC) &_rsparse_is_invalid_ptr, 1},
     {"_rsparse_arma_kmeans", (DL_FUNC) &_rsparse_arma_kmeans, 6},
     {"_rsparse_top_product", (DL_FUNC) &_rsparse_top_product, 7},
-    {"_rsparse_c_nnls_double", (DL_FUNC) &_rsparse_c_nnls_double, 4},
+    {"_rsparse_c_nnls_double", (DL_FUNC) &_rsparse_c_nnls_double, 5},
     {"_rsparse_rankmf_solver_double", (DL_FUNC) &_rsparse_rankmf_solver_double, 22},
     {"_rsparse_rankmf_solver_float", (DL_FUNC) &_rsparse_rankmf_solver_float, 22},
     {"_rsparse_omp_thread_count", (DL_FUNC) &_rsparse_omp_thread_count, 0},
@@ -478,8 +481,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rsparse_deep_copy", (DL_FUNC) &_rsparse_deep_copy, 1},
     {"_rsparse_als_explicit_double", (DL_FUNC) &_rsparse_als_explicit_double, 13},
     {"_rsparse_als_explicit_float", (DL_FUNC) &_rsparse_als_explicit_float, 13},
-    {"_rsparse_als_implicit_double", (DL_FUNC) &_rsparse_als_implicit_double, 13},
-    {"_rsparse_als_implicit_float", (DL_FUNC) &_rsparse_als_implicit_float, 13},
+    {"_rsparse_als_implicit_double", (DL_FUNC) &_rsparse_als_implicit_double, 14},
+    {"_rsparse_als_implicit_float", (DL_FUNC) &_rsparse_als_implicit_float, 14},
     {"_rsparse_initialize_biases_double", (DL_FUNC) &_rsparse_initialize_biases_double, 10},
     {"_rsparse_initialize_biases_float", (DL_FUNC) &_rsparse_initialize_biases_float, 10},
     {NULL, NULL, 0}

@@ -57,8 +57,8 @@ top_product <- function(x, y, k, n_threads, not_recommend_r, exclude, glob_mean 
     .Call(`_rsparse_top_product`, x, y, k, n_threads, not_recommend_r, exclude, glob_mean)
 }
 
-c_nnls_double <- function(x, y, max_iter, rel_tol) {
-    .Call(`_rsparse_c_nnls_double`, x, y, max_iter, rel_tol)
+c_nnls_double <- function(x, y, max_iter, rel_tol, lambda_l1) {
+    .Call(`_rsparse_c_nnls_double`, x, y, max_iter, rel_tol, lambda_l1)
 }
 
 rankmf_solver_double <- function(x_r, W, H, W2_grad, H2_grad, user_features_r, item_features_r, rank, n_updates, learning_rate = 0.01, gamma = 1, lambda_user = 0.0, lambda_item_positive = 0.0, lambda_item_negative = 0.0, n_threads = 1L, update_items = TRUE, loss = 0L, kernel = 0L, max_negative_samples = 50L, margin = 0.1, optimizer = 0L, report_progress = 10L) {
@@ -93,12 +93,12 @@ als_explicit_float <- function(m_csc_r, X_, Y_, cnt_X_, lambda, lambda_l1, n_thr
     .Call(`_rsparse_als_explicit_float`, m_csc_r, X_, Y_, cnt_X_, lambda, lambda_l1, n_threads, solver, cg_steps, cd_steps, dynamic_lambda, with_biases, is_x_bias_last_row)
 }
 
-als_implicit_double <- function(m_csc_r, X, Y, XtX, lambda, n_threads, solver, cg_steps, with_biases, is_x_bias_last_row, global_bias, global_bias_base, initialize_bias_base) {
-    .Call(`_rsparse_als_implicit_double`, m_csc_r, X, Y, XtX, lambda, n_threads, solver, cg_steps, with_biases, is_x_bias_last_row, global_bias, global_bias_base, initialize_bias_base)
+als_implicit_double <- function(m_csc_r, X, Y, XtX, lambda, lambda_l1, n_threads, solver, cg_steps, with_biases, is_x_bias_last_row, global_bias, global_bias_base, initialize_bias_base) {
+    .Call(`_rsparse_als_implicit_double`, m_csc_r, X, Y, XtX, lambda, lambda_l1, n_threads, solver, cg_steps, with_biases, is_x_bias_last_row, global_bias, global_bias_base, initialize_bias_base)
 }
 
-als_implicit_float <- function(m_csc_r, X_, Y_, XtX_, lambda, n_threads, solver, cg_steps, with_biases, is_x_bias_last_row, global_bias, global_bias_base_, initialize_bias_base) {
-    .Call(`_rsparse_als_implicit_float`, m_csc_r, X_, Y_, XtX_, lambda, n_threads, solver, cg_steps, with_biases, is_x_bias_last_row, global_bias, global_bias_base_, initialize_bias_base)
+als_implicit_float <- function(m_csc_r, X_, Y_, XtX_, lambda, lambda_l1, n_threads, solver, cg_steps, with_biases, is_x_bias_last_row, global_bias, global_bias_base_, initialize_bias_base) {
+    .Call(`_rsparse_als_implicit_float`, m_csc_r, X_, Y_, XtX_, lambda, lambda_l1, n_threads, solver, cg_steps, with_biases, is_x_bias_last_row, global_bias, global_bias_base_, initialize_bias_base)
 }
 
 initialize_biases_double <- function(m_csc_r, m_csr_r, user_bias, item_bias, lambda, dynamic_lambda, non_negative, calculate_global_bias = FALSE, is_explicit_feedback = FALSE, initialize_item_biases = FALSE) {

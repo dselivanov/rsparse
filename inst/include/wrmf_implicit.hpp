@@ -89,7 +89,7 @@ arma::Col<T> cg_solver_implicit_user_item_bias(const arma::Mat<T>& X_nnz, const 
 
 template <class T>
 T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
-               const arma::Mat<T>& XtX, double lambda, int n_threads,
+               const arma::Mat<T>& XtX, double lambda, double lambda_l1, int n_threads,
                const unsigned int solver, unsigned int cg_steps, const bool with_biases,
                const bool is_x_bias_last_row, double global_bias,
                arma::Col<T> &global_bias_base, const bool initialize_bias_base) {
@@ -225,7 +225,7 @@ T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
           rhs = X_nnz * confidence;
         }
         if (solver == SEQ_COORDINATE_WISE_NNLS) {
-          Y_new = c_nnls<T>(lhs, rhs, init, SCD_MAX_ITER, SCD_TOL);
+          Y_new = c_nnls<T>(lhs, rhs, init, SCD_MAX_ITER, SCD_TOL, lambda_l1);
         } else {  // CHOLESKY
           Y_new = solve(lhs, rhs, arma::solve_opts::fast);
         }

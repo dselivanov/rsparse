@@ -92,7 +92,7 @@ creates WRMF model
 \item{\code{lambda}}{regularization parameter on the l2 norm of the model matrices}
 
 \item{\code{lambda_l1}}{regularization parameter on the l1 norm of the model matrices.
-Currently available only for explicit feedback with coordinate descent solver.}
+Currently available only for nnls and coordinate descent solvers.}
 
 \item{\code{dynamic_lambda}}{whether `lambda` is to be scaled according to the number}
 
@@ -114,7 +114,7 @@ One of \code{c("conjugate_gradient", "cholesky", "nnls", "coordinate_descent")}.
 Usually approximate \code{"conjugate_gradient"} is significantly faster and solution is
 on par with \code{"cholesky"}.
 \code{"nnls"} performs non-negative matrix factorization (NNMF) - restricts
-user and item embeddings to be non-negative.
+user and item embeddings to be non-negative. Can use l1 regularization.
 \code{"coordinate_descent"} can use l1 regularization. Only available for explicit feedback.}
 
 \item{\code{with_user_item_bias}}{\code{bool} controls if  model should calculate user and item biases.

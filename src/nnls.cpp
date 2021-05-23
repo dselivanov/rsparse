@@ -3,7 +3,7 @@
 
 // [[Rcpp::export]]
 arma::Mat<double> c_nnls_double(const arma::mat& x, const arma::vec& y, unsigned int max_iter,
-                                double rel_tol) {
+                                double rel_tol, double lambda_l1) {
   auto n = y.size();
   Rcpp::NumericVector res(n);
   for (auto i = 0; i < n; i++) {
@@ -11,5 +11,5 @@ arma::Mat<double> c_nnls_double(const arma::mat& x, const arma::vec& y, unsigned
   }
 
   arma::colvec init(&res[0], n, false, true);
-  return c_nnls<double>(x, y, init, max_iter, rel_tol);
+  return c_nnls<double>(x, y, init, max_iter, rel_tol, lambda_l1);
 }
