@@ -71,7 +71,7 @@ It is recommended to:
 
 If you are on **Mac** follow the instructions [here](https://github.com/coatless/r-macos-rtools). After installation of `clang4`, additionally put a `PKG_CXXFLAGS += -DARMA_USE_OPENMP` line in your `~/.R/Makevars`. After that, install `rsparse` in the usual way.
 
-On Linux, these optimizations can also be added by modifying the global `Makeconf` file - in Debian and its derivatives (such as Ubuntu), this file will typically be under `/etc/R/`, and can be modified by applying these simple text replacements: `-O2` -> `-O3`, `-msse2` -> `-march=native` (assuming R was installed from system repositories and this is an x86-64 CPU). Be aware that this file is used for compilation of **all** R packages.
+On Linux, it's enough to just create this file if it doesn't exist (`~/.R/Makevars`).
 
 If using OpenBLAS, it is highly recommended to use the `openmp` variant rather than the `pthreads` variant. On Linux, it is usually available as a separate package in typical distribution package managers (e.g. for Debian, it can be obtained by installing `libopenblas-openmp-dev`, which is not the default version), and if there are multiple BLASes installed, can be set as the default through the [Debian alternatives system](https://wiki.debian.org/DebianScience/LinearAlgebraLibraries) - which can also be used [for MKL](https://stackoverflow.com/a/49842944/5941695).
 
