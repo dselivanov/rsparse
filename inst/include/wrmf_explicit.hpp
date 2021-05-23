@@ -43,7 +43,7 @@ arma::Col<T> cd_solver_explicit(const arma::Mat<T>& X_nnz, const arma::Col<T>& c
     n_iter = X_nnz.n_rows * X_nnz.n_rows;
 
   for (auto t = 0; t < n_iter; t++) {
-    if (cd_until_conv && t > 3) {
+    if (cd_until_conv && t > 3 || X_nnz.n_rows <= 3) {
       rsq = arma::dot(r, r);
       if (rsq < 1e-10)
         return res;
