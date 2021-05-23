@@ -161,6 +161,7 @@ WRMF = R6::R6Class(
             solver_code = solver_use,
             cg_steps = private$cg_steps,
             cd_steps = private$cd_steps,
+            cd_until_conv = private$cd_until_conv,
             dynamic_lambda = private$dynamic_lambda,
             precision = private$precision,
             with_user_item_bias = private$with_user_item_bias,
@@ -315,6 +316,8 @@ WRMF = R6::R6Class(
           self$global_bias_base = float(size_global_bias_base)
       }
 
+      private$cd_until_conv = FALSE
+
       logger$info("starting factorization with %d threads", getOption("rsparse_omp_threads", 1L))
 
       loss_prev_iter = Inf
@@ -414,6 +417,8 @@ WRMF = R6::R6Class(
         res[1, ] = if(private$precision == "double") 1.0 else float::fl(1.0)
       }
 
+      private$cd_until_conv = TRUE
+
       loss = private$solver(
         x,
         self$components,
@@ -439,6 +444,7 @@ WRMF = R6::R6Class(
     solver_code = NULL,
     cg_steps = NULL,
     cd_steps = NULL,
+    cd_until_conv = FALSE,
     scorers = NULL,
     lambda = NULL,
     lambda_l1 = NULL,
@@ -513,6 +519,7 @@ als_explicit = function(
   solver_code,
   cg_steps,
   cd_steps,
+  cd_until_conv,
   dynamic_lambda,
   precision,
   with_user_item_bias,
@@ -523,7 +530,7 @@ als_explicit = function(
                   als_explicit_double)
 
   # Y is modified in-place
-  loss = solver(x, X, Y, cnt_X, lambda, lambda_l1, n_threads, solver_code, cg_steps, cd_steps, dynamic_lambda, with_user_item_bias, is_bias_last_row)
+  loss = solver(x, X, Y, cnt_X, lambda, lambda_l1, n_threads, solver_code, cg_steps, cd_steps, dynamic_lambda, cd_until_conv, with_user_item_bias, is_bias_last_row)
 }
 
 solver_explicit = function(x, X, Y, lambda = 0, non_negative = FALSE) {

@@ -33,12 +33,21 @@ arma::Col<T> cg_solver_explicit(const arma::Mat<T>& X_nnz, const arma::Col<T>& c
 template <class T>
 arma::Col<T> cd_solver_explicit(const arma::Mat<T>& X_nnz, const arma::Col<T>& confidence,
                                 arma::Col<T>& res, const T lambda, const T lambda_l1,
-                                const arma::uword n_iter) {
+                                arma::uword n_iter, const bool cd_until_conv) {
   arma::Col<T> r = confidence - X_nnz.t() * res;
   arma::Col<T> xk;
   T diff, x_old, crit, div;
+  T rsq;
+
+  if (cd_until_conv)
+    n_iter = X_nnz.n_rows * X_nnz.n_rows;
 
   for (auto t = 0; t < n_iter; t++) {
+    if (cd_until_conv && t > 3) {
+      rsq = arma::dot(r, r);
+      if (rsq < 1e-10)
+        return res;
+    }
     for (auto k = 0; k < X_nnz.n_rows; k++) {
       xk = X_nnz.row(k).t();
       div = arma::dot(xk, xk) + lambda;
@@ -64,7 +73,7 @@ T als_explicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
                const double lambda, const double lambda_l1, const int n_threads, const unsigned int solver,
                const unsigned int cg_steps, const unsigned int cd_steps, const bool dynamic_lambda,
                const arma::Col<T>& cnt_X, const bool with_biases,
-               const bool is_x_bias_last_row) {
+               const bool is_x_bias_last_row, const bool cd_until_conv) {
   /* Note about biases:
    * For user factors, the first row will be set to all ones
    * to match with the item biases, and the calculated user biases will be in the
@@ -130,7 +139,7 @@ T als_explicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
       if (solver == CONJUGATE_GRADIENT) {
         Y_new = cg_solver_explicit<T>(X_nnz, confidence, init, lambda_use, cg_steps);
       } else if (solver == COORDINATE_DESCENT) {
-        Y_new = cd_solver_explicit<T>(X_nnz, confidence, init, lambda_use, lambda_l1_use, cd_steps);
+        Y_new = cd_solver_explicit<T>(X_nnz, confidence, init, lambda_use, lambda_l1_use, cd_steps, cd_until_conv);
       } else {
         arma::Mat<T> lhs = X_nnz * X_nnz.t();
         lhs.diag() += lambda_use;
