@@ -530,7 +530,7 @@ als_explicit = function(
                   als_explicit_double)
 
   # Y is modified in-place
-  loss = solver(x, X, Y, cnt_X, lambda, lambda_l1, n_threads, solver_code, cg_steps, cd_steps, dynamic_lambda, cd_until_conv, with_user_item_bias, is_bias_last_row)
+  loss = solver(x, X, Y, cnt_X, lambda, lambda_l1, n_threads, solver_code, cg_steps, cd_steps, cd_until_conv, dynamic_lambda,  with_user_item_bias, is_bias_last_row)
 }
 
 solver_explicit = function(x, X, Y, lambda = 0, non_negative = FALSE) {
