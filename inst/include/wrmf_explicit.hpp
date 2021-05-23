@@ -105,6 +105,7 @@ T als_explicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
     if (p1 < p2) {
       const arma::uvec idx = arma::uvec(&Conf.row_indices[p1], p2 - p1, false, true);
       T lambda_use = lambda * (dynamic_lambda ? static_cast<T>(p2 - p1) : 1.);
+      T lambda_l1_use = lambda_l1 * (dynamic_lambda ? static_cast<T>(p2 - p1) : 1.);
       arma::Col<T> confidence =
           arma::conv_to<arma::Col<T> >::from(arma::vec(&Conf.values[p1], p2 - p1));
       arma::Mat<T> X_nnz = X.cols(idx);
@@ -129,7 +130,6 @@ T als_explicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
       if (solver == CONJUGATE_GRADIENT) {
         Y_new = cg_solver_explicit<T>(X_nnz, confidence, init, lambda_use, cg_steps);
       } else if (solver == COORDINATE_DESCENT) {
-        T lambda_l1_use = lambda_l1 * (dynamic_lambda ? static_cast<T>(p2 - p1) : 1.);
         Y_new = cd_solver_explicit<T>(X_nnz, confidence, init, lambda_use, lambda_l1_use, cd_steps);
       } else {
         arma::Mat<T> lhs = X_nnz * X_nnz.t();
@@ -139,7 +139,7 @@ T als_explicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
         if (solver == CHOLESKY) {  // CHOLESKY
           Y_new = solve(lhs, rhs, arma::solve_opts::fast);
         } else if (solver == SEQ_COORDINATE_WISE_NNLS) {  // SEQ_COORDINATE_WISE_NNLS
-          Y_new = c_nnls<T>(lhs, rhs, init, SCD_MAX_ITER, SCD_TOL, lambda_l1);
+          Y_new = c_nnls<T>(lhs, rhs, init, SCD_MAX_ITER, SCD_TOL, lambda_l1_use);
         }
       }
       arma::Row<T> diff;
@@ -162,6 +162,9 @@ T als_explicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
       }
       diff = confidence.t() - (Y_new.t() * X_nnz);
       loss += arma::dot(diff, diff) + lambda_use * arma::dot(Y_new, Y_new);
+      if (lambda_l1) {
+        loss += lambda_l1_use * accu(abs(Y_new));
+      }
     } else {
       if (with_biases) {
         const arma::Col<T> z(rank - 1, arma::fill::zeros);
@@ -194,11 +197,23 @@ T als_explicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
       else {
         loss += lambda * accu((X_excl_ones % X_excl_ones) * cnt_X);
       }
+      if (lambda_l1) {
+        if (!dynamic_lambda)
+          loss += lambda_l1 * accu(abs(X_excl_ones));
+        else
+          loss += lambda_l1 * accu(sum(abs(X_excl_ones), 0)  * cnt_X);
+      }
     } else {
       if (!dynamic_lambda)
         loss += lambda * accu(X % X);
       else {
         loss += lambda * accu((X % X) * cnt_X);
+      }
+      if (lambda_l1) {
+        if (!dynamic_lambda)
+          loss += lambda_l1 * accu(abs(X));
+        else
+          loss += lambda_l1 * accu(sum(abs(X), 0)  * cnt_X);
       }
     }
   }

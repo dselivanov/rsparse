@@ -261,6 +261,9 @@ T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
         loss += dot(square((1 - global_bias) - (Y_new.t() * X_nnz) - x_biases(idx).t()), confidence) +
                 lambda * arma::dot(Y_new, Y_new);
 
+      if (lambda_l1) {
+        loss += lambda_l1 * accu(abs(Y_new));
+      }
     } else {
       if (with_biases) {
         const arma::Col<T> z(rank - 1, arma::fill::zeros);
@@ -289,8 +292,13 @@ T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
       // should should be translated
       // into efficient MKL/OpenBLAS calls
       loss += lambda * accu(X_excl_ones % X_excl_ones);
+      if (lambda_l1) {
+        loss += lambda_l1 * accu(abs(X_excl_ones));
+      }
     } else {
       loss += lambda * accu(X % X);
+      if (lambda_l1)
+        loss += lambda_l1 * accu(abs(X));
     }
   }
   return (loss / Conf.nnz);
