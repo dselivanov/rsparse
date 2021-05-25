@@ -54,19 +54,24 @@ _Note: the optimized matrix operations which `rparse` used to offer have been mo
 
 # Installation 
 
-Most of the algorithms benefit from OpenMP and many of them could utilize high-performance implementation of BLAS. If you want make maximum out of the package please read the section below carefuly.
+Most of the algorithms benefit from OpenMP and many of them could utilize high-performance implementations of BLAS. If you want to make the maximum out of this package, please read the section below carefully.
 
 It is recommended to:
 
 1. Use high-performance BLAS (such as OpenBLAS, MKL, Apple Accelerate).
-1. Add proper compiler optimizations in your `~/.R/Makevars`. For example on recent processors (with AVX support) and complier with OpenMP support following lines could be a good option:
+1. Add proper compiler optimizations in your `~/.R/Makevars`. For example on recent processors (with AVX support) and compiler with OpenMP support, the following lines could be a good option:
     ```txt
-    CXX11FLAGS += -O3 -march=native -mavx -fopenmp -ffast-math
-    CXXFLAGS   += -O3 -march=native -mavx -fopenmp -ffast-math
+    CXX11FLAGS += -O3 -march=native -fopenmp
+    CXXFLAGS   += -O3 -march=native -fopenmp
     ```
 
-If you are on **Mac** follow instructions [here](https://github.com/coatless/r-macos-rtools). After installation of `clang4` additionally put `PKG_CXXFLAGS += -DARMA_USE_OPENMP` line to your `~/.R/Makevars`. After that install `rsparse` in a usual way.
+If you are on **Mac** follow the instructions [here](https://github.com/coatless/r-macos-rtools). After installation of `clang4`, additionally put a `PKG_CXXFLAGS += -DARMA_USE_OPENMP` line in your `~/.R/Makevars`. After that, install `rsparse` in the usual way.
 
+On Linux, it's enough to just create this file if it doesn't exist (`~/.R/Makevars`).
+
+If using OpenBLAS, it is highly recommended to use the `openmp` variant rather than the `pthreads` variant. On Linux, it is usually available as a separate package in typical distribution package managers (e.g. for Debian, it can be obtained by installing `libopenblas-openmp-dev`, which is not the default version), and if there are multiple BLASes installed, can be set as the default through the [Debian alternatives system](https://wiki.debian.org/DebianScience/LinearAlgebraLibraries) - which can also be used [for MKL](https://stackoverflow.com/a/49842944/5941695).
+
+By default, R for Windows comes with unoptimized BLAS and LAPACK libraries, and `rsparse` will prefer using Armadillo's replacements instead. In order to use BLAS, **install `rsparse` from source** (not from CRAN), removing the option `-DARMA_DONT_USE_BLAS` from `src/Makevars.win` and ideally adding `-march=native` (under `PKG_CXXFLAGS`). See [this tutorial](https://github.com/david-cortes/R-openblas-in-windows) for instructions on getting R for Windows to use OpenBLAS. Alternatively, Microsoft's MRAN distribution for Windows comes with MKL.
 
 # Materials
 
