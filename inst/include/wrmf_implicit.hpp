@@ -171,7 +171,7 @@ T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
     arma::uword p2 = Conf.col_ptrs[i + 1];
     // catch situation when some columns in matrix are empty, so p1 becomes equal to p2 or
     // greater than number of columns
-    if (p1 < p2) {
+    if (with_biases || global_bias || p1 < p2) {
       const arma::uvec idx = arma::uvec(&Conf.row_indices[p1], p2 - p1, false, true);
       arma::Col<T> confidence =
           arma::conv_to<arma::Col<T> >::from(arma::vec(&Conf.values[p1], p2 - p1));
@@ -248,7 +248,9 @@ T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
         Y.unsafe_col(i) = Y_new;
       }
 
-      if (!global_bias && !with_biases)
+      if (p1 == p2)
+        loss += lambda * arma::dot(Y_new, Y_new);
+      else if (!global_bias && !with_biases)
         loss += dot(square(1 - (Y_new.t() * X_nnz)), confidence) +
                 lambda * arma::dot(Y_new, Y_new);
       else if (global_bias && !with_biases)
