@@ -17,7 +17,7 @@ jobs:
 
       - uses: actions/checkout@v2
 
-      - uses: dselivanov/actions/setup-r@master
+      - uses: r-lib/actions/setup-r@master
 
       - uses: r-lib/actions/setup-pandoc@master
 
