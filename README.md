@@ -3,8 +3,8 @@
 [![R build status](https://github.com/rexyai/rsparse/workflows/R-CMD-check/badge.svg)](https://github.com/rexyai/rsparse/actions)
 [![codecov](https://codecov.io/gh/rexyai/rsparse/branch/master/graph/badge.svg)](https://codecov.io/gh/rexyai/rsparse/branch/master)
 [![License](https://eddelbuettel.github.io/badges/GPL2+.svg)](http://www.gnu.org/licenses/gpl-2.0.html)
-[![Project Status](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
-<a href="https://www.rexy.ai"><img src="https://s3-eu-west-1.amazonaws.com/rexy.ai/images/favicon.ico" height="32" width="32"></a>
+[![Project Status](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#maturing)
+<a href="https://rexy.ai"><img src="https://s3-eu-west-1.amazonaws.com/rexy.ai/images/favicon.ico" height="32" width="32"></a>
 <!-- badges: end -->
 
 `rsparse` is an R package for statistical learning primarily on **sparse matrices** -  **matrix factorizations, factorization machines, out-of-core regression**. Many of the implemented algorithms are particularly useful for **recommender systems** and **NLP**. 
@@ -22,20 +22,20 @@ Please reach us if you need **commercial support** - [hello@rexy.ai](mailto:hell
 
 ### Classification/Regression
 
-1. [Follow the proximally-regularized leader](http://www.jmlr.org/proceedings/papers/v15/mcmahan11b/mcmahan11b.pdf) which allows to solve **very large linear/logistic regression** problems with elastic-net penalty. Solver uses stochastic gradient descent with adaptive learning rates (so can be used for online learning - not necessary to load all data to RAM). See [Ad Click Prediction: a View from the Trenches](https://www.eecs.tufts.edu/~dsculley/papers/ad-click-prediction.pdf) for more examples.
+1. [Follow the proximally-regularized leader](https://www.jmlr.org/proceedings/papers/v15/mcmahan11b/mcmahan11b.pdf) which allows to solve **very large linear/logistic regression** problems with elastic-net penalty. Solver uses stochastic gradient descent with adaptive learning rates (so can be used for online learning - not necessary to load all data to RAM). See [Ad Click Prediction: a View from the Trenches](https://www.eecs.tufts.edu/~dsculley/papers/ad-click-prediction.pdf) for more examples.
     - Only logistic regerssion implemented at the moment
     - Native format for matrices is CSR - `Matrix::RsparseMatrix`. However common R `Matrix::CsparseMatrix` (`dgCMatrix`) will be converted automatically.
 1. [Factorization Machines](https://www.csie.ntu.edu.tw/~b97053/paper/Rendle2010FM.pdf) supervised learning algorithm which learns second order polynomial interactions in a factorized way. We provide highly optimized SIMD accelerated implementation.  
 
 ### Matrix Factorizations
 
-1. Vanilla **Maximum Margin Matrix Factorization** - classic approch for "rating" prediction. See `WRMF` class and constructor option `feedback = "explicit"`. Original paper which indroduced MMMF could be found [here](http://ttic.uchicago.edu/~nati/Publications/MMMFnips04.pdf).
+1. Vanilla **Maximum Margin Matrix Factorization** - classic approch for "rating" prediction. See `WRMF` class and constructor option `feedback = "explicit"`. Original paper which indroduced MMMF could be found [here](https://ttic.uchicago.edu/~nati/Publications/MMMFnips04.pdf).
     * <img src="https://raw.githubusercontent.com/rexyai/rsparse/master/docs/img/MMMF.png" width="400">
-1. **Weighted Regularized Matrix Factorization (WRMF)** from [Collaborative Filtering for Implicit Feedback Datasets](https://www.researchgate.net/profile/Yifan_Hu/publication/220765111_Collaborative_Filtering_for_Implicit_Feedback_Datasets/links/0912f509c579ddd954000000/Collaborative-Filtering-for-Implicit-Feedback-Datasets.pdf). See `WRMF` class and constructor option `feedback = "implicit"`. 
+1. **Weighted Regularized Matrix Factorization (WRMF)** from [Collaborative Filtering for Implicit Feedback Datasets](https://www.researchgate.net/profile/Yifan-Hu-25/publication/220765111_Collaborative_Filtering_for_Implicit_Feedback_Datasets/links/0912f509c579ddd954000000/Collaborative-Filtering-for-Implicit-Feedback-Datasets.pdf). See `WRMF` class and constructor option `feedback = "implicit"`. 
 We provide 2 solvers:
     1. Exact based on Cholesky Factorization
     1. Approximated based on fixed number of steps of **Conjugate Gradient**.
-See details in [Applications of the Conjugate Gradient Method for Implicit Feedback Collaborative Filtering](https://pdfs.semanticscholar.org/bfdf/7af6cf7fd7bb5e6b6db5bbd91be11597eaf0.pdf) and [Faster Implicit Matrix Factorization](http://www.benfrederickson.com/fast-implicit-matrix-factorization/).
+See details in [Applications of the Conjugate Gradient Method for Implicit Feedback Collaborative Filtering](http://www.sze.hu/~gtakacs/download/recsys_2011_draft.pdf) and [Faster Implicit Matrix Factorization](http://www.benfrederickson.com/fast-implicit-matrix-factorization/).
     * <img src="https://raw.githubusercontent.com/rexyai/rsparse/master/docs/img/WRMF.png" width="400">
 1. **Linear-Flow** from [Practical Linear Models for Large-Scale One-Class Collaborative Filtering](http://www.bkveton.com/docs/ijcai2016.pdf). Algorithm looks for factorized low-rank item-item similarity matrix (in some sense it is similar to [SLIM](http://glaros.dtc.umn.edu/gkhome/node/774))
     * <img src="https://raw.githubusercontent.com/rexyai/rsparse/master/docs/img/LinearFlow.png" width="300">

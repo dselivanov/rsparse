@@ -1,5 +1,6 @@
-AC_PREREQ([2.69])
-AC_INIT(DESCRIPTION)
+AC_PREREQ([2.71])
+AC_INIT
+AC_CONFIG_SRCDIR([DESCRIPTION])
 
 ## Set R_HOME, respecting an environment variable if one is set
 : ${R_HOME=$(R RHOME)}
@@ -117,4 +118,5 @@ fi
 AC_SUBST(OPENMP_CXXFLAGS)
 AC_SUBST([OPENMP_FLAG], ["${openmp_flag}"])
 AC_SUBST(FLOAT_LIBS)
-AC_OUTPUT(src/Makevars)
+AC_CONFIG_FILES([src/Makevars])
+AC_OUTPUT

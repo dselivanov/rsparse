@@ -4,6 +4,7 @@
 #' @import data.table
 #' @import Rcpp
 #' @import float
+#' @import MatrixExtra
 #' @importFrom RhpcBLASctl get_num_cores
 #' @useDynLib rsparse, .registration = TRUE
 

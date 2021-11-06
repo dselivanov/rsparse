@@ -1,3 +1,7 @@
+- 2021-10-17 - `v0.5.0`
+    - reworked non-negative matrix factorization with brand-new Coordinate Descent solver for OLS
+    - WRMF can model user, item and global biases
+    - various performance improvements
 - 2020-04-01 - `v0.4.0`
     - updated docs with roxygen2 7.1
     - added `ScaleNormalize` transformer

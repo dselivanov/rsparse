@@ -24,7 +24,7 @@ preds = model$predict(cv, k = 10)
 \references{
 \itemize{
   \item{\url{http://www.bkveton.com/docs/ijcai2016.pdf}}
-  \item{\url{http://www-users.cs.umn.edu/~xning/slides/ICDM2011_slides.pdf}}
+  \item{\url{https://www-users.cse.umn.edu/~ningx005/slides/ICDM2011_slides.pdf}}
 }
 }
 \section{Super class}{

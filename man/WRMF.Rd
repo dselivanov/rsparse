@@ -25,9 +25,7 @@ preds = model$predict(cv, k = 10, not_recommend = cv)
         2008 Eighth IEEE International Conference on Data Mining. Ieee, 2008.}
   \item{\url{https://math.stackexchange.com/questions/1072451/analytic-solution-for-matrix-factorization-using-alternating-least-squares/1073170#1073170}}
   \item{\url{http://activisiongamescience.github.io/2016/01/11/Implicit-Recommender-Systems-Biased-Matrix-Factorization/}}
-  \item{\url{http://datamusing.info/blog/2015/01/07/implicit-feedback-and-collaborative-filtering/}}
   \item{\url{https://jessesw.com/Rec-System/}}
-  \item{\url{http://danielnee.com/2016/09/collaborative-filtering-using-alternating-least-squares/}}
   \item{\url{http://www.benfrederickson.com/matrix-factorization/}}
   \item{\url{http://www.benfrederickson.com/fast-implicit-matrix-factorization/}}
   \item{Franc, Vojtech, Vaclav Hlavac, and Mirko Navara.
