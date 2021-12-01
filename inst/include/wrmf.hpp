@@ -1,4 +1,9 @@
+#ifdef RSPARSE_R_PKG
+#include <RcppArmadillo.h>
+#else
 #include <armadillo>
+#endif
+
 #include "mapped_csc.hpp"
 #include "mapped_csr.hpp"
 

@@ -7,9 +7,9 @@ src/*.so
 src/*.dll
 .DS_Store
 extradata/
-
 *.status
 config.log
 autom4te.cache
-
 src/Makevars
+revdep
+.Rprofile

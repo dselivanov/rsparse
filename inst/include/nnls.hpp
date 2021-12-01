@@ -1,4 +1,9 @@
+#ifdef RSPARSE_R_PKG
+#include <RcppArmadillo.h>
+#else
 #include <armadillo>
+#endif
+
 
 #define EPS 1e-16
 

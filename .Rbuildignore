@@ -12,3 +12,4 @@ docs/
 ^.clang-format$
 ^Makefile$
 extradata/
+revdep/
