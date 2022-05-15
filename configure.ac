@@ -113,6 +113,14 @@ if test x"${can_use_openmp}" = x"yes"; then
     fi
 fi
 
+## For Linux (and other OSes?), it is safe to just use 'SHLIB_OPENMP_CXXFLAGS'
+## and let the R build system deal with it
+if test "${openmp_flag}" = ""; then
+    if test "${RSysinfoName}" != "Darwin"; then
+        openmp_flag='$(SHLIB_OPENMP_CXXFLAGS)'
+    fi
+fi
+
 #------------------------------------------------------
 
 AC_SUBST(OPENMP_CXXFLAGS)
