@@ -22,13 +22,13 @@ implicit feedback when not using user/item biases)}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-predict}{\code{MatrixFactorizationRecommender$predict()}}
-\item \href{#method-clone}{\code{MatrixFactorizationRecommender$clone()}}
+\item \href{#method-MatrixFactorizationRecommender-predict}{\code{MatrixFactorizationRecommender$predict()}}
+\item \href{#method-MatrixFactorizationRecommender-clone}{\code{MatrixFactorizationRecommender$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-predict"></a>}}
-\if{latex}{\out{\hypertarget{method-predict}{}}}
+\if{html}{\out{<a id="method-MatrixFactorizationRecommender-predict"></a>}}
+\if{latex}{\out{\hypertarget{method-MatrixFactorizationRecommender-predict}{}}}
 \subsection{Method \code{predict()}}{
 recommends items for users
 \subsection{Usage}{
@@ -62,8 +62,8 @@ recommend to any user.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-MatrixFactorizationRecommender-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-MatrixFactorizationRecommender-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

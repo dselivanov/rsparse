@@ -45,22 +45,22 @@ preds = model$predict(cv, k = 10, not_recommend = cv)
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{WRMF$new()}}
-\item \href{#method-fit_transform}{\code{WRMF$fit_transform()}}
-\item \href{#method-transform}{\code{WRMF$transform()}}
-\item \href{#method-clone}{\code{WRMF$clone()}}
+\item \href{#method-WRMF-new}{\code{WRMF$new()}}
+\item \href{#method-WRMF-fit_transform}{\code{WRMF$fit_transform()}}
+\item \href{#method-WRMF-transform}{\code{WRMF$transform()}}
+\item \href{#method-WRMF-clone}{\code{WRMF$clone()}}
 }
 }
-\if{html}{
-\out{<details open ><summary>Inherited methods</summary>}
-\itemize{
-\item \out{<span class="pkg-link" data-pkg="rsparse" data-topic="MatrixFactorizationRecommender" data-id="predict">}\href{../../rsparse/html/MatrixFactorizationRecommender.html#method-predict}{\code{rsparse::MatrixFactorizationRecommender$predict()}}\out{</span>}
-}
-\out{</details>}
-}
+\if{html}{\out{
+<details open><summary>Inherited methods</summary>
+<ul>
+<li><span class="pkg-link" data-pkg="rsparse" data-topic="MatrixFactorizationRecommender" data-id="predict"><a href='../../rsparse/html/MatrixFactorizationRecommender.html#method-MatrixFactorizationRecommender-predict'><code>rsparse::MatrixFactorizationRecommender$predict()</code></a></span></li>
+</ul>
+</details>
+}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-WRMF-new"></a>}}
+\if{latex}{\out{\hypertarget{method-WRMF-new}{}}}
 \subsection{Method \code{new()}}{
 creates WRMF model
 \subsection{Usage}{
@@ -129,8 +129,8 @@ consumes less RAM. BUT \code{float} matrices are not "base" objects. Use careful
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fit_transform"></a>}}
-\if{latex}{\out{\hypertarget{method-fit_transform}{}}}
+\if{html}{\out{<a id="method-WRMF-fit_transform"></a>}}
+\if{latex}{\out{\hypertarget{method-WRMF-fit_transform}{}}}
 \subsection{Method \code{fit_transform()}}{
 fits the model
 \subsection{Usage}{
@@ -157,8 +157,8 @@ fits the model
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-transform"></a>}}
-\if{latex}{\out{\hypertarget{method-transform}{}}}
+\if{html}{\out{<a id="method-WRMF-transform"></a>}}
+\if{latex}{\out{\hypertarget{method-WRMF-transform}{}}}
 \subsection{Method \code{transform()}}{
 create user embeddings for new input
 \subsection{Usage}{
@@ -176,8 +176,8 @@ create user embeddings for new input
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-WRMF-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-WRMF-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

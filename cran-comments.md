@@ -1,6 +1,8 @@
-# Resubmission
+# New submission
 
-- fixed pkg imports to not break dependencies
+- fixed HTML validation problems discovered by CRAN checks
+- fixed NEWS.md to follow CRAN format
+- failing tests on "r-oldrel-windows-ix86+x86_64" are due to the lack of `MatrixExtra` library. I'm not sure why this happened on CRAN server
 
 # Test environments
 
@@ -9,4 +11,4 @@
 
 # R CMD check results
 
-0 errors | 0 warning | 0 notes
+One misc note which shows 403 error when accessing [http://yifanhu.net/PUB/cf.pdf](http://yifanhu.net/PUB/cf.pdf). This seems CRAN server specific.

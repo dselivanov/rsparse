@@ -22,7 +22,7 @@ Please reach us if you need **commercial support** - [hello@rexy.ai](mailto:hell
 
 ### Classification/Regression
 
-1. [Follow the proximally-regularized leader](https://www.jmlr.org/proceedings/papers/v15/mcmahan11b/mcmahan11b.pdf) which allows to solve **very large linear/logistic regression** problems with elastic-net penalty. Solver uses stochastic gradient descent with adaptive learning rates (so can be used for online learning - not necessary to load all data to RAM). See [Ad Click Prediction: a View from the Trenches](https://www.eecs.tufts.edu/~dsculley/papers/ad-click-prediction.pdf) for more examples.
+1. [Follow the proximally-regularized leader](http://proceedings.mlr.press/v15/mcmahan11b/mcmahan11b.pdf) which allows to solve **very large linear/logistic regression** problems with elastic-net penalty. Solver uses stochastic gradient descent with adaptive learning rates (so can be used for online learning - not necessary to load all data to RAM). See [Ad Click Prediction: a View from the Trenches](https://www.eecs.tufts.edu/~dsculley/papers/ad-click-prediction.pdf) for more examples.
     - Only logistic regerssion implemented at the moment
     - Native format for matrices is CSR - `Matrix::RsparseMatrix`. However common R `Matrix::CsparseMatrix` (`dgCMatrix`) will be converted automatically.
 1. [Factorization Machines](https://www.csie.ntu.edu.tw/~b97053/paper/Rendle2010FM.pdf) supervised learning algorithm which learns second order polynomial interactions in a factorized way. We provide highly optimized SIMD accelerated implementation.  
@@ -31,7 +31,7 @@ Please reach us if you need **commercial support** - [hello@rexy.ai](mailto:hell
 
 1. Vanilla **Maximum Margin Matrix Factorization** - classic approch for "rating" prediction. See `WRMF` class and constructor option `feedback = "explicit"`. Original paper which indroduced MMMF could be found [here](https://ttic.uchicago.edu/~nati/Publications/MMMFnips04.pdf).
     * <img src="https://raw.githubusercontent.com/rexyai/rsparse/master/docs/img/MMMF.png" width="400">
-1. **Weighted Regularized Matrix Factorization (WRMF)** from [Collaborative Filtering for Implicit Feedback Datasets](https://www.researchgate.net/profile/Yifan-Hu-25/publication/220765111_Collaborative_Filtering_for_Implicit_Feedback_Datasets/links/0912f509c579ddd954000000/Collaborative-Filtering-for-Implicit-Feedback-Datasets.pdf). See `WRMF` class and constructor option `feedback = "implicit"`. 
+1. **Weighted Regularized Matrix Factorization (WRMF)** from [Collaborative Filtering for Implicit Feedback Datasets](http://yifanhu.net/PUB/cf.pdf). See `WRMF` class and constructor option `feedback = "implicit"`. 
 We provide 2 solvers:
     1. Exact based on Cholesky Factorization
     1. Approximated based on fixed number of steps of **Conjugate Gradient**.

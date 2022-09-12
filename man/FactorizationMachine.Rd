@@ -27,16 +27,16 @@ all(preds[c(2, 3)] > 0.99)
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{FactorizationMachine$new()}}
-\item \href{#method-partial_fit}{\code{FactorizationMachine$partial_fit()}}
-\item \href{#method-fit}{\code{FactorizationMachine$fit()}}
-\item \href{#method-predict}{\code{FactorizationMachine$predict()}}
-\item \href{#method-clone}{\code{FactorizationMachine$clone()}}
+\item \href{#method-FactorizationMachine-new}{\code{FactorizationMachine$new()}}
+\item \href{#method-FactorizationMachine-partial_fit}{\code{FactorizationMachine$partial_fit()}}
+\item \href{#method-FactorizationMachine-fit}{\code{FactorizationMachine$fit()}}
+\item \href{#method-FactorizationMachine-predict}{\code{FactorizationMachine$predict()}}
+\item \href{#method-FactorizationMachine-clone}{\code{FactorizationMachine$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-FactorizationMachine-new"></a>}}
+\if{latex}{\out{\hypertarget{method-FactorizationMachine-new}{}}}
 \subsection{Method \code{new()}}{
 creates Creates second order Factorization Machines model
 \subsection{Usage}{
@@ -72,8 +72,8 @@ creates Creates second order Factorization Machines model
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-partial_fit"></a>}}
-\if{latex}{\out{\hypertarget{method-partial_fit}{}}}
+\if{html}{\out{<a id="method-FactorizationMachine-partial_fit"></a>}}
+\if{latex}{\out{\hypertarget{method-FactorizationMachine-partial_fit}{}}}
 \subsection{Method \code{partial_fit()}}{
 fits/updates model
 \subsection{Usage}{
@@ -98,8 +98,8 @@ for each sample. May be useful for highly unbalanced problems.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fit"></a>}}
-\if{latex}{\out{\hypertarget{method-fit}{}}}
+\if{html}{\out{<a id="method-FactorizationMachine-fit"></a>}}
+\if{latex}{\out{\hypertarget{method-FactorizationMachine-fit}{}}}
 \subsection{Method \code{fit()}}{
 shorthand for applying `partial_fit` `n_iter` times
 \subsection{Usage}{
@@ -126,8 +126,8 @@ for each sample. May be useful for highly unbalanced problems.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-predict"></a>}}
-\if{latex}{\out{\hypertarget{method-predict}{}}}
+\if{html}{\out{<a id="method-FactorizationMachine-predict"></a>}}
+\if{latex}{\out{\hypertarget{method-FactorizationMachine-predict}{}}}
 \subsection{Method \code{predict()}}{
 makes predictions based on fitted model
 \subsection{Usage}{
@@ -145,8 +145,8 @@ makes predictions based on fitted model
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-FactorizationMachine-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-FactorizationMachine-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

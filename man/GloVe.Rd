@@ -34,15 +34,15 @@ each SGD iteration. Generally shuffling is a good practice for SGD.}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{GloVe$new()}}
-\item \href{#method-fit_transform}{\code{GloVe$fit_transform()}}
-\item \href{#method-get_history}{\code{GloVe$get_history()}}
-\item \href{#method-clone}{\code{GloVe$clone()}}
+\item \href{#method-GloVe-new}{\code{GloVe$new()}}
+\item \href{#method-GloVe-fit_transform}{\code{GloVe$fit_transform()}}
+\item \href{#method-GloVe-get_history}{\code{GloVe$get_history()}}
+\item \href{#method-GloVe-clone}{\code{GloVe$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-GloVe-new"></a>}}
+\if{latex}{\out{\hypertarget{method-GloVe-new}{}}}
 \subsection{Method \code{new()}}{
 Creates GloVe model object
 \subsection{Usage}{
@@ -85,8 +85,8 @@ expected number of rows (w_i) / columns(w_j) in the input matrix.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fit_transform"></a>}}
-\if{latex}{\out{\hypertarget{method-fit_transform}{}}}
+\if{html}{\out{<a id="method-GloVe-fit_transform"></a>}}
+\if{latex}{\out{\hypertarget{method-GloVe-fit_transform}{}}}
 \subsection{Method \code{fit_transform()}}{
 fits model and returns embeddings
 \subsection{Usage}{
@@ -119,8 +119,8 @@ convergence_tol}.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-get_history"></a>}}
-\if{latex}{\out{\hypertarget{method-get_history}{}}}
+\if{html}{\out{<a id="method-GloVe-get_history"></a>}}
+\if{latex}{\out{\hypertarget{method-GloVe-get_history}{}}}
 \subsection{Method \code{get_history()}}{
 returns value of the loss function for each epoch
 \subsection{Usage}{
@@ -129,8 +129,8 @@ returns value of the loss function for each epoch
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-GloVe-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-GloVe-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

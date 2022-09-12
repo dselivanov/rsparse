@@ -147,7 +147,7 @@ FTRL = R6::R6Class(
     },
     #-----------------------------------------------------------------
     load = function(x) {
-      if (class(x) != "ftrl_model_dump")
+      if (!inherits(x, "ftrl_model_dump"))
         stop("input should be class of 'ftrl_model_dump' -  list of model parameters")
       private$init_model_param(learning_rate = x$learning_rate, learning_rate_decay = x$learning_rate_decay,
                                lambda = x$lambda, l1_ratio = x$l1_ratio,

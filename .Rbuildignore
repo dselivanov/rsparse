@@ -13,3 +13,4 @@ docs/
 ^Makefile$
 extradata/
 revdep/
+^CRAN-SUBMISSION$

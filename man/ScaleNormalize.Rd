@@ -24,16 +24,16 @@ Effective and Efficient Top-N Recommendations} for details.
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{ScaleNormalize$new()}}
-\item \href{#method-fit}{\code{ScaleNormalize$fit()}}
-\item \href{#method-transform}{\code{ScaleNormalize$transform()}}
-\item \href{#method-fit_transform}{\code{ScaleNormalize$fit_transform()}}
-\item \href{#method-clone}{\code{ScaleNormalize$clone()}}
+\item \href{#method-NA-new}{\code{ScaleNormalize$new()}}
+\item \href{#method-NA-fit}{\code{ScaleNormalize$fit()}}
+\item \href{#method-NA-transform}{\code{ScaleNormalize$transform()}}
+\item \href{#method-NA-fit_transform}{\code{ScaleNormalize$fit_transform()}}
+\item \href{#method-unknown-clone}{\code{ScaleNormalize$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-NA-new"></a>}}
+\if{latex}{\out{\hypertarget{method-NA-new}{}}}
 \subsection{Method \code{new()}}{
 creates model
 \subsection{Usage}{
@@ -53,8 +53,8 @@ creates model
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fit"></a>}}
-\if{latex}{\out{\hypertarget{method-fit}{}}}
+\if{html}{\out{<a id="method-NA-fit"></a>}}
+\if{latex}{\out{\hypertarget{method-NA-fit}{}}}
 \subsection{Method \code{fit()}}{
 fits the modes
 \subsection{Usage}{
@@ -70,8 +70,8 @@ fits the modes
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-transform"></a>}}
-\if{latex}{\out{\hypertarget{method-transform}{}}}
+\if{html}{\out{<a id="method-NA-transform"></a>}}
+\if{latex}{\out{\hypertarget{method-NA-transform}{}}}
 \subsection{Method \code{transform()}}{
 transforms new matrix
 \subsection{Usage}{
@@ -87,8 +87,8 @@ transforms new matrix
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fit_transform"></a>}}
-\if{latex}{\out{\hypertarget{method-fit_transform}{}}}
+\if{html}{\out{<a id="method-NA-fit_transform"></a>}}
+\if{latex}{\out{\hypertarget{method-NA-fit_transform}{}}}
 \subsection{Method \code{fit_transform()}}{
 fits the model and transforms input
 \subsection{Usage}{
@@ -104,8 +104,8 @@ fits the model and transforms input
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-unknown-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-unknown-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

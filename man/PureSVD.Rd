@@ -27,22 +27,22 @@ mean(ap_k(preds, actual = test))
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{PureSVD$new()}}
-\item \href{#method-fit_transform}{\code{PureSVD$fit_transform()}}
-\item \href{#method-transform}{\code{PureSVD$transform()}}
-\item \href{#method-clone}{\code{PureSVD$clone()}}
+\item \href{#method-PureSVD-new}{\code{PureSVD$new()}}
+\item \href{#method-PureSVD-fit_transform}{\code{PureSVD$fit_transform()}}
+\item \href{#method-PureSVD-transform}{\code{PureSVD$transform()}}
+\item \href{#method-PureSVD-clone}{\code{PureSVD$clone()}}
 }
 }
-\if{html}{
-\out{<details open ><summary>Inherited methods</summary>}
-\itemize{
-\item \out{<span class="pkg-link" data-pkg="rsparse" data-topic="MatrixFactorizationRecommender" data-id="predict">}\href{../../rsparse/html/MatrixFactorizationRecommender.html#method-predict}{\code{rsparse::MatrixFactorizationRecommender$predict()}}\out{</span>}
-}
-\out{</details>}
-}
+\if{html}{\out{
+<details open><summary>Inherited methods</summary>
+<ul>
+<li><span class="pkg-link" data-pkg="rsparse" data-topic="MatrixFactorizationRecommender" data-id="predict"><a href='../../rsparse/html/MatrixFactorizationRecommender.html#method-MatrixFactorizationRecommender-predict'><code>rsparse::MatrixFactorizationRecommender$predict()</code></a></span></li>
+</ul>
+</details>
+}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-PureSVD-new"></a>}}
+\if{latex}{\out{\hypertarget{method-PureSVD-new}{}}}
 \subsection{Method \code{new()}}{
 create PureSVD model
 \subsection{Usage}{
@@ -80,8 +80,8 @@ basis. Original paper uses SVD. See paper for details.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fit_transform"></a>}}
-\if{latex}{\out{\hypertarget{method-fit_transform}{}}}
+\if{html}{\out{<a id="method-PureSVD-fit_transform"></a>}}
+\if{latex}{\out{\hypertarget{method-PureSVD-fit_transform}{}}}
 \subsection{Method \code{fit_transform()}}{
 performs matrix factorization
 \subsection{Usage}{
@@ -106,8 +106,8 @@ is less then provided \code{convergence_tol}.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-transform"></a>}}
-\if{latex}{\out{\hypertarget{method-transform}{}}}
+\if{html}{\out{<a id="method-PureSVD-transform"></a>}}
+\if{latex}{\out{\hypertarget{method-PureSVD-transform}{}}}
 \subsection{Method \code{transform()}}{
 calculates user embeddings for the new input
 \subsection{Usage}{
@@ -125,8 +125,8 @@ calculates user embeddings for the new input
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-PureSVD-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-PureSVD-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

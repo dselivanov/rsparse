@@ -41,23 +41,23 @@ In the paper this matrix is called \bold{v}}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{LinearFlow$new()}}
-\item \href{#method-fit_transform}{\code{LinearFlow$fit_transform()}}
-\item \href{#method-transform}{\code{LinearFlow$transform()}}
-\item \href{#method-cross_validate_lambda}{\code{LinearFlow$cross_validate_lambda()}}
-\item \href{#method-clone}{\code{LinearFlow$clone()}}
+\item \href{#method-LinearFlow-new}{\code{LinearFlow$new()}}
+\item \href{#method-LinearFlow-fit_transform}{\code{LinearFlow$fit_transform()}}
+\item \href{#method-LinearFlow-transform}{\code{LinearFlow$transform()}}
+\item \href{#method-LinearFlow-cross_validate_lambda}{\code{LinearFlow$cross_validate_lambda()}}
+\item \href{#method-LinearFlow-clone}{\code{LinearFlow$clone()}}
 }
 }
-\if{html}{
-\out{<details open ><summary>Inherited methods</summary>}
-\itemize{
-\item \out{<span class="pkg-link" data-pkg="rsparse" data-topic="MatrixFactorizationRecommender" data-id="predict">}\href{../../rsparse/html/MatrixFactorizationRecommender.html#method-predict}{\code{rsparse::MatrixFactorizationRecommender$predict()}}\out{</span>}
-}
-\out{</details>}
-}
+\if{html}{\out{
+<details open><summary>Inherited methods</summary>
+<ul>
+<li><span class="pkg-link" data-pkg="rsparse" data-topic="MatrixFactorizationRecommender" data-id="predict"><a href='../../rsparse/html/MatrixFactorizationRecommender.html#method-MatrixFactorizationRecommender-predict'><code>rsparse::MatrixFactorizationRecommender$predict()</code></a></span></li>
+</ul>
+</details>
+}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-LinearFlow-new"></a>}}
+\if{latex}{\out{\hypertarget{method-LinearFlow-new}{}}}
 \subsection{Method \code{new()}}{
 creates Linear-FLow model with \code{rank} latent factors.
 \subsection{Usage}{
@@ -92,8 +92,8 @@ basis. Original paper uses SVD. See paper for details.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fit_transform"></a>}}
-\if{latex}{\out{\hypertarget{method-fit_transform}{}}}
+\if{html}{\out{<a id="method-LinearFlow-fit_transform"></a>}}
+\if{latex}{\out{\hypertarget{method-LinearFlow-fit_transform}{}}}
 \subsection{Method \code{fit_transform()}}{
 performs matrix factorization
 \subsection{Usage}{
@@ -111,8 +111,8 @@ performs matrix factorization
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-transform"></a>}}
-\if{latex}{\out{\hypertarget{method-transform}{}}}
+\if{html}{\out{<a id="method-LinearFlow-transform"></a>}}
+\if{latex}{\out{\hypertarget{method-LinearFlow-transform}{}}}
 \subsection{Method \code{transform()}}{
 calculates user embeddings for the new input
 \subsection{Usage}{
@@ -130,8 +130,8 @@ calculates user embeddings for the new input
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-cross_validate_lambda"></a>}}
-\if{latex}{\out{\hypertarget{method-cross_validate_lambda}{}}}
+\if{html}{\out{<a id="method-LinearFlow-cross_validate_lambda"></a>}}
+\if{latex}{\out{\hypertarget{method-LinearFlow-cross_validate_lambda}{}}}
 \subsection{Method \code{cross_validate_lambda()}}{
 performs fast tuning of the parameter `lambda` with warm re-starts
 \subsection{Usage}{
@@ -174,8 +174,8 @@ for each user.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-LinearFlow-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-LinearFlow-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

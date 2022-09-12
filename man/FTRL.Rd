@@ -30,17 +30,17 @@ p = ftrl$predict(x)
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{FTRL$new()}}
-\item \href{#method-partial_fit}{\code{FTRL$partial_fit()}}
-\item \href{#method-fit}{\code{FTRL$fit()}}
-\item \href{#method-predict}{\code{FTRL$predict()}}
-\item \href{#method-coef}{\code{FTRL$coef()}}
-\item \href{#method-clone}{\code{FTRL$clone()}}
+\item \href{#method-FTRL-new}{\code{FTRL$new()}}
+\item \href{#method-FTRL-partial_fit}{\code{FTRL$partial_fit()}}
+\item \href{#method-FTRL-fit}{\code{FTRL$fit()}}
+\item \href{#method-FTRL-predict}{\code{FTRL$predict()}}
+\item \href{#method-FTRL-coef}{\code{FTRL$coef()}}
+\item \href{#method-FTRL-clone}{\code{FTRL$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-FTRL-new"></a>}}
+\if{latex}{\out{\hypertarget{method-FTRL-new}{}}}
 \subsection{Method \code{new()}}{
 creates a model
 \subsection{Usage}{
@@ -78,8 +78,8 @@ the model. Only \code{binomial} (logistic regression) is implemented at the mome
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-partial_fit"></a>}}
-\if{latex}{\out{\hypertarget{method-partial_fit}{}}}
+\if{html}{\out{<a id="method-FTRL-partial_fit"></a>}}
+\if{latex}{\out{\hypertarget{method-FTRL-partial_fit}{}}}
 \subsection{Method \code{partial_fit()}}{
 fits model to the data
 \subsection{Usage}{
@@ -104,8 +104,8 @@ for each sample. May be useful for highly unbalanced problems.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fit"></a>}}
-\if{latex}{\out{\hypertarget{method-fit}{}}}
+\if{html}{\out{<a id="method-FTRL-fit"></a>}}
+\if{latex}{\out{\hypertarget{method-FTRL-fit}{}}}
 \subsection{Method \code{fit()}}{
 shorthand for applying `partial_fit` `n_iter` times
 \subsection{Usage}{
@@ -132,8 +132,8 @@ for each sample. May be useful for highly unbalanced problems.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-predict"></a>}}
-\if{latex}{\out{\hypertarget{method-predict}{}}}
+\if{html}{\out{<a id="method-FTRL-predict"></a>}}
+\if{latex}{\out{\hypertarget{method-FTRL-predict}{}}}
 \subsection{Method \code{predict()}}{
 makes predictions based on fitted model
 \subsection{Usage}{
@@ -151,8 +151,8 @@ makes predictions based on fitted model
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-coef"></a>}}
-\if{latex}{\out{\hypertarget{method-coef}{}}}
+\if{html}{\out{<a id="method-FTRL-coef"></a>}}
+\if{latex}{\out{\hypertarget{method-FTRL-coef}{}}}
 \subsection{Method \code{coef()}}{
 returns coefficients of the regression model
 \subsection{Usage}{
@@ -161,8 +161,8 @@ returns coefficients of the regression model
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-FTRL-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-FTRL-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{
