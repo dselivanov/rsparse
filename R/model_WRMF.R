@@ -331,7 +331,6 @@ WRMF = R6::R6Class(
 
         loss_prev_iter = loss
       }
-
       if (private$precision == "double")
         data.table::setattr(self$components, "dimnames", list(NULL, colnames(x)))
       else
@@ -341,7 +340,10 @@ WRMF = R6::R6Class(
       rank_ = ifelse(private$with_user_item_bias, private$rank - 1L, private$rank)
       ridge = fl(diag(x = private$lambda, nrow = rank_, ncol = rank_))
       XX = if (private$with_user_item_bias) self$components[-1L, , drop = FALSE] else self$components
+
+      RhpcBLASctl::blas_set_num_threads(RhpcBLASctl::get_num_cores())
       private$XtX = tcrossprod(XX) + ridge
+      RhpcBLASctl::blas_set_num_threads(1)
 
       # call extra transform to ensure results from transform() and fit_transform()
       # are the same (due to avoid_cg, etc)
@@ -465,7 +467,9 @@ als_implicit = function(
     } else {
       XX = X
     }
+    RhpcBLASctl::blas_set_num_threads(RhpcBLASctl::get_num_cores())
     XtX = tcrossprod(XX) + ridge
+    RhpcBLASctl::blas_set_num_threads(1)
   }
   if (is.null(global_bias_base)) {
     global_bias_base = numeric()
