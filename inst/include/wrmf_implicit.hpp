@@ -182,17 +182,17 @@ T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
       arma::Col<T> confidence =
           arma::conv_to<arma::Col<T> >::from(arma::vec(&Conf.values[p1], p2 - p1));
       X_nnz = X.cols(idx);
+      init = Y.col(i);
       // if is_x_bias_last_row == true
       // X_nnz = [1, ...]
       // if is_x_bias_last_row == false
       // X_nnz = [..., 1]
       if (with_biases) {
         X_nnz = drop_row<T>(X_nnz, is_x_bias_last_row);
-        // init = drop_row<T>(init, !is_x_bias_last_row);
+        init = drop_row<T>(init, !is_x_bias_last_row);
       }
 
       if (solver == CONJUGATE_GRADIENT) {
-        init = Y.col(i);
         if (!with_biases && !global_bias)
           Y_new = cg_solver_implicit<T>(X_nnz, confidence, init, cg_steps, XtX);
         else if (with_biases) {
