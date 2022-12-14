@@ -1,3 +1,7 @@
+# rsparse dev
+- faster WRMF solver see #72, #75
+- updated github actions
+
 # rsparse 0.5.1 (2022-09-11)
 - update `configure` script, thanks to @david-cortes, see #73
 - minor fixes in WRMF

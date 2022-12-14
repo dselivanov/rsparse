@@ -11,13 +11,6 @@
 
 We've paid some attention to the implementation details - we try to avoid data copies, utilize multiple threads via OpenMP and use SIMD where appropriate. Package **allows to work on datasets with millions of rows and millions of columns**.
 
-
-### Support 
-
-Please reach us if you need **commercial support** - [hello@rexy.ai](mailto:hello@rexy.ai).
-
-
-
 # Features
 
 ### Classification/Regression
