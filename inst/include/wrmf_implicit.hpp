@@ -149,14 +149,10 @@ T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
       // C = 1 (so we omit multiplication on eye matrix)
       // rhs = X * eye * (0 - x_biases) = -X * x_biases
       rhs_init *= -x_biases;
-    }
-
-    else {
+    } else {
       rhs_init = - (drop_row<T>(X, is_x_bias_last_row) * (x_biases + global_bias));
     }
-  }
-
-  else if (global_bias) {
+  } else if (global_bias) {
     rhs_init = arma::Mat<T>(&global_bias_base[0], rank - (int)with_biases, 1, false, true);
   }
 
@@ -164,7 +160,17 @@ T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
   double loss = 0;
   size_t nc = Conf.n_cols;
 #ifdef _OPENMP
-#pragma omp parallel for num_threads(n_threads) schedule(dynamic, GRAIN_SIZE) reduction(+:loss)
+#pragma omp parallel num_threads(n_threads)
+#endif
+{
+  arma::Mat<T> X_nnz;
+  arma::Mat<T> X_nnz_t;
+  arma::Col<T> init;
+  arma::Col<T> Y_new;
+  arma::Mat<T> rhs;
+
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic) reduction(+:loss)
 #endif
   for (size_t i = 0; i < nc; i++) {
     arma::uword p1 = Conf.col_ptrs[i];
@@ -175,8 +181,8 @@ T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
       const arma::uvec idx = arma::uvec(&Conf.row_indices[p1], p2 - p1, false, true);
       arma::Col<T> confidence =
           arma::conv_to<arma::Col<T> >::from(arma::vec(&Conf.values[p1], p2 - p1));
-      arma::Mat<T> X_nnz = X.cols(idx);
-      arma::Col<T> init = Y.col(i);
+      X_nnz = X.cols(idx);
+      init = Y.col(i);
       // if is_x_bias_last_row == true
       // X_nnz = [1, ...]
       // if is_x_bias_last_row == false
@@ -185,22 +191,22 @@ T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
         X_nnz = drop_row<T>(X_nnz, is_x_bias_last_row);
         init = drop_row<T>(init, !is_x_bias_last_row);
       }
-      arma::Col<T> Y_new;
 
       if (solver == CONJUGATE_GRADIENT) {
         if (!with_biases && !global_bias)
           Y_new = cg_solver_implicit<T>(X_nnz, confidence, init, cg_steps, XtX);
-        else if (with_biases)
+        else if (with_biases) {
+          init = drop_row<T>(init, !is_x_bias_last_row);
           Y_new = cg_solver_implicit_user_item_bias<T>(X_nnz, confidence, init, cg_steps, XtX,
                                                        rhs_init, x_biases(idx), global_bias);
-        else
+        } else {
           Y_new = cg_solver_implicit_global_bias<T>(X_nnz, confidence, init, cg_steps, XtX,
                                                     rhs_init, global_bias);
-
+        }
       } else {
         const arma::Mat<T> lhs =
-            XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
-        arma::Mat<T> rhs;
+          XtX + X_nnz.each_row() % (confidence.t() - 1) * X_nnz.t();
+
         if (with_biases) {
           // now we need to update rhs with rhs_init and take into account
           // items with interactions (p=1)
@@ -227,7 +233,7 @@ T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
         if (solver == SEQ_COORDINATE_WISE_NNLS) {
           Y_new = c_nnls<T>(lhs, rhs, init, SCD_MAX_ITER, SCD_TOL);
         } else {  // CHOLESKY
-          Y_new = solve(lhs, rhs, arma::solve_opts::fast);
+          Y_new = solve(lhs, rhs, arma::solve_opts::fast + arma::solve_opts::likely_sympd);
         }
       }
 
@@ -276,7 +282,7 @@ T als_implicit(const dMappedCSC& Conf, arma::Mat<T>& X, arma::Mat<T>& Y,
       }
     }
   }
-
+}
   if (lambda > 0) {
     if (with_biases) {
       // lambda applied to all learned parameters:

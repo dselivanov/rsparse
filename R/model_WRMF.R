@@ -180,10 +180,15 @@ WRMF = R6::R6Class(
           RhpcBLASctl::blas_set_num_threads(blas_threads_keep)
         })
       }
-
+      logger$debug("converting input user-item matrix")
       c_ui = MatrixExtra::as.csc.matrix(x)
+      # c_ui = as(x, "CsparseMatrix")
+      logger$debug("pre-processing input")
       c_ui = private$preprocess(c_ui)
-      c_iu = MatrixExtra::t_shallow(MatrixExtra::as.csr.matrix(x))
+      logger$debug("creating item-user matrix")
+      c_iu = MatrixExtra::t_shallow(MatrixExtra::as.csr.matrix(c_ui))
+      # c_iu = t(c_ui)
+      logger$debug("created item-user matrix")
       # store item_ids in order to use them in predict method
       private$item_ids = colnames(c_ui)
 
@@ -195,7 +200,7 @@ WRMF = R6::R6Class(
       n_user = nrow(c_ui)
       n_item = ncol(c_ui)
 
-      logger$trace("initializing U")
+      logger$debug("initializing U")
       if (private$precision == "double") {
         private$U = large_rand_matrix(private$rank, n_user)
         # for item biases
@@ -210,7 +215,7 @@ WRMF = R6::R6Class(
       }
 
       if (is.null(self$components)) {
-
+        logger$debug("initializing components")
         if (private$solver_code == 1L) { ### <- cholesky
           if (private$precision == "double") {
             self$components = matrix(0, private$rank, n_item)
@@ -331,6 +336,7 @@ WRMF = R6::R6Class(
 
         loss_prev_iter = loss
       }
+      logger$debug("solver finished")
 
       if (private$precision == "double")
         data.table::setattr(self$components, "dimnames", list(NULL, colnames(x)))
@@ -341,12 +347,16 @@ WRMF = R6::R6Class(
       rank_ = ifelse(private$with_user_item_bias, private$rank - 1L, private$rank)
       ridge = fl(diag(x = private$lambda, nrow = rank_, ncol = rank_))
       XX = if (private$with_user_item_bias) self$components[-1L, , drop = FALSE] else self$components
+
+      RhpcBLASctl::blas_set_num_threads(RhpcBLASctl::get_num_cores())
       private$XtX = tcrossprod(XX) + ridge
+      RhpcBLASctl::blas_set_num_threads(1)
 
       # call extra transform to ensure results from transform() and fit_transform()
       # are the same (due to avoid_cg, etc)
       # this adds some extra computation, but not a big deal though
-      self$transform(x)
+      # self$transform(x)
+      private$transform_(c_iu, ...)
     },
     # project new users into latent user space - just make ALS step given fixed items matrix
     #' @description create user embeddings for new input
@@ -366,48 +376,12 @@ WRMF = R6::R6Class(
         x = MatrixExtra::t_shallow(x)
       }
 
-      if (private$feedback == "implicit" ) {
-        logger$trace("WRMF$transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
-        blas_threads_keep = RhpcBLASctl::blas_get_num_procs()
-        RhpcBLASctl::blas_set_num_threads(1)
-        on.exit({
-          logger$trace("WRMF$transform(): on exit `RhpcBLASctl::blas_set_num_threads(%d)", blas_threads_keep)
-          RhpcBLASctl::blas_set_num_threads(blas_threads_keep)
-        })
-      }
-
       x = private$preprocess(x)
+
       if (self$global_bias != 0. && private$feedback == "explicit")
         x@x = x@x - self$global_bias
 
-      if (private$precision == "double") {
-        res = matrix(0, nrow = private$rank, ncol = ncol(x))
-      } else {
-        res = float(0, nrow = private$rank, ncol = ncol(x))
-      }
-
-      if (private$with_user_item_bias) {
-        res[1, ] = if(private$precision == "double") 1.0 else float::fl(1.0)
-      }
-
-      loss = private$solver(
-        x,
-        self$components,
-        res,
-        is_bias_last_row = FALSE,
-        XtX = private$XtX,
-        cnt_X = private$cnt_u,
-        avoid_cg = TRUE
-      )
-
-      res = t(res)
-
-      if (private$precision == "double")
-        setattr(res, "dimnames", list(colnames(x), NULL))
-      else
-        setattr(res@Data, "dimnames", list(colnames(x), NULL))
-
-      res
+      private$transform_(x, ...)
     }
   ),
   #### private -----
@@ -434,7 +408,48 @@ WRMF = R6::R6Class(
     solver = NULL,
     with_user_item_bias = NULL,
     with_global_bias = NULL,
-    init_user_item_bias = NULL
+    init_user_item_bias = NULL,
+    transform_ = function(x, ...) {
+      logger$debug('starting transform')
+      if (private$feedback == "implicit" ) {
+        logger$trace("WRMF$transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
+        blas_threads_keep = RhpcBLASctl::blas_get_num_procs()
+        RhpcBLASctl::blas_set_num_threads(1)
+        on.exit({
+          logger$trace("WRMF$transform(): on exit `RhpcBLASctl::blas_set_num_threads(%d)", blas_threads_keep)
+          RhpcBLASctl::blas_set_num_threads(blas_threads_keep)
+        })
+      }
+      if (private$precision == "double") {
+        res = matrix(0, nrow = private$rank, ncol = ncol(x))
+      } else {
+        res = float(0, nrow = private$rank, ncol = ncol(x))
+      }
+
+      if (private$with_user_item_bias) {
+        res[1, ] = if(private$precision == "double") 1.0 else float::fl(1.0)
+      }
+      logger$debug('starting transform solver')
+      loss = private$solver(
+        x,
+        self$components,
+        res,
+        is_bias_last_row = FALSE,
+        XtX = private$XtX,
+        cnt_X = private$cnt_u,
+        avoid_cg = TRUE
+      )
+      logger$debug('finished transform solver')
+
+      res = t(res)
+
+      if (private$precision == "double")
+        setattr(res, "dimnames", list(colnames(x), NULL))
+      else
+        setattr(res@Data, "dimnames", list(colnames(x), NULL))
+      logger$debug('finished transform')
+      res
+    }
   )
 )
 
@@ -465,7 +480,9 @@ als_implicit = function(
     } else {
       XX = X
     }
+    RhpcBLASctl::blas_set_num_threads(RhpcBLASctl::get_num_cores())
     XtX = tcrossprod(XX) + ridge
+    RhpcBLASctl::blas_set_num_threads(1)
   }
   if (is.null(global_bias_base)) {
     global_bias_base = numeric()

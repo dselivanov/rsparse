@@ -13,3 +13,4 @@ autom4te.cache
 src/Makevars
 revdep
 .Rprofile
+bench/

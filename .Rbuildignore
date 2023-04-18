@@ -14,3 +14,4 @@ docs/
 extradata/
 revdep/
 ^CRAN-SUBMISSION$
+bench/
