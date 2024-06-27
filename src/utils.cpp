@@ -113,16 +113,17 @@ const std::string currentDateTime() {
 }
 
 arma::fmat extract_float_matrix(Rcpp::S4 x) {
-  Rcpp::IntegerMatrix x_data = x.slot("Data");
-  float* ptr = reinterpret_cast<float*>(&x_data[0]);
-  arma::fmat x_mapped = arma::fmat(ptr, x_data.nrow(), x_data.ncol(), false, true);
+  SEXP x_data = x.slot("Data");
+  SEXP dims = Rf_getAttrib(x_data, R_DimSymbol);
+  float* ptr = reinterpret_cast<float*>(INTEGER(x_data));
+  arma::fmat x_mapped = arma::fmat(ptr, INTEGER(dims)[0], INTEGER(dims)[1], false, true);
   return (x_mapped);
 }
 
 arma::fvec extract_float_vector(Rcpp::S4 x) {
-  Rcpp::IntegerVector x_data = x.slot("Data");
-  float* ptr = reinterpret_cast<float*>(&x_data[0]);
-  arma::fvec x_mapped = arma::fvec(ptr, x_data.length(), false, true);
+  SEXP x_data = x.slot("Data");
+  float* ptr = reinterpret_cast<float*>(INTEGER(x_data));
+  arma::fvec x_mapped = arma::fvec(ptr, Rf_xlength(x_data), false, true);
   return (x_mapped);
 }
 
