@@ -2,7 +2,7 @@
 #' @description scales input user-item interaction matrix as per eq (16) from the paper.
 #' Usage of such rescaled matrix with [PureSVD] model will be equal to running PureSVD
 #' on the scaled cosine-based inter-item similarity matrix.
-#' @references See \href{https://arxiv.org/pdf/1511.06033.pdf}{EigenRec: Generalizing PureSVD for
+#' @references See \href{http://arxiv.org/pdf/1511.06033}{EigenRec: Generalizing PureSVD for
 #' Effective and Efficient Top-N Recommendations} for details.
 #' @export
 ScaleNormalize = R6::R6Class(

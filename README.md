@@ -1,10 +1,9 @@
 # rsparse <img src='man/figures/logo.png' align="right" height="128" />
 <!-- badges: start -->
-[![R build status](https://github.com/rexyai/rsparse/workflows/R-CMD-check/badge.svg)](https://github.com/rexyai/rsparse/actions)
-[![codecov](https://codecov.io/gh/rexyai/rsparse/branch/master/graph/badge.svg)](https://codecov.io/gh/rexyai/rsparse/branch/master)
+[![R build status](https://github.com/rexyai/rsparse/workflows/R-CMD-check/badge.svg)](https://github.com/dselivanov/rsparse/actions)
+[![codecov](https://codecov.io/gh/rexyai/rsparse/branch/master/graph/badge.svg)](https://app.codecov.io/gh/rexyai/rsparse/branch/master)
 [![License](https://eddelbuettel.github.io/badges/GPL2+.svg)](http://www.gnu.org/licenses/gpl-2.0.html)
 [![Project Status](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#maturing)
-<a href="https://rexy.ai"><img src="https://s3-eu-west-1.amazonaws.com/rexy.ai/images/favicon.ico" height="32" width="32"></a>
 <!-- badges: end -->
 
 `rsparse` is an R package for statistical learning primarily on **sparse matrices** -  **matrix factorizations, factorization machines, out-of-core regression**. Many of the implemented algorithms are particularly useful for **recommender systems** and **NLP**. 
@@ -15,10 +14,10 @@ We've paid some attention to the implementation details - we try to avoid data c
 
 ### Classification/Regression
 
-1. [Follow the proximally-regularized leader](http://proceedings.mlr.press/v15/mcmahan11b/mcmahan11b.pdf) which allows to solve **very large linear/logistic regression** problems with elastic-net penalty. Solver uses stochastic gradient descent with adaptive learning rates (so can be used for online learning - not necessary to load all data to RAM). See [Ad Click Prediction: a View from the Trenches](https://www.eecs.tufts.edu/~dsculley/papers/ad-click-prediction.pdf) for more examples.
+1. [Follow the proximally-regularized leader](http://proceedings.mlr.press/v15/mcmahan11b/mcmahan11b.pdf) which allows to solve **very large linear/logistic regression** problems with elastic-net penalty. Solver uses stochastic gradient descent with adaptive learning rates (so can be used for online learning - not necessary to load all data to RAM). See [Ad Click Prediction: a View from the Trenches](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/41159.pdf) for more examples.
     - Only logistic regerssion implemented at the moment
     - Native format for matrices is CSR - `Matrix::RsparseMatrix`. However common R `Matrix::CsparseMatrix` (`dgCMatrix`) will be converted automatically.
-1. [Factorization Machines](https://www.csie.ntu.edu.tw/~b97053/paper/Rendle2010FM.pdf) supervised learning algorithm which learns second order polynomial interactions in a factorized way. We provide highly optimized SIMD accelerated implementation.  
+1. [Factorization Machines](https://cseweb.ucsd.edu/classes/fa17/cse291-b/reading/Rendle2010FM.pdf) supervised learning algorithm which learns second order polynomial interactions in a factorized way. We provide highly optimized SIMD accelerated implementation.  
 
 ### Matrix Factorizations
 
@@ -32,14 +31,14 @@ See details in [Applications of the Conjugate Gradient Method for Implicit Feedb
     * <img src="https://raw.githubusercontent.com/rexyai/rsparse/master/docs/img/WRMF.png" width="400">
 1. **Linear-Flow** from [Practical Linear Models for Large-Scale One-Class Collaborative Filtering](http://www.bkveton.com/docs/ijcai2016.pdf). Algorithm looks for factorized low-rank item-item similarity matrix (in some sense it is similar to [SLIM](http://glaros.dtc.umn.edu/gkhome/node/774))
     * <img src="https://raw.githubusercontent.com/rexyai/rsparse/master/docs/img/LinearFlow.png" width="300">
-1. Fast **Truncated SVD** and **Truncated Soft-SVD** via Alternating Least Squares as described in [Matrix Completion and Low-Rank SVD via Fast Alternating Least Squares](https://arxiv.org/pdf/1410.2596.pdf). Works for both sparse and dense matrices. Works on [float](https://github.com/wrathematics/float) matrices as well! For certain problems may be even faster than [irlba](https://github.com/bwlewis/irlba) package.
+1. Fast **Truncated SVD** and **Truncated Soft-SVD** via Alternating Least Squares as described in [Matrix Completion and Low-Rank SVD via Fast Alternating Least Squares](http://arxiv.org/pdf/1410.2596). Works for both sparse and dense matrices. Works on [float](https://github.com/wrathematics/float) matrices as well! For certain problems may be even faster than [irlba](https://github.com/bwlewis/irlba) package.
     * <img src="https://raw.githubusercontent.com/rexyai/rsparse/master/docs/img/soft-svd.png" width="600">
-1. **Soft-Impute** via fast Alternating Least Squares as described in [Matrix Completion and Low-Rank SVD via Fast Alternating Least Squares](https://arxiv.org/pdf/1410.2596.pdf).
+1. **Soft-Impute** via fast Alternating Least Squares as described in [Matrix Completion and Low-Rank SVD via Fast Alternating Least Squares](https://arxiv.org/pdf/1410.2596).
     * <img src="https://raw.githubusercontent.com/rexyai/rsparse/master/docs/img/soft-impute.png" width="400">
     * with a solution in SVD form <img src="https://raw.githubusercontent.com/rexyai/rsparse/master/docs/img/soft-impute-svd-form.png" width="150">
 1. **GloVe** as described in [GloVe: Global Vectors for Word Representation](https://nlp.stanford.edu/pubs/glove.pdf).
     * This is usually used to train word embeddings, but actually also very useful for recommender systems.
-1. Matrix scaling as descibed in [EigenRec: Generalizing PureSVD for Effective and Efficient Top-N Recommendations](https://arxiv.org/pdf/1511.06033.pdf)
+1. Matrix scaling as descibed in [EigenRec: Generalizing PureSVD for Effective and Efficient Top-N Recommendations](http://arxiv.org/pdf/1511.06033)
 
 *********************
 
@@ -84,14 +83,6 @@ By default, R for Windows comes with unoptimized BLAS and LAPACK libraries, and 
 **Note that syntax is these posts/slides is not up to date since package was under active development**
 
 1. [Slides from DataFest Tbilisi(2017-11-16)](https://www.slideshare.net/DmitriySelivanov/matrix-factorizations-for-recommender-systems)
-1. [Introduction to matrix factorization with Weighted-ALS algorithm](http://dsnotes.com/post/2017-05-28-matrix-factorization-for-recommender-systems/) - collaborative filtering for implicit feedback datasets.
-1. [Music recommendations using LastFM-360K dataset](http://dsnotes.com/post/2017-06-28-matrix-factorization-for-recommender-systems-part-2/)
-    * evaluation metrics for ranking
-    * setting up proper cross-validation
-    * possible issues with nested parallelism and thread contention
-    * making recommendations for new users
-    * complimentary item-to-item recommendations
-1. [Benchmark](http://dsnotes.com/post/2017-07-10-bench-wrmf/) against other good implementations
 
 Here is example of `rsparse::WRMF` on [lastfm360k](https://www.upf.edu/web/mtg/lastfm360k) dataset in comparison with other good implementations:
 

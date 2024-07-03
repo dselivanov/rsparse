@@ -2,7 +2,7 @@
 #' @description Fit SoftImpute/SoftSVD via fast alternating least squares. Based on the
 #' paper by Trevor Hastie, Rahul Mazumder, Jason D. Lee, Reza Zadeh
 #' by "Matrix Completion and Low-Rank SVD via Fast Alternating Least Squares" -
-#' \url{https://arxiv.org/pdf/1410.2596.pdf}
+#' \url{http://arxiv.org/pdf/1410.2596}
 #' @param x sparse matrix. Both CSR \code{dgRMatrix} and CSC \code{dgCMatrix} are supported.
 #' CSR matrix is preffered because in this case algorithm will benefit from multithreaded
 #' CSR * dense matrix products (if OpenMP is supported on your platform).

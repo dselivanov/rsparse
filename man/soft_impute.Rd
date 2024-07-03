@@ -57,7 +57,7 @@ components represent left, right singular vectors and singular values.
 Fit SoftImpute/SoftSVD via fast alternating least squares. Based on the
 paper by Trevor Hastie, Rahul Mazumder, Jason D. Lee, Reza Zadeh
 by "Matrix Completion and Low-Rank SVD via Fast Alternating Least Squares" -
-\url{https://arxiv.org/pdf/1410.2596.pdf}
+\url{http://arxiv.org/pdf/1410.2596}
 }
 \examples{
 set.seed(42)

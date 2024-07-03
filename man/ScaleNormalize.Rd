@@ -9,7 +9,7 @@ Usage of such rescaled matrix with [PureSVD] model will be equal to running Pure
 on the scaled cosine-based inter-item similarity matrix.
 }
 \references{
-See \href{https://arxiv.org/pdf/1511.06033.pdf}{EigenRec: Generalizing PureSVD for
+See \href{http://arxiv.org/pdf/1511.06033}{EigenRec: Generalizing PureSVD for
 Effective and Efficient Top-N Recommendations} for details.
 }
 \section{Public fields}{
