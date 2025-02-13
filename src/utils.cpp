@@ -84,9 +84,9 @@ dMappedCSC extract_mapped_csc(Rcpp::S4 input) {
 int omp_thread_count() {
   int n = 0;
 #ifdef _OPENMP
-#pragma omp parallel reduction(+ : n)
+  int max_threads = omp_get_max_threads(), thread_limit = omp_get_thread_limit();
+  n = max_threads < thread_limit ? max_threads : thread_limit;
 #endif
-  n += 1;
   return n;
 }
 
