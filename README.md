@@ -27,9 +27,9 @@ We've paid some attention to the implementation details - we try to avoid data c
 We provide 2 solvers:
     1. Exact based on Cholesky Factorization
     1. Approximated based on fixed number of steps of **Conjugate Gradient**.
-See details in [Applications of the Conjugate Gradient Method for Implicit Feedback Collaborative Filtering](http://www.sze.hu/~gtakacs/download/recsys_2011_draft.pdf) and [Faster Implicit Matrix Factorization](http://www.benfrederickson.com/fast-implicit-matrix-factorization/).
+See details in [Applications of the Conjugate Gradient Method for Implicit Feedback Collaborative Filtering](https://dl.acm.org/doi/10.1145/2043932.2043987) and [Faster Implicit Matrix Factorization](http://www.benfrederickson.com/fast-implicit-matrix-factorization/).
     * <img src="https://raw.githubusercontent.com/rexyai/rsparse/master/docs/img/WRMF.png" width="400">
-1. **Linear-Flow** from [Practical Linear Models for Large-Scale One-Class Collaborative Filtering](http://www.bkveton.com/docs/ijcai2016.pdf). Algorithm looks for factorized low-rank item-item similarity matrix (in some sense it is similar to [SLIM](http://glaros.dtc.umn.edu/gkhome/node/774))
+1. **Linear-Flow** from [Practical Linear Models for Large-Scale One-Class Collaborative Filtering](http://www.bkveton.com/docs/ijcai2016.pdf). Algorithm looks for factorized low-rank item-item similarity matrix (in some sense it is similar to [SLIM](https://ieeexplore.ieee.org/document/6137254))
     * <img src="https://raw.githubusercontent.com/rexyai/rsparse/master/docs/img/LinearFlow.png" width="300">
 1. Fast **Truncated SVD** and **Truncated Soft-SVD** via Alternating Least Squares as described in [Matrix Completion and Low-Rank SVD via Fast Alternating Least Squares](http://arxiv.org/pdf/1410.2596). Works for both sparse and dense matrices. Works on [float](https://github.com/wrathematics/float) matrices as well! For certain problems may be even faster than [irlba](https://github.com/bwlewis/irlba) package.
     * <img src="https://raw.githubusercontent.com/rexyai/rsparse/master/docs/img/soft-svd.png" width="600">

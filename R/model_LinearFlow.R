@@ -7,7 +7,6 @@
 #' @references
 #' \itemize{
 #'   \item{\url{http://www.bkveton.com/docs/ijcai2016.pdf}}
-#'   \item{\url{https://www-users.cse.umn.edu/~ningx005/slides/ICDM2011_slides.pdf}}
 #' }
 #' @export
 #' @examples

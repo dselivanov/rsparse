@@ -1,12 +1,10 @@
 # New submission
 
-- fixed HTML validation problems discovered by CRAN checks
-- fixed NEWS.md to follow CRAN format
-- failing tests on "r-oldrel-windows-ix86+x86_64" are due to the lack of `MatrixExtra` library. I'm not sure why this happened on CRAN server
+- improves OpenMP threads detection
 
 # Test environments
 
-- laptop OS X, R 4.0.5
+- laptop OS X, R 4.3.1
 - win-builder (devel)
 
 # R CMD check results
