@@ -52,8 +52,9 @@ LinkingTo:
     Rcpp, 
     RcppArmadillo (>= 0.9.100.5.0)
 Suggests: 
-    testthat, 
-    covr
+    testthat,
+    covr,
+    R6
 StagedInstall: TRUE
 URL: https://github.com/dselivanov/rsparse
 BugReports: https://github.com/dselivanov/rsparse/issues
