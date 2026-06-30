@@ -3,9 +3,9 @@ library(Matrix)
 
 # Generate large random sparse matrix
 set.seed(42)
-n_users = 10000
-n_items = 10000
-nnz = 200000
+n_users = 20000
+n_items = 20000
+nnz = 1000000
 I = sample(n_users, nnz, replace = TRUE)
 J = sample(n_items, nnz, replace = TRUE)
 X = sparseMatrix(i = I, j = J, x = runif(nnz), dims = c(n_users, n_items))
@@ -27,11 +27,11 @@ run_bench = function(use_omp_threads, use_blas_control) {
      message(sprintf("  BLAS threads initial: %d", RhpcBLASctl::blas_get_num_procs()))
   }
   
-  model = WRMF$new(rank = 100, feedback = "implicit", solver = "cholesky")
+  model = WRMF$new(rank = 120, feedback = "implicit", solver = "cholesky")
   
   start_time = Sys.time()
   # Use small number of iterations for quick benchmark
-  model$fit_transform(X, n_iter = 3L)
+  model$fit_transform(X, n_iter = 5L)
   end_time = Sys.time()
   
   diff_time = as.numeric(end_time - start_time, units = "secs")
