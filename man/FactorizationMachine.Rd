@@ -26,21 +26,22 @@ all(preds[c(2, 3)] > 0.99)
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-FactorizationMachine-new}{\code{FactorizationMachine$new()}}
-\item \href{#method-FactorizationMachine-partial_fit}{\code{FactorizationMachine$partial_fit()}}
-\item \href{#method-FactorizationMachine-fit}{\code{FactorizationMachine$fit()}}
-\item \href{#method-FactorizationMachine-predict}{\code{FactorizationMachine$predict()}}
-\item \href{#method-FactorizationMachine-clone}{\code{FactorizationMachine$clone()}}
-}
+  \itemize{
+    \item \href{#method-FactorizationMachine-initialize}{\code{FactorizationMachine$new()}}
+    \item \href{#method-FactorizationMachine-partial_fit}{\code{FactorizationMachine$partial_fit()}}
+    \item \href{#method-FactorizationMachine-fit}{\code{FactorizationMachine$fit()}}
+    \item \href{#method-FactorizationMachine-predict}{\code{FactorizationMachine$predict()}}
+    \item \href{#method-FactorizationMachine-clone}{\code{FactorizationMachine$clone()}}
+  }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-FactorizationMachine-new"></a>}}
-\if{latex}{\out{\hypertarget{method-FactorizationMachine-new}{}}}
-\subsection{Method \code{new()}}{
-creates Creates second order Factorization Machines model
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{FactorizationMachine$new(
+\if{html}{\out{<a id="method-FactorizationMachine-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-FactorizationMachine-initialize}{}}}
+\subsection{\code{FactorizationMachine$new()}}{
+  creates Creates second order Factorization Machines model
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{FactorizationMachine$new(
   learning_rate_w = 0.2,
   rank = 4,
   lambda_w = 0,
@@ -48,117 +49,112 @@ creates Creates second order Factorization Machines model
   family = c("binomial", "gaussian"),
   intercept = TRUE,
   learning_rate_v = learning_rate_w
-)}\if{html}{\out{</div>}}
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{learning_rate_w}}{learning rate for features intercations}
+      \item{\code{rank}}{dimension of the latent dimensions which models features interactions}
+      \item{\code{lambda_w}}{regularization for features interactions}
+      \item{\code{lambda_v}}{regularization for features}
+      \item{\code{family}}{one of \code{"binomial", "gaussian"}}
+      \item{\code{intercept}}{logical, indicates whether or not include intecept to the model}
+      \item{\code{learning_rate_v}}{learning rate for features}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{learning_rate_w}}{learning rate for features intercations}
-
-\item{\code{rank}}{dimension of the latent dimensions which models features interactions}
-
-\item{\code{lambda_w}}{regularization for features interactions}
-
-\item{\code{lambda_v}}{regularization for features}
-
-\item{\code{family}}{one of \code{"binomial", "gaussian"}}
-
-\item{\code{intercept}}{logical, indicates whether or not include intecept to the model}
-
-\item{\code{learning_rate_v}}{learning rate for features}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-FactorizationMachine-partial_fit"></a>}}
 \if{latex}{\out{\hypertarget{method-FactorizationMachine-partial_fit}{}}}
-\subsection{Method \code{partial_fit()}}{
-fits/updates model
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{FactorizationMachine$partial_fit(x, y, weights = rep(1, length(y)), ...)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{x}}{input sparse matrix. Native format is \code{Matrix::RsparseMatrix}.
+\subsection{\code{FactorizationMachine$partial_fit()}}{
+  fits/updates model
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{FactorizationMachine$partial_fit(x, y, weights = rep(1, length(y)), ...)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{x}}{input sparse matrix. Native format is \code{Matrix::RsparseMatrix}.
 If \code{x} is in different format, model will try to convert it to \code{RsparseMatrix}
 with \code{as(x, "RsparseMatrix")}. Dimensions should be (n_samples, n_features)}
-
-\item{\code{y}}{vector of targets}
-
-\item{\code{weights}}{numeric vector of length `n_samples`. Defines how to amplify SGD updates
+      \item{\code{y}}{vector of targets}
+      \item{\code{weights}}{numeric vector of length `n_samples`. Defines how to amplify SGD updates
 for each sample. May be useful for highly unbalanced problems.}
+      \item{\code{...}}{not used at the moment}
+    }
+    \if{html}{\out{</div>}}
+  }
+}
 
-\item{\code{...}}{not used at the moment}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-FactorizationMachine-fit"></a>}}
 \if{latex}{\out{\hypertarget{method-FactorizationMachine-fit}{}}}
-\subsection{Method \code{fit()}}{
-shorthand for applying `partial_fit` `n_iter` times
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{FactorizationMachine$fit(x, y, weights = rep(1, length(y)), n_iter = 1L, ...)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{x}}{input sparse matrix. Native format is \code{Matrix::RsparseMatrix}.
+\subsection{\code{FactorizationMachine$fit()}}{
+  shorthand for applying `partial_fit` `n_iter` times
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{FactorizationMachine$fit(x, y, weights = rep(1, length(y)), n_iter = 1L, ...)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{x}}{input sparse matrix. Native format is \code{Matrix::RsparseMatrix}.
 If \code{x} is in different format, model will try to convert it to \code{RsparseMatrix}
 with \code{as(x, "RsparseMatrix")}. Dimensions should be (n_samples, n_features)}
-
-\item{\code{y}}{vector of targets}
-
-\item{\code{weights}}{numeric vector of length `n_samples`. Defines how to amplify SGD updates
+      \item{\code{y}}{vector of targets}
+      \item{\code{weights}}{numeric vector of length `n_samples`. Defines how to amplify SGD updates
 for each sample. May be useful for highly unbalanced problems.}
+      \item{\code{n_iter}}{number of SGD epochs}
+      \item{\code{...}}{not used at the moment}
+    }
+    \if{html}{\out{</div>}}
+  }
+}
 
-\item{\code{n_iter}}{number of SGD epochs}
-
-\item{\code{...}}{not used at the moment}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-FactorizationMachine-predict"></a>}}
 \if{latex}{\out{\hypertarget{method-FactorizationMachine-predict}{}}}
-\subsection{Method \code{predict()}}{
-makes predictions based on fitted model
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{FactorizationMachine$predict(x, ...)}\if{html}{\out{</div>}}
+\subsection{\code{FactorizationMachine$predict()}}{
+  makes predictions based on fitted model
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{FactorizationMachine$predict(x, ...)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{x}}{input sparse matrix of shape \emph{(n_samples, n_featires)}}
+      \item{\code{...}}{not used at the moment}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{x}}{input sparse matrix of shape \emph{(n_samples, n_featires)}}
-
-\item{\code{...}}{not used at the moment}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-FactorizationMachine-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-FactorizationMachine-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{FactorizationMachine$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{FactorizationMachine$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{FactorizationMachine$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

@@ -29,152 +29,151 @@ p = ftrl$predict(x)
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-FTRL-new}{\code{FTRL$new()}}
-\item \href{#method-FTRL-partial_fit}{\code{FTRL$partial_fit()}}
-\item \href{#method-FTRL-fit}{\code{FTRL$fit()}}
-\item \href{#method-FTRL-predict}{\code{FTRL$predict()}}
-\item \href{#method-FTRL-coef}{\code{FTRL$coef()}}
-\item \href{#method-FTRL-clone}{\code{FTRL$clone()}}
-}
+  \itemize{
+    \item \href{#method-FTRL-initialize}{\code{FTRL$new()}}
+    \item \href{#method-FTRL-partial_fit}{\code{FTRL$partial_fit()}}
+    \item \href{#method-FTRL-fit}{\code{FTRL$fit()}}
+    \item \href{#method-FTRL-predict}{\code{FTRL$predict()}}
+    \item \href{#method-FTRL-coef}{\code{FTRL$coef()}}
+    \item \href{#method-FTRL-clone}{\code{FTRL$clone()}}
+  }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-FTRL-new"></a>}}
-\if{latex}{\out{\hypertarget{method-FTRL-new}{}}}
-\subsection{Method \code{new()}}{
-creates a model
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{FTRL$new(
+\if{html}{\out{<a id="method-FTRL-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-FTRL-initialize}{}}}
+\subsection{\code{FTRL$new()}}{
+  creates a model
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{FTRL$new(
   learning_rate = 0.1,
   learning_rate_decay = 0.5,
   lambda = 0,
   l1_ratio = 1,
   dropout = 0,
   family = c("binomial")
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{learning_rate}}{learning rate}
-
-\item{\code{learning_rate_decay}}{learning rate which controls decay. Please refer to FTRL proximal
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{learning_rate}}{learning rate}
+      \item{\code{learning_rate_decay}}{learning rate which controls decay. Please refer to FTRL proximal
 paper for details. Usually convergense does not heavily depend on this parameter,
 so default value 0.5 is safe.}
-
-\item{\code{lambda}}{regularization parameter}
-
-\item{\code{l1_ratio}}{controls L1 vs L2 penalty mixing.
+      \item{\code{lambda}}{regularization parameter}
+      \item{\code{l1_ratio}}{controls L1 vs L2 penalty mixing.
 1 = Lasso regression, 0 = Ridge regression. Elastic net is in between}
-
-\item{\code{dropout}}{dropout - percentage of random features to
+      \item{\code{dropout}}{dropout - percentage of random features to
 exclude from each sample. Acts as regularization.}
-
-\item{\code{family}}{a description of the error distribution and link function to be used in
+      \item{\code{family}}{a description of the error distribution and link function to be used in
 the model. Only \code{binomial} (logistic regression) is implemented at the moment.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-FTRL-partial_fit"></a>}}
 \if{latex}{\out{\hypertarget{method-FTRL-partial_fit}{}}}
-\subsection{Method \code{partial_fit()}}{
-fits model to the data
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{FTRL$partial_fit(x, y, weights = rep(1, length(y)), ...)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{x}}{input sparse matrix. Native format is \code{Matrix::RsparseMatrix}.
+\subsection{\code{FTRL$partial_fit()}}{
+  fits model to the data
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{FTRL$partial_fit(x, y, weights = rep(1, length(y)), ...)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{x}}{input sparse matrix. Native format is \code{Matrix::RsparseMatrix}.
 If \code{x} is in different format, model will try to convert it to \code{RsparseMatrix}
 with \code{as(x, "RsparseMatrix")}. Dimensions should be (n_samples, n_features)}
-
-\item{\code{y}}{vector of targets}
-
-\item{\code{weights}}{numeric vector of length `n_samples`. Defines how to amplify SGD updates
+      \item{\code{y}}{vector of targets}
+      \item{\code{weights}}{numeric vector of length `n_samples`. Defines how to amplify SGD updates
 for each sample. May be useful for highly unbalanced problems.}
+      \item{\code{...}}{not used at the moment}
+    }
+    \if{html}{\out{</div>}}
+  }
+}
 
-\item{\code{...}}{not used at the moment}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-FTRL-fit"></a>}}
 \if{latex}{\out{\hypertarget{method-FTRL-fit}{}}}
-\subsection{Method \code{fit()}}{
-shorthand for applying `partial_fit` `n_iter` times
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{FTRL$fit(x, y, weights = rep(1, length(y)), n_iter = 1L, ...)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{x}}{input sparse matrix. Native format is \code{Matrix::RsparseMatrix}.
+\subsection{\code{FTRL$fit()}}{
+  shorthand for applying `partial_fit` `n_iter` times
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{FTRL$fit(x, y, weights = rep(1, length(y)), n_iter = 1L, ...)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{x}}{input sparse matrix. Native format is \code{Matrix::RsparseMatrix}.
 If \code{x} is in different format, model will try to convert it to \code{RsparseMatrix}
 with \code{as(x, "RsparseMatrix")}. Dimensions should be (n_samples, n_features)}
-
-\item{\code{y}}{vector of targets}
-
-\item{\code{weights}}{numeric vector of length `n_samples`. Defines how to amplify SGD updates
+      \item{\code{y}}{vector of targets}
+      \item{\code{weights}}{numeric vector of length `n_samples`. Defines how to amplify SGD updates
 for each sample. May be useful for highly unbalanced problems.}
+      \item{\code{n_iter}}{number of SGD epochs}
+      \item{\code{...}}{not used at the moment}
+    }
+    \if{html}{\out{</div>}}
+  }
+}
 
-\item{\code{n_iter}}{number of SGD epochs}
-
-\item{\code{...}}{not used at the moment}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-FTRL-predict"></a>}}
 \if{latex}{\out{\hypertarget{method-FTRL-predict}{}}}
-\subsection{Method \code{predict()}}{
-makes predictions based on fitted model
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{FTRL$predict(x, ...)}\if{html}{\out{</div>}}
+\subsection{\code{FTRL$predict()}}{
+  makes predictions based on fitted model
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{FTRL$predict(x, ...)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{x}}{input matrix}
+      \item{\code{...}}{not used at the moment}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{x}}{input matrix}
-
-\item{\code{...}}{not used at the moment}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-FTRL-coef"></a>}}
 \if{latex}{\out{\hypertarget{method-FTRL-coef}{}}}
-\subsection{Method \code{coef()}}{
-returns coefficients of the regression model
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{FTRL$coef()}\if{html}{\out{</div>}}
+\subsection{\code{FTRL$coef()}}{
+  returns coefficients of the regression model
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{FTRL$coef()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-FTRL-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-FTRL-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{FTRL$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{FTRL$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{FTRL$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

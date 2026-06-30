@@ -40,31 +40,30 @@ preds = model$predict(cv, k = 10, not_recommend = cv)
 }
 }
 \section{Super class}{
-\code{\link[rsparse:MatrixFactorizationRecommender]{rsparse::MatrixFactorizationRecommender}} -> \code{WRMF}
+\code{\link[rsparse:MatrixFactorizationRecommender]{MatrixFactorizationRecommender}} -> \code{WRMF}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-WRMF-new}{\code{WRMF$new()}}
-\item \href{#method-WRMF-fit_transform}{\code{WRMF$fit_transform()}}
-\item \href{#method-WRMF-transform}{\code{WRMF$transform()}}
-\item \href{#method-WRMF-clone}{\code{WRMF$clone()}}
+  \itemize{
+    \item \href{#method-WRMF-initialize}{\code{WRMF$new()}}
+    \item \href{#method-WRMF-fit_transform}{\code{WRMF$fit_transform()}}
+    \item \href{#method-WRMF-transform}{\code{WRMF$transform()}}
+    \item \href{#method-WRMF-clone}{\code{WRMF$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="rsparse" data-topic="MatrixFactorizationRecommender" data-id="predict"><a href='../../rsparse/html/MatrixFactorizationRecommender.html#method-MatrixFactorizationRecommender-predict'><code>rsparse::MatrixFactorizationRecommender$predict()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="rsparse" data-topic="MatrixFactorizationRecommender" data-id="predict"><a href='../../rsparse/html/MatrixFactorizationRecommender.html#method-MatrixFactorizationRecommender-predict'><code>MatrixFactorizationRecommender$predict()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-WRMF-new"></a>}}
-\if{latex}{\out{\hypertarget{method-WRMF-new}{}}}
-\subsection{Method \code{new()}}{
-creates WRMF model
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{WRMF$new(
+\if{html}{\out{<a id="method-WRMF-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-WRMF-initialize}{}}}
+\subsection{\code{WRMF$new()}}{
+  creates WRMF model
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{WRMF$new(
   rank = 10L,
   lambda = 0,
   dynamic_lambda = TRUE,
@@ -77,21 +76,17 @@ creates WRMF model
   cg_steps = 3L,
   precision = c("double", "float"),
   ...
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{rank}}{size of the latent dimension}
-
-\item{\code{lambda}}{regularization parameter}
-
-\item{\code{dynamic_lambda}}{whether `lambda` is to be scaled according to the number}
-
-\item{\code{init}}{initialization of item embeddings}
-
-\item{\code{preprocess}}{\code{identity()} by default. User spectified function which will
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{rank}}{size of the latent dimension}
+      \item{\code{lambda}}{regularization parameter}
+      \item{\code{dynamic_lambda}}{whether `lambda` is to be scaled according to the number}
+      \item{\code{init}}{initialization of item embeddings}
+      \item{\code{preprocess}}{\code{identity()} by default. User spectified function which will
 be applied to user-item interaction matrix before running matrix factorization
 (also applied during inference time before making predictions).
 For example we may want to normalize each row of user-item matrix to have 1 norm.
@@ -99,97 +94,93 @@ Or apply \code{log1p()} to discount large counts.
 This corresponds to the "confidence" function from
 "Collaborative Filtering for Implicit Feedback Datasets" paper.
 Note that it will not automatically add +1 to the weights of the positive entries.}
-
-\item{\code{feedback}}{\code{character} - feedback type - one of \code{c("implicit", "explicit")}}
-
-\item{\code{solver}}{\code{character} - solver name.
+      \item{\code{feedback}}{\code{character} - feedback type - one of \code{c("implicit", "explicit")}}
+      \item{\code{solver}}{\code{character} - solver name.
 One of \code{c("conjugate_gradient", "cholesky", "nnls")}.
 Usually approximate \code{"conjugate_gradient"} is significantly faster and solution is
 on par with \code{"cholesky"}.
 \code{"nnls"} performs non-negative matrix factorization (NNMF) - restricts
 user and item embeddings to be non-negative.}
-
-\item{\code{with_user_item_bias}}{\code{bool} controls if  model should calculate user and item biases.
+      \item{\code{with_user_item_bias}}{\code{bool} controls if  model should calculate user and item biases.
 At the moment only implemented for \code{"explicit"} feedback.}
-
-\item{\code{with_global_bias}}{\code{bool} controls if model should calculate global biases (mean).
+      \item{\code{with_global_bias}}{\code{bool} controls if model should calculate global biases (mean).
 At the moment only implemented for \code{"explicit"} feedback.}
-
-\item{\code{cg_steps}}{\code{integer > 0} - max number of internal steps in conjugate gradient
+      \item{\code{cg_steps}}{\code{integer > 0} - max number of internal steps in conjugate gradient
 (if "conjugate_gradient" solver used). \code{cg_steps = 3} by default.
 Controls precision of linear equation solution at the each ALS step. Usually no need to tune this parameter}
-
-\item{\code{precision}}{one of \code{c("double", "float")}. Should embedding matrices be
+      \item{\code{precision}}{one of \code{c("double", "float")}. Should embedding matrices be
 numeric or float (from \code{float} package). The latter is usually 2x faster and
 consumes less RAM. BUT \code{float} matrices are not "base" objects. Use carefully.}
+      \item{\code{...}}{not used at the moment}
+    }
+    \if{html}{\out{</div>}}
+  }
+}
 
-\item{\code{...}}{not used at the moment}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-WRMF-fit_transform"></a>}}
 \if{latex}{\out{\hypertarget{method-WRMF-fit_transform}{}}}
-\subsection{Method \code{fit_transform()}}{
-fits the model
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{WRMF$fit_transform(
+\subsection{\code{WRMF$fit_transform()}}{
+  fits the model
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{WRMF$fit_transform(
   x,
   n_iter = 10L,
   convergence_tol = ifelse(private$feedback == "implicit", 0.005, 0.001),
   ...
-)}\if{html}{\out{</div>}}
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{x}}{input matrix (preferably matrix  in CSC format -`CsparseMatrix`}
+      \item{\code{n_iter}}{max number of ALS iterations}
+      \item{\code{convergence_tol}}{convergence tolerance checked between iterations}
+      \item{\code{...}}{not used at the moment}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{x}}{input matrix (preferably matrix  in CSC format -`CsparseMatrix`}
-
-\item{\code{n_iter}}{max number of ALS iterations}
-
-\item{\code{convergence_tol}}{convergence tolerance checked between iterations}
-
-\item{\code{...}}{not used at the moment}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-WRMF-transform"></a>}}
 \if{latex}{\out{\hypertarget{method-WRMF-transform}{}}}
-\subsection{Method \code{transform()}}{
-create user embeddings for new input
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{WRMF$transform(x, ...)}\if{html}{\out{</div>}}
+\subsection{\code{WRMF$transform()}}{
+  create user embeddings for new input
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{WRMF$transform(x, ...)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{x}}{user-item iteraction matrix (preferrably as `dgRMatrix`)}
+      \item{\code{...}}{not used at the moment}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{x}}{user-item iteraction matrix (preferrably as `dgRMatrix`)}
-
-\item{\code{...}}{not used at the moment}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-WRMF-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-WRMF-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{WRMF$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{WRMF$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{WRMF$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }
