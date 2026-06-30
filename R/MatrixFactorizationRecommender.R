@@ -36,15 +36,15 @@ MatrixFactorizationRecommender = R6::R6Class(
   private = list(
     predict_internal = function(user_embeddings, item_embeddings, k, not_recommend, items_exclude = integer(0), ...) {
 
-      logger$trace("MatrixFactorizationRecommender$predict(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
-      n_blas_threads_to_restore = RhpcBLASctl::get_num_cores()
-      RhpcBLASctl::blas_set_num_threads(1)
+      logger$trace("MatrixFactorizationRecommender$predict(): calling `blas_set_num_threads(1)` (to avoid thread contention)")
+      n_blas_threads_to_restore = .get_num_cores()
+      .blas_set_num_threads(1)
       on.exit({
         logger$trace(
           "MatrixFactorizationRecommender$predict(): on exit blas_set_num_threads(%d)",
           n_blas_threads_to_restore
         )
-        RhpcBLASctl::blas_set_num_threads(n_blas_threads_to_restore)
+        .blas_set_num_threads(n_blas_threads_to_restore)
       })
 
       if (is.character(items_exclude)) {

@@ -123,9 +123,9 @@ RankMF = R6::R6Class(
       if (is.null(private$item_features_squared_grad)) private$item_features_squared_grad = ones(n_item_features)
 
       # temporary disable BLAS threading to prevent thread contention with OpenMP
-      n_threads_blas = RhpcBLASctl::blas_get_num_procs()
-      RhpcBLASctl::blas_set_num_threads(1L)
-      on.exit(RhpcBLASctl::blas_set_num_threads(n_threads_blas))
+      n_threads_blas = .blas_get_num_procs()
+      .blas_set_num_threads(1L)
+      on.exit(.blas_set_num_threads(n_threads_blas))
       SOLVER = if (self$precision == "double") rankmf_solver_double else rankmf_solver_float
       SOLVER(
         x,

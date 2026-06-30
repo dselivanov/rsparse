@@ -35,11 +35,11 @@ find_top_product = function(x, y, k, not_recommend = NULL, exclude = integer(0),
   if (float::is.float(x)) x = float::dbl(x)
   if (float::is.float(y)) y = float::dbl(y)
 
-  n_threads_blas = RhpcBLASctl::blas_get_num_procs()
+  n_threads_blas = .blas_get_num_procs()
   # set num threads to 1 in order to avoid thread contention between BLAS and openmp threads in `top_product()`
-  RhpcBLASctl::blas_set_num_threads(1L)
+  .blas_set_num_threads(1L)
   # restore on exit
-  on.exit(RhpcBLASctl::blas_set_num_threads(n_threads_blas))
+  on.exit(.blas_set_num_threads(n_threads_blas))
 
   if (!inherits(exclude, "integer"))
     stop("'exclude' should be integer vector")
@@ -56,4 +56,30 @@ find_top_product = function(x, y, k, not_recommend = NULL, exclude = integer(0),
     not_recommend = as(not_recommend, "RsparseMatrix")
   }
   top_product(x, y, k, n_threads, not_recommend, exclude, glob_mean)
+}
+
+.use_rhpcblasctl = function() {
+  getOption("rsparse_use_rhpcblasctl", TRUE) && requireNamespace("RhpcBLASctl", quietly = TRUE)
+}
+
+.blas_get_num_procs = function() {
+  if (.use_rhpcblasctl()) {
+    RhpcBLASctl::blas_get_num_procs()
+  } else {
+    1L
+  }
+}
+
+.blas_set_num_threads = function(n) {
+  if (.use_rhpcblasctl()) {
+    RhpcBLASctl::blas_set_num_threads(n)
+  }
+}
+
+.get_num_cores = function() {
+  if (.use_rhpcblasctl()) {
+    RhpcBLASctl::get_num_cores()
+  } else {
+    1L
+  }
 }

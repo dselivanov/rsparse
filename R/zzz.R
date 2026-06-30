@@ -4,7 +4,6 @@
 #' @import Rcpp
 #' @import float
 #' @import Matrix
-#' @importFrom RhpcBLASctl get_num_cores
 #' @useDynLib rsparse, .registration = TRUE
 
 
@@ -19,6 +18,14 @@
                  n_omp_threads,
                  "\nCan be adjusted by setting `options(\"rsparse_omp_threads\" = N_THREADS)`")
     packageStartupMessage(msg)
+  }
+  if (!requireNamespace("RhpcBLASctl", quietly = TRUE)) {
+    packageStartupMessage(
+      "Warning: 'RhpcBLASctl' package not found. ",
+      "Without it, 'rsparse' cannot limit BLAS multi-threading, ",
+      "which may lead to severe performance degradation due to thread contention. ",
+      "Highly recommended to install it: install.packages('RhpcBLASctl')"
+    )
   }
 }
 
