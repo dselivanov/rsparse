@@ -1,6 +1,9 @@
 name: Benchmark Thread Contention
 
 on:
+  push:
+    branches:
+      - rhpcblasctl-benchmark
   workflow_dispatch:
 
 jobs:
