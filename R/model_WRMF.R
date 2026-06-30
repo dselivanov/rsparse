@@ -172,12 +172,12 @@ WRMF = R6::R6Class(
     #' @param ... not used at the moment
     fit_transform = function(x, n_iter = 10L, convergence_tol = ifelse(private$feedback == "implicit", 0.005, 0.001), ...) {
       if (private$feedback == "implicit" ) {
-        logger$trace("WRMF$fit_transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
-        blas_threads_keep = RhpcBLASctl::blas_get_num_procs()
-        RhpcBLASctl::blas_set_num_threads(1)
+        logger$trace("WRMF$fit_transform(): calling `blas_set_num_threads(1)` (to avoid thread contention)")
+        blas_threads_keep = .blas_get_num_procs()
+        .blas_set_num_threads(1)
         on.exit({
-          logger$trace("WRMF$fit_transform(): on exit `RhpcBLASctl::blas_set_num_threads(%d)", blas_threads_keep)
-          RhpcBLASctl::blas_set_num_threads(blas_threads_keep)
+          logger$trace("WRMF$fit_transform(): on exit `blas_set_num_threads(%d)", blas_threads_keep)
+          .blas_set_num_threads(blas_threads_keep)
         })
       }
       logger$debug("converting input user-item matrix")
@@ -348,9 +348,9 @@ WRMF = R6::R6Class(
       ridge = fl(diag(x = private$lambda, nrow = rank_, ncol = rank_))
       XX = if (private$with_user_item_bias) self$components[-1L, , drop = FALSE] else self$components
 
-      RhpcBLASctl::blas_set_num_threads(RhpcBLASctl::get_num_cores())
+      .blas_set_num_threads(.get_num_cores())
       private$XtX = tcrossprod(XX) + ridge
-      RhpcBLASctl::blas_set_num_threads(1)
+      .blas_set_num_threads(1)
 
       # call extra transform to ensure results from transform() and fit_transform()
       # are the same (due to avoid_cg, etc)
@@ -412,12 +412,12 @@ WRMF = R6::R6Class(
     transform_ = function(x, ...) {
       logger$debug('starting transform')
       if (private$feedback == "implicit" ) {
-        logger$trace("WRMF$transform(): calling `RhpcBLASctl::blas_set_num_threads(1)` (to avoid thread contention)")
-        blas_threads_keep = RhpcBLASctl::blas_get_num_procs()
-        RhpcBLASctl::blas_set_num_threads(1)
+        logger$trace("WRMF$transform(): calling `blas_set_num_threads(1)` (to avoid thread contention)")
+        blas_threads_keep = .blas_get_num_procs()
+        .blas_set_num_threads(1)
         on.exit({
-          logger$trace("WRMF$transform(): on exit `RhpcBLASctl::blas_set_num_threads(%d)", blas_threads_keep)
-          RhpcBLASctl::blas_set_num_threads(blas_threads_keep)
+          logger$trace("WRMF$transform(): on exit `blas_set_num_threads(%d)", blas_threads_keep)
+          .blas_set_num_threads(blas_threads_keep)
         })
       }
       if (private$precision == "double") {
@@ -480,9 +480,9 @@ als_implicit = function(
     } else {
       XX = X
     }
-    RhpcBLASctl::blas_set_num_threads(RhpcBLASctl::get_num_cores())
+    .blas_set_num_threads(.get_num_cores())
     XtX = tcrossprod(XX) + ridge
-    RhpcBLASctl::blas_set_num_threads(1)
+    .blas_set_num_threads(1)
   }
   if (is.null(global_bias_base)) {
     global_bias_base = numeric()

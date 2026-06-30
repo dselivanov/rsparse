@@ -46,14 +46,14 @@ Imports:
     Rcpp (>= 0.11),
     data.table (>= 1.10.0),
     float (>= 0.2-2),
-    RhpcBLASctl,
     lgr (>= 0.2)
 LinkingTo: 
     Rcpp, 
     RcppArmadillo (>= 0.9.100.5.0)
 Suggests: 
     testthat, 
-    covr
+    covr,
+    RhpcBLASctl
 StagedInstall: TRUE
 URL: https://github.com/dselivanov/rsparse
 BugReports: https://github.com/dselivanov/rsparse/issues
