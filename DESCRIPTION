@@ -57,5 +57,5 @@ Suggests:
 StagedInstall: TRUE
 URL: https://github.com/dselivanov/rsparse
 BugReports: https://github.com/dselivanov/rsparse/issues
-RoxygenNote: 7.3.1
 NeedsCompilation: yes
+Config/roxygen2/version: 8.0.0

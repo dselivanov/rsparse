@@ -22,123 +22,120 @@ preds = model$predict(sign(test), k = 1500, not_recommend = NULL)
 mean(ap_k(preds, actual = test))
 }
 \section{Super class}{
-\code{\link[rsparse:MatrixFactorizationRecommender]{rsparse::MatrixFactorizationRecommender}} -> \code{PureSVD}
+\code{\link[rsparse:MatrixFactorizationRecommender]{MatrixFactorizationRecommender}} -> \code{PureSVD}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-PureSVD-new}{\code{PureSVD$new()}}
-\item \href{#method-PureSVD-fit_transform}{\code{PureSVD$fit_transform()}}
-\item \href{#method-PureSVD-transform}{\code{PureSVD$transform()}}
-\item \href{#method-PureSVD-clone}{\code{PureSVD$clone()}}
+  \itemize{
+    \item \href{#method-PureSVD-initialize}{\code{PureSVD$new()}}
+    \item \href{#method-PureSVD-fit_transform}{\code{PureSVD$fit_transform()}}
+    \item \href{#method-PureSVD-transform}{\code{PureSVD$transform()}}
+    \item \href{#method-PureSVD-clone}{\code{PureSVD$clone()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
+\if{html}{\out{<details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="rsparse" data-topic="MatrixFactorizationRecommender" data-id="predict"><a href='../../rsparse/html/MatrixFactorizationRecommender.html#method-MatrixFactorizationRecommender-predict'><code>rsparse::MatrixFactorizationRecommender$predict()</code></a></span></li>
+  <li><span class="pkg-link" data-pkg="rsparse" data-topic="MatrixFactorizationRecommender" data-id="predict"><a href='../../rsparse/html/MatrixFactorizationRecommender.html#method-MatrixFactorizationRecommender-predict'><code>MatrixFactorizationRecommender$predict()</code></a></span></li>
 </ul>
-</details>
-}}
+</details>}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-PureSVD-new"></a>}}
-\if{latex}{\out{\hypertarget{method-PureSVD-new}{}}}
-\subsection{Method \code{new()}}{
-create PureSVD model
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PureSVD$new(
+\if{html}{\out{<a id="method-PureSVD-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-PureSVD-initialize}{}}}
+\subsection{\code{PureSVD$new()}}{
+  create PureSVD model
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{PureSVD$new(
   rank = 10L,
   lambda = 0,
   init = NULL,
   preprocess = identity,
   method = c("svd", "impute"),
   ...
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{rank}}{size of the latent dimension}
-
-\item{\code{lambda}}{regularization parameter}
-
-\item{\code{init}}{initialization of item embeddings}
-
-\item{\code{preprocess}}{\code{identity()} by default. User spectified function which will
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{rank}}{size of the latent dimension}
+      \item{\code{lambda}}{regularization parameter}
+      \item{\code{init}}{initialization of item embeddings}
+      \item{\code{preprocess}}{\code{identity()} by default. User spectified function which will
 be applied to user-item interaction matrix before running matrix factorization
 (also applied during inference time before making predictions).
 For example we may want to normalize each row of user-item matrix to have 1 norm.
 Or apply \code{log1p()} to discount large counts.}
-
-\item{\code{method}}{type of the solver for initialization of the orthogonal
+      \item{\code{method}}{type of the solver for initialization of the orthogonal
 basis. Original paper uses SVD. See paper for details.}
+      \item{\code{...}}{not used at the moment}
+    }
+    \if{html}{\out{</div>}}
+  }
+}
 
-\item{\code{...}}{not used at the moment}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-PureSVD-fit_transform"></a>}}
 \if{latex}{\out{\hypertarget{method-PureSVD-fit_transform}{}}}
-\subsection{Method \code{fit_transform()}}{
-performs matrix factorization
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PureSVD$fit_transform(x, n_iter = 100L, convergence_tol = 0.001, ...)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{x}}{input sparse user-item matrix(of class \code{dgCMatrix})}
-
-\item{\code{n_iter}}{maximum number of iterations}
-
-\item{\code{convergence_tol}}{\code{numeric = -Inf} defines early stopping strategy.
+\subsection{\code{PureSVD$fit_transform()}}{
+  performs matrix factorization
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{PureSVD$fit_transform(x, n_iter = 100L, convergence_tol = 0.001, ...)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{x}}{input sparse user-item matrix(of class \code{dgCMatrix})}
+      \item{\code{n_iter}}{maximum number of iterations}
+      \item{\code{convergence_tol}}{\code{numeric = -Inf} defines early stopping strategy.
 Stops fitting when one of two following conditions will be satisfied: (a) passed
 all iterations (b) relative change of Frobenious norm of the two consequent solution
 is less then provided \code{convergence_tol}.}
+      \item{\code{...}}{not used at the moment}
+    }
+    \if{html}{\out{</div>}}
+  }
+}
 
-\item{\code{...}}{not used at the moment}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-PureSVD-transform"></a>}}
 \if{latex}{\out{\hypertarget{method-PureSVD-transform}{}}}
-\subsection{Method \code{transform()}}{
-calculates user embeddings for the new input
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PureSVD$transform(x, ...)}\if{html}{\out{</div>}}
+\subsection{\code{PureSVD$transform()}}{
+  calculates user embeddings for the new input
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{PureSVD$transform(x, ...)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{x}}{input matrix}
+      \item{\code{...}}{not used at the moment}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{x}}{input matrix}
-
-\item{\code{...}}{not used at the moment}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-PureSVD-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-PureSVD-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PureSVD$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{PureSVD$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{PureSVD$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

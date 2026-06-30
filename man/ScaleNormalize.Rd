@@ -13,111 +13,119 @@ See \href{http://arxiv.org/pdf/1511.06033}{EigenRec: Generalizing PureSVD for
 Effective and Efficient Top-N Recommendations} for details.
 }
 \section{Public fields}{
-\if{html}{\out{<div class="r6-fields">}}
-\describe{
-\item{\code{norm}}{which norm model should make equal to one}
+  \if{html}{\out{<div class="r6-fields">}}
+  \describe{
+    \item{\code{norm}}{which norm model should make equal to one}
 
-\item{\code{scale}}{how to rescale norm vector}
-}
-\if{html}{\out{</div>}}
+    \item{\code{scale}}{how to rescale norm vector}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-NA-new}{\code{ScaleNormalize$new()}}
-\item \href{#method-NA-fit}{\code{ScaleNormalize$fit()}}
-\item \href{#method-NA-transform}{\code{ScaleNormalize$transform()}}
-\item \href{#method-NA-fit_transform}{\code{ScaleNormalize$fit_transform()}}
-\item \href{#method-unknown-clone}{\code{ScaleNormalize$clone()}}
-}
+  \itemize{
+    \item \href{#method-NA-initialize}{\code{NA$new()}}
+    \item \href{#method-NA-fit}{\code{NA$fit()}}
+    \item \href{#method-NA-transform}{\code{NA$transform()}}
+    \item \href{#method-NA-fit_transform}{\code{NA$fit_transform()}}
+    \item \href{#method-unknown-clone}{\code{unknown$clone()}}
+  }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-NA-new"></a>}}
-\if{latex}{\out{\hypertarget{method-NA-new}{}}}
-\subsection{Method \code{new()}}{
-creates model
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScaleNormalize$new(scale = 0.5, norm = 2, target = c("rows", "columns"))}\if{html}{\out{</div>}}
+\if{html}{\out{<a id="method-NA-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-NA-initialize}{}}}
+\subsection{\code{NA$new()}}{
+  creates model
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{NA$new(scale = 0.5, norm = 2, target = c("rows", "columns"))}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{scale}}{numeric, how to rescale norm vector}
+      \item{\code{norm}}{numeric, which norm model should make equal to one}
+      \item{\code{target}}{character, defines whether rows or columns should be rescaled}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{scale}}{numeric, how to rescale norm vector}
-
-\item{\code{norm}}{numeric, which norm model should make equal to one}
-
-\item{\code{target}}{character, defines whether rows or columns should be rescaled}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NA-fit"></a>}}
 \if{latex}{\out{\hypertarget{method-NA-fit}{}}}
-\subsection{Method \code{fit()}}{
-fits the modes
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScaleNormalize$fit(x)}\if{html}{\out{</div>}}
+\subsection{\code{NA$fit()}}{
+  fits the modes
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{NA$fit(x)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{x}}{input sparse matrix}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{x}}{input sparse matrix}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NA-transform"></a>}}
 \if{latex}{\out{\hypertarget{method-NA-transform}{}}}
-\subsection{Method \code{transform()}}{
-transforms new matrix
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScaleNormalize$transform(x)}\if{html}{\out{</div>}}
+\subsection{\code{NA$transform()}}{
+  transforms new matrix
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{NA$transform(x)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{x}}{input sparse matrix}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{x}}{input sparse matrix}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NA-fit_transform"></a>}}
 \if{latex}{\out{\hypertarget{method-NA-fit_transform}{}}}
-\subsection{Method \code{fit_transform()}}{
-fits the model and transforms input
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScaleNormalize$fit_transform(x)}\if{html}{\out{</div>}}
+\subsection{\code{NA$fit_transform()}}{
+  fits the model and transforms input
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{NA$fit_transform(x)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{x}}{input sparse matrix}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{x}}{input sparse matrix}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-unknown-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-unknown-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ScaleNormalize$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{unknown$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{unknown$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

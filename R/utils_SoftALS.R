@@ -9,12 +9,14 @@ make_sparse_approximation = function(x, A, B) {
   UseMethod("make_sparse_approximation")
 }
 
+#' @export
 make_sparse_approximation.CsparseMatrix = function(x, A, B) {
   CSC = 1L
   CSR = 2L
   cpp_make_sparse_approximation(x, A, B, CSC, getOption("rsparse_omp_threads", 1L))
 }
 
+#' @export
 make_sparse_approximation.RsparseMatrix = function(x, A, B) {
   CSC = 1L
   CSR = 2L

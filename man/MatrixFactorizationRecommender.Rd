@@ -8,74 +8,74 @@ All matrix factorization recommenders inherit from this class
 }
 \keyword{internal}
 \section{Public fields}{
-\if{html}{\out{<div class="r6-fields">}}
-\describe{
-\item{\code{components}}{item embeddings}
+  \if{html}{\out{<div class="r6-fields">}}
+  \describe{
+    \item{\code{components}}{item embeddings}
 
-\item{\code{global_bias}}{global mean (for centering values in explicit feedback)}
+    \item{\code{global_bias}}{global mean (for centering values in explicit feedback)}
 
-\item{\code{global_bias_base}}{Pre-calculated `-(factors*global_bias)` (for centering values in
+    \item{\code{global_bias_base}}{Pre-calculated `-(factors*global_bias)` (for centering values in
 implicit feedback when not using user/item biases)}
-}
-\if{html}{\out{</div>}}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-MatrixFactorizationRecommender-predict}{\code{MatrixFactorizationRecommender$predict()}}
-\item \href{#method-MatrixFactorizationRecommender-clone}{\code{MatrixFactorizationRecommender$clone()}}
-}
+  \itemize{
+    \item \href{#method-MatrixFactorizationRecommender-predict}{\code{MatrixFactorizationRecommender$predict()}}
+    \item \href{#method-MatrixFactorizationRecommender-clone}{\code{MatrixFactorizationRecommender$clone()}}
+  }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MatrixFactorizationRecommender-predict"></a>}}
 \if{latex}{\out{\hypertarget{method-MatrixFactorizationRecommender-predict}{}}}
-\subsection{Method \code{predict()}}{
-recommends items for users
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MatrixFactorizationRecommender$predict(
+\subsection{\code{MatrixFactorizationRecommender$predict()}}{
+  recommends items for users
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MatrixFactorizationRecommender$predict(
   x,
   k,
   not_recommend = x,
   items_exclude = integer(0),
   ...
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{x}}{user-item interactions matrix (usually sparse - `Matrix::sparseMatrix`).Users are
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{x}}{user-item interactions matrix (usually sparse - `Matrix::sparseMatrix`).Users are
 rows and items are columns}
-
-\item{\code{k}}{number of items to recommend}
-
-\item{\code{not_recommend}}{user-item matrix (sparse) which describes which items method should NOT
+      \item{\code{k}}{number of items to recommend}
+      \item{\code{not_recommend}}{user-item matrix (sparse) which describes which items method should NOT
 recomment for each user. Usually this is same as `x` as we don't want to recommend items user
 already liked.}
-
-\item{\code{items_exclude}}{either integer indices or character identifiers of the items to not
+      \item{\code{items_exclude}}{either integer indices or character identifiers of the items to not
 recommend to any user.}
+      \item{\code{...}}{not used at the moment}
+    }
+    \if{html}{\out{</div>}}
+  }
+}
 
-\item{\code{...}}{not used at the moment}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MatrixFactorizationRecommender-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-MatrixFactorizationRecommender-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MatrixFactorizationRecommender$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{MatrixFactorizationRecommender$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MatrixFactorizationRecommender$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }
